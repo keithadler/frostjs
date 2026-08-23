@@ -103,5 +103,5 @@ straightforward and be kind.
 
 ## Security
 
-See [SECURITY.md](SECURITY.md). Please do not report security issues in
-public issues.
+See [SECURITY.md](SECURITY.md). Security reports go through GitHub's
+private report form, not public issues.

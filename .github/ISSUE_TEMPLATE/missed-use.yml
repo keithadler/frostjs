@@ -6,7 +6,7 @@ body:
     attributes:
       value: |
         Before filing, check SECURITY.md: obfuscated or runtime-constructed access is the documented floor, not a bug.
-        If this could be used to sneak a capability past a policy, please email keith.adler@icloud.com instead of filing publicly.
+        If this could be used to sneak a capability past a policy, please use the private report form (https://github.com/keithadler/frostjs/security/advisories/new) instead of filing publicly.
   - type: textarea
     id: code
     attributes:

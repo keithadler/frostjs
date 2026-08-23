@@ -51,7 +51,7 @@ to a local.
   `.policy` files say it and use the same words.
 - No em dashes in prose, docs or comments; use " - ". American spelling.
 - `oxc-parser` is pinned to patch releases. Do not widen the range.
-- Commits are authored as `keithadler <keith.adler@icloud.com>`.
+- Commits are authored as `keithadler`, with the repository's configured email.
 
 ## What not to do
 

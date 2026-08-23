@@ -1,5 +1,5 @@
 blank_issues_enabled: true
 contact_links:
-  - name: Security report
-    url: https://github.com/keithadler/frostjs/blob/main/SECURITY.md
-    about: A way to make frostjs pass code it should refuse. Please email rather than filing publicly.
+  - name: Security report (private)
+    url: https://github.com/keithadler/frostjs/security/advisories/new
+    about: A way to make frostjs pass code it should refuse. Only the maintainer can read these.

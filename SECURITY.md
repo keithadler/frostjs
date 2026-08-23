@@ -20,10 +20,14 @@ If you find a way to make frostjs pass code it should refuse (a bypass in a
 recognizer, a scope-analysis hole that lets a shadowed global slip through,
 a policy parser quirk that grants more than the author wrote, a path
 traversal in policy discovery, an injection in the GitHub Action), please
-email **keith.adler@icloud.com** rather than opening a public issue.
-Include the smallest reproduction you can. You will get an acknowledgement
-within a few days and a fix or an explanation as soon as one exists; credit
-in the changelog is yours if you want it.
+use GitHub's private report form rather than opening a public issue:
+
+**https://github.com/keithadler/frostjs/security/advisories/new**
+
+Only the maintainer can read it. Include the smallest reproduction you
+can. You will get an acknowledgement within a few days and a fix or an
+explanation as soon as one exists; credit in the changelog and the
+advisory is yours if you want it.
 
 Bypasses that rely on obfuscation the threat model already excludes (for
 example `window["local" + k]` where `k` is computed at runtime) are not

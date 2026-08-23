@@ -18,8 +18,9 @@ project is represented:
   this project. Treat one as a gift, even when it turns out to be a
   misreading.
 
-If you see behavior that breaks these rules, email
-**keith.adler@icloud.com**. Reports are read by the maintainer, kept
-confidential, and acted on: a warning, a temporary block, or a permanent
-one, depending on what happened. Maintainers are held to the same
-standard as everyone else.
+If you see behavior that breaks these rules, open an issue. If it should
+not be public, use the private report form at
+https://github.com/keithadler/frostjs/security/advisories/new, which only
+the maintainer can read. Reports are kept confidential and acted on: a
+warning, a temporary block, or a permanent one, depending on what
+happened. Maintainers are held to the same standard as everyone else.

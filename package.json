@@ -2,7 +2,7 @@
   "name": "@keithadler/frostjs",
   "version": "0.1.0",
   "description": "Policy-driven, deny-by-default capability linter for JavaScript",
-  "author": "Keith Adler <keith.adler@icloud.com>",
+  "author": "Keith Adler",
   "license": "MIT",
   "repository": {
     "type": "git",
