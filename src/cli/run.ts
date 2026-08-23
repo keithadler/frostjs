@@ -46,6 +46,7 @@ import {
   type Registry,
 } from "../registry.js";
 import { includesFor, sync, usesOf } from "../sync.js";
+import { policyNameFor, starterPolicy } from "../init.js";
 
 export interface Io {
   stdout: (s: string) => void;
@@ -74,6 +75,8 @@ export function run(argv: readonly string[], io: Io): number {
     return 0;
   }
   switch (args.command) {
+    case "init":
+      return runInit(args, io);
     case "csp":
     case "summary":
       return runPolicyCommand(args, io);
@@ -190,25 +193,13 @@ function runCheck(args: ParsedArgs, io: Io): number {
     registry = r;
   }
 
-  const syntaxErrors: ParseError[] = [];
-  const uses: CapabilityUse[] = [];
-  for (const file of files) {
-    const name = shown(cwd, file);
-    if (registry !== null && policy.vendored.some((g) => matchesGlob(g, relToPolicy(policyDir, file)))) {
-      uses.push(...vendoredUses(file, name, registry));
-    } else if (isHtml(file)) {
-      for (const block of parseHtml(file, fs.readFileSync(file, "utf8"))) {
-        if (block.errors.length > 0) syntaxErrors.push(...block.errors.map((e) => ({ ...e, file: name })));
-        else uses.push(...extract(block, { origin: "inline-html" }).map((u) => ({ ...u, file: name })));
-      }
-    } else {
-      const parsed = parseFile(file);
-      if (parsed.errors.length > 0) syntaxErrors.push(...parsed.errors.map((e) => ({ ...e, file: name })));
-      else uses.push(...extract(parsed).map((u) => ({ ...u, file: name })));
-    }
-  }
-  for (const e of syntaxErrors) io.stderr(`${e.file}:${e.line}:${e.column}: syntax error: ${e.message}\n`);
-  if (syntaxErrors.length > 0) return 2;
+  const extracted = extractAll(files, cwd, io, (file, name) =>
+    registry !== null && policy.vendored.some((g) => matchesGlob(g, relToPolicy(policyDir, file)))
+      ? vendoredUses(file, name, registry)
+      : null,
+  );
+  if (typeof extracted === "number") return extracted;
+  const uses = extracted;
 
   // Report paths are relative to cwd; policy globs are relative to the policy file.
   let decisions = decide(uses, policy, {
@@ -279,6 +270,61 @@ function runCheck(args: ParsedArgs, io: Io): number {
 
   const denied = decisions.some((d) => d.verdict === "denied");
   return denied && !args.exitZero && !args.updateBaseline ? 1 : 0;
+}
+
+/**
+ * Extract every use from the files, reporting paths relative to cwd.
+ * `special` may claim a file (vendored files do) and return its uses.
+ * Syntax errors are printed and end the run with exit 2.
+ */
+function extractAll(
+  files: readonly string[],
+  cwd: string,
+  io: Io,
+  special: (file: string, name: string) => CapabilityUse[] | null = () => null,
+): CapabilityUse[] | number {
+  const syntaxErrors: ParseError[] = [];
+  const uses: CapabilityUse[] = [];
+  for (const file of files) {
+    const name = shown(cwd, file);
+    const claimed = special(file, name);
+    if (claimed !== null) {
+      uses.push(...claimed);
+    } else if (isHtml(file)) {
+      for (const block of parseHtml(file, fs.readFileSync(file, "utf8"))) {
+        if (block.errors.length > 0) syntaxErrors.push(...block.errors.map((e) => ({ ...e, file: name })));
+        else uses.push(...extract(block, { origin: "inline-html" }).map((u) => ({ ...u, file: name })));
+      }
+    } else {
+      const parsed = parseFile(file);
+      if (parsed.errors.length > 0) syntaxErrors.push(...parsed.errors.map((e) => ({ ...e, file: name })));
+      else uses.push(...extract(parsed).map((u) => ({ ...u, file: name })));
+    }
+  }
+  for (const e of syntaxErrors) io.stderr(`${e.file}:${e.line}:${e.column}: syntax error: ${e.message}\n`);
+  return syntaxErrors.length > 0 ? 2 : uses;
+}
+
+// frostjs init [paths...]
+
+function runInit(args: ParsedArgs, io: Io): number {
+  const cwd = cwdOf(io);
+  const target = path.join(cwd, "frostjs.policy");
+  if (fs.existsSync(target))
+    return fail(io, "frostjs.policy already exists here; edit it, or delete it and run init again");
+  if (args.paths.length === 0) args = { ...args, paths: ["."] };
+  const files = discoverOrFail(args, io, []);
+  if (typeof files === "number") return files;
+  const uses = extractAll(files, cwd, io);
+  if (typeof uses === "number") return uses;
+  const policy = starterPolicy(policyNameFor(cwd), uses, args.today ?? isoToday());
+  fs.writeFileSync(target, policy);
+  const grants = policy.split("\n").filter((l) => l.startsWith("may ")).length;
+  io.stdout(policy);
+  io.stderr(
+    `wrote frostjs.policy with ${grants} ${grants === 1 ? "grant" : "grants"} from ${files.length} ${files.length === 1 ? "file" : "files"}; read it, delete what should not be allowed, then run: frostjs ${args.paths.join(" ")}\n`,
+  );
+  return 0;
 }
 
 /** A vendored file contributes its registry entry's capability set, or one unregistered use. */

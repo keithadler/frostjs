@@ -5,7 +5,7 @@
 import { CONFIDENCE_ORDER, type Confidence } from "../policy/index.js";
 
 /** The subcommand, `check` being the bare `frostjs <paths>` form. */
-type Command = "check" | "csp" | "summary" | "vendor-add" | "registry-sync" | "sri";
+type Command = "check" | "init" | "csp" | "summary" | "vendor-add" | "registry-sync" | "sri";
 
 export interface ParsedArgs {
   command: Command;
@@ -56,7 +56,7 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
     const arg = argv[i]!;
     if (first) {
       first = false;
-      if (arg === "csp" || arg === "summary" || arg === "sri") {
+      if (arg === "csp" || arg === "summary" || arg === "sri" || arg === "init") {
         out.command = arg;
         continue;
       }
@@ -152,6 +152,7 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
 
 /** The `--help` text, also printed after a usage error. */
 export const HELP = `usage: frostjs [options] <paths...>
+       frostjs init [paths...]
        frostjs csp [--policy <file>]
        frostjs summary [--policy <file>]
        frostjs vendor add <files...>
@@ -162,6 +163,11 @@ Deny-by-default capability linter for JavaScript.
 
 commands:
   (default)            analyze the given paths against the policy
+  frostjs init         write a starter frostjs.policy in the current
+                       directory granting exactly what the code under the
+                       paths (default .) does today, with a note on each
+                       grant saying where; read it and delete what should
+                       not be allowed
   frostjs csp           print the Content-Security-Policy header the policy
                        implies, and nothing else, for the deploy step
   frostjs summary       print a plain-English reading of the policy for a

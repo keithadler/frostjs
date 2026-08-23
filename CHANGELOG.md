@@ -9,6 +9,7 @@ change the policy grammar or the JSON schema; the changelog will say so.
 
 ### Added
 
+- `frostjs init`: a starter policy granting what the code does today.
 - Eight capability families: `storage`, `network` (with static destination
   resolution), `codegen`, `dom-escape`, `identity`, `navigation`, `globals`,
   `worker`.

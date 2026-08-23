@@ -43,6 +43,21 @@ $ echo $?
 1
 ```
 
+## Starting out
+
+```bash
+npx frostjs init src
+```
+
+writes a `frostjs.policy` in the current directory that grants exactly
+what the code under `src` does today, one line per capability, scoped to
+the files that use it when there are only a few, each with a note saying
+where. The first check passes. Then read the file and delete what should
+not be allowed; the build starts refusing it. A network destination the
+code builds at runtime is called out in a hint rather than quietly widened
+to `may use the network`. For a large codebase with debt you would rather
+pay down than grant, use `--baseline` instead (below).
+
 ## Policy files
 
 A policy is a `frostjs.policy` file in frost's policy dialect: one rule per
@@ -104,6 +119,7 @@ all, every capability is denied and a note says so.
 ## Usage
 
 ```
+frostjs init [paths]     write a starter frostjs.policy granting what the code does today
 frostjs <paths...>        discover and analyze .js/.mjs/.cjs/.jsx/.ts/.tsx/.mts/.cts and inline <script> in .html under paths
 frostjs csp               print the Content-Security-Policy header the policy implies
 frostjs summary           print a plain-English reading of the policy
