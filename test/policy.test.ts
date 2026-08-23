@@ -17,7 +17,7 @@ const use = (over: Partial<CapabilityUse> = {}): CapabilityUse => ({
 describe("deny-all policy", () => {
   it("denies a certain use", () => {
     const [d] = decide([use()], DENY_ALL);
-    expect(d).toMatchObject({ verdict: "denied", rule: "deny everything" });
+    expect(d).toMatchObject({ verdict: "denied", reason: "not granted", rule: null });
     expect(d?.use.capability).toBe("storage.local");
   });
 

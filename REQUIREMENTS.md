@@ -282,7 +282,9 @@ Ported directly from `exact`, because it is already proven.
 
 5. Frost grammar for `policy`, `may use`, `forbid`, path scoping, `until`.
    **DONE 2026-08-23.** `src/policy/parse.ts`, `src/policy/vocabulary.ts`.
-6. Policy compiler to internal ruleset.
+6. Policy compiler to internal ruleset. **DONE 2026-08-23.** `forbid` always
+   wins over `may`; a family grants its members; expired grants deny with a
+   distinct reason; grants within 14 days of expiry warn.
 7. Config discovery and `permit.policy` resolution.
 8. Precise policy syntax errors.
 
