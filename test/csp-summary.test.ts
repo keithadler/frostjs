@@ -72,7 +72,7 @@ describe("summary", () => {
         "It may not, even where a broader grant would allow it:",
         "  - use cookies (line 5) - consent banner owns these",
         "",
-        "Everything else is denied. In particular this code may not use: code generation, html injection, identity, navigation, globals, workers.",
+        "Everything else is denied. In particular this code may not use: code generation, html injection, identity, navigation, globals, workers, device access.",
         "",
       ].join("\n"),
     );

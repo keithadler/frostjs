@@ -46,6 +46,7 @@ export const FAMILIES: readonly string[] = [
   "navigation",
   "globals",
   "worker",
+  "device",
 ];
 
 /** Every member code the extractor can emit. Keep in step with src/extract/recognizers. */
@@ -87,6 +88,14 @@ export const MEMBER_CODES: readonly string[] = [
   "worker.shared",
   "worker.service",
   "worker.worklet",
+  "device.filesystem",
+  "device.usb",
+  "device.bluetooth",
+  "device.serial",
+  "device.hid",
+  "device.midi",
+  "device.wakelock",
+  "device.notification",
 ];
 
 /** Every code a policy may name directly: the families and each member the extractor can emit. */

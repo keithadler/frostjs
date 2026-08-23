@@ -240,6 +240,7 @@ forbid everything else                             optional, readability only
 | `navigation` | `navigation` |
 | `globals` | `globals` |
 | `workers`, `service workers` | `worker` |
+| `device access`, `file access`, `usb`, `bluetooth`, `notifications` | `device` |
 | `everything` | `*` |
 
 Rules:
@@ -509,6 +510,10 @@ to a reviewer; suppression is for the one-off.
 | `worker.shared` | `new SharedWorker(url)` |
 | `worker.service` | `navigator.serviceWorker.register(url)` |
 | `worker.worklet` | `CSS.paintWorklet.addModule(url)`, `audioWorklet.addModule(url)`... |
+| `device.filesystem` | `showOpenFilePicker` / `showSaveFilePicker` / `showDirectoryPicker` (read/write the user's files) |
+| `device.usb` / `device.bluetooth` / `device.serial` / `device.hid` / `device.midi` | `navigator.usb` etc. (hardware access) |
+| `device.wakelock` | `navigator.wakeLock` |
+| `device.notification` | `Notification` |
 
 Each is recognized bare, via `window` / `globalThis` / `self`, and via a
 computed member whose name is a string literal (`window["localStorage"]`),
