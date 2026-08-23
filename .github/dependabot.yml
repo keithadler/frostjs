@@ -10,6 +10,19 @@ updates:
     groups:
       dev-dependencies:
         dependency-type: development
+        update-types: [minor, patch]
+    ignore:
+      # Major bumps of the toolchain are deliberate upgrades, not PRs to
+      # merge on green: the first grouped PR tried TypeScript 5 -> 7 and
+      # vitest 3 -> 4 at once and did not build.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      - dependency-name: vitest
+        update-types: ["version-update:semver-major"]
+      - dependency-name: vite-node
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
