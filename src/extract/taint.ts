@@ -196,9 +196,20 @@ function taintSource(n: AnyNode, scope: Scope): string | null {
   }
 }
 
-/** The sinks: a tainted value here is markup, code, a remote load, or a redirect. */
+/**
+ * The sinks: a tainted value here is markup, code, or a remote load.
+ *
+ * Open redirect (`location = tainted`, `window.open(tainted)`) is
+ * deliberately NOT a sink. A sweep of 20 top web apps found this sink fired
+ * 15 times and every hit was benign same-origin navigation - reloading with
+ * the current query, `location.href = new URL(location.href).pathname`,
+ * `?next=${location.href}` login redirects - because redirecting off the
+ * current URL is ubiquitous and frostjs cannot statically tell it from an
+ * attacker-controlled full URL. A ~0% precision sink violates the
+ * zero-false-positive rule, so it is left to other tooling.
+ */
 function checkSinks(n: AnyNode, scope: Scope, add: (source: string, sink: string, node: AnyNode) => void): void {
-  // assignment sinks: el.innerHTML = tainted, location.href = tainted, setAttribute-less
+  // assignment sinks: el.innerHTML = tainted, el.outerHTML = tainted, iframe.srcdoc = tainted
   if (n.type === "AssignmentExpression") {
     const left = unwrap(n["left"] as AnyNode);
     const right = n["right"] as AnyNode;
@@ -207,11 +218,6 @@ function checkSinks(n: AnyNode, scope: Scope, add: (source: string, sink: string
       if (prop === "innerHTML" || prop === "outerHTML" || prop === "srcdoc") {
         const s = taintSource(right, scope);
         if (s) add(s, prop, n);
-      }
-      // location = tainted, location.href = tainted
-      if ((prop !== null && LOCATION_PROPS.has(prop) && isLocation(left["object"] as AnyNode)) || isLocation(left)) {
-        const s = taintSource(right, scope);
-        if (s) add(s, "location (redirect)", n);
       }
     }
   }
@@ -266,8 +272,8 @@ function checkSinks(n: AnyNode, scope: Scope, add: (source: string, sink: string
         if (name === "srcdoc" || (name !== null && /^on[a-z]+$/.test(name))) flag(args[1], `setAttribute("${name}")`);
         return;
       }
-      if ((method === "assign" || method === "replace") && isLocation(obj)) return flag(args[0], "location (redirect)");
-      if (method === "open" && freeGlobal(unwrap(obj), GLOBALS)) return flag(args[0], "window.open (redirect)");
+      // location.assign / .replace and window.open are open-redirect sinks,
+      // deliberately omitted (see the note on checkSinks).
       // navigator.serviceWorker.register(tainted): registers an attacker-chosen script that intercepts every request.
       if (method === "register" && obj.type === "MemberExpression" && memberName(obj) === "serviceWorker")
         return flag(args[0], "serviceWorker.register");

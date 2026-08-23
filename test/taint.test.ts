@@ -34,11 +34,17 @@ describe("taint: untrusted source into a dangerous sink", () => {
     expect(flows("setTimeout(handler, delay)")).toEqual([]);
   });
 
-  it("open redirect and setAttribute handler", () => {
-    expect(flows("location.href = location.hash.slice(1)")).toEqual(["location.hash->location (redirect)"]);
-    expect(flows("location.assign(location.search)")).toEqual(["location.search->location (redirect)"]);
-    expect(flows("window.open(document.URL)")).toEqual(["document.URL->window.open (redirect)"]);
+  it("setAttribute handler is a sink", () => {
     expect(flows('el.setAttribute("onclick", location.hash)')).toEqual(['location.hash->setAttribute("onclick")']);
+  });
+
+  it("open redirect is deliberately NOT a sink (too many benign same-origin cases)", () => {
+    expect(flows("location.href = location.hash.slice(1)")).toEqual([]);
+    expect(flows("location.assign(location.search)")).toEqual([]);
+    expect(flows("window.open(document.URL)")).toEqual([]);
+    expect(flows("location.href = new URL(location.href).pathname")).toEqual([]);
+    // location parts are still sources into real sinks:
+    expect(flows("el.innerHTML = location.hash")).toEqual(["location.hash->innerHTML"]);
   });
 
   it("postMessage data into a sink (window handler only)", () => {

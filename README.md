@@ -199,8 +199,8 @@ npx frostjs audit node_modules/some-widget
 
 No policy involved. It prints, alarming things first: **untrusted input
 reaching a dangerous sink** (a URL parameter, `document.cookie`, or a
-`postMessage` payload flowing into `eval`, `innerHTML`, `importScripts`, a
-redirect - real taint analysis, see below); files where code
+`postMessage` payload flowing into `eval`, `innerHTML`, or
+`importScripts` - real taint analysis, see below); files where code
 generation or script injection meets a network reach (a *remote code
 path*, the shape that found three.js's bundled remote eval); code
 generation from non-constant input, every host reached, hosts merely
@@ -237,9 +237,11 @@ chain, so `innerHTML = DOMPurify.sanitize(x)` is not flagged while
   the `event.data` of a WebSocket/EventSource this file constructs.
 - **Sinks**: `eval`, `Function`, `innerHTML` / `outerHTML` / `srcdoc`,
   `insertAdjacentHTML`, `document.write`, `importScripts`, `import()`,
-  `setAttribute("on*"/"srcdoc", ...)`, React `dangerouslySetInnerHTML`,
-  `new Worker` / `serviceWorker.register`, and `location` / `window.open`
-  redirects.
+  `setAttribute("on*"/"srcdoc", ...)`, React `dangerouslySetInnerHTML`, and
+  `new Worker` / `serviceWorker.register`. Open redirect (`location = x`)
+  is deliberately not a sink: a sweep of 20 top apps showed it is almost
+  always benign same-origin navigation, and static analysis cannot tell
+  that from a real open redirect.
 - **One hop across functions**: a tainted argument passed to a local
   function whose parameter reaches a sink is flagged (`setHtml(x) { el.innerHTML = x }`
   called with `location.hash`), reported `... (via setHtml())`. A parameter

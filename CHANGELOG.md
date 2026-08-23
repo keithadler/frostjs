@@ -7,6 +7,16 @@ change the policy grammar or the JSON schema; the changelog will say so.
 
 ## [Unreleased]
 
+### Changed
+
+- Open redirect (`location = tainted`, `window.open(tainted)`) is no longer
+  a taint sink. A sweep of 20 top web apps found it fired 15 times and every
+  hit was benign same-origin navigation (reload-with-query,
+  `location.href = new URL(location.href).pathname`, `?next=` login
+  redirects); it cannot be told from a real open redirect statically, so it
+  is dropped to keep the zero-false-positive guarantee. Location URL parts
+  remain sources into the real sinks (eval, innerHTML, ...).
+
 ### Added
 
 - New capabilities: `network.webtransport` (WebTransport), `network.webrtc`

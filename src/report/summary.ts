@@ -58,7 +58,7 @@ export function summary(policy: Policy): string {
     lines.push("Everything not listed above is denied.");
   }
   if (policy.taint)
-    lines.push("Untrusted input reaching a dangerous sink (eval, innerHTML, a redirect...) fails the build.");
+    lines.push("Untrusted input reaching a dangerous sink (eval, innerHTML, importScripts...) fails the build.");
   for (const w of policy.warnings) lines.push(`Warning: ${w}`);
   return lines.join("\n") + "\n";
 }
