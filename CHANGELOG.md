@@ -7,6 +7,11 @@ change the policy grammar or the JSON schema; the changelog will say so.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-23
+
+Minor bump: new grammar is additive (`frostjs capabilities`; taint now
+also gates via HTML). No breaking changes to policies or the JSON schema.
+
 ### Added
 
 - `frostjs capabilities`: the full taxonomy with the policy phrase for each
