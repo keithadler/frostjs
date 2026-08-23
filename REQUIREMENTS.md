@@ -247,7 +247,11 @@ Ported directly from `exact`, because it is already proven.
 
 1. Repo, packaging, CI, licence, `--version`. **DONE 2026-08-23.**
 2. Discovery and parsing of `.js`/`.mjs` only. **DONE 2026-08-23.**
-3. Extract one capability family end to end: `storage`.
+3. Extract one capability family end to end: `storage`. **DONE 2026-08-23.**
+   Interim shadowing rule until step 14: if a file declares the name a match
+   rests on (`caches`, `window`, `document`...), the use is `possible`, not
+   `certain`. Smoke run over 347 files / 24.5 MB of node_modules: 1 certain
+   (true positive in `debug`), 8 possible, 2.2s.
 4. Hardcoded deny-all policy, text output, non-zero exit.
    *Acceptance:* running it on a file containing `localStorage.setItem("a", 1)`
    fails the build and names the line.

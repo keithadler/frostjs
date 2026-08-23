@@ -24,6 +24,23 @@ A path that names a file directly is always analyzed.
 Exit codes: `0` clean, `1` policy violations, `2` usage or input error
 (bad flag, missing path, syntax error).
 
+## Capabilities recognized so far
+
+| code | what |
+| --- | --- |
+| `storage.local` | `localStorage` |
+| `storage.session` | `sessionStorage` |
+| `storage.indexeddb` | `indexedDB` |
+| `storage.cache` | `caches` |
+| `storage.cookie` | `document.cookie` |
+| `storage.navigator` | `navigator.storage` |
+
+Each is recognized bare, via `window` / `globalThis` / `self`, and via a
+string-literal computed member (`window["localStorage"]`). Uses via `self`
+are `probable` rather than `certain`, since `self` is often a local alias for
+`this`. If a file declares a variable with the same name as the global, the
+use is downgraded to `possible` until proper scope analysis lands.
+
 ## What this is not
 
 - **Not a runtime sandbox.** No membrane, no proxied globals. A determined
