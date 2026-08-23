@@ -96,8 +96,8 @@ describe("network: targets", () => {
     expect(one(`fetch(${arg})`).target).toBe(target);
   });
 
-  it("resolveTarget on a URL object is unknown", () => {
-    expect(one('fetch(new URL("https://x.example.com"))').target).toBe(null);
+  it("resolveTarget on a URL object resolves the URL's host", () => {
+    expect(one('fetch(new URL("https://x.example.com"))').target).toBe("x.example.com");
   });
 
   it("resolveTarget is exported and handles a plain string", () => {
@@ -186,5 +186,29 @@ describe("network.importscripts: a worker loading a script", () => {
 
   it("a local named importScripts is not the global", () => {
     expect(caps("function importScripts(x) {} importScripts(u);")).toEqual([]);
+  });
+});
+
+describe("network: new URL(path, base) resolves to the base host", () => {
+  it("two-argument form: host from the base, whatever the first arg", () => {
+    expect(one('fetch(new URL("/v1/items", "https://api.example.com/"))').target).toBe("api.example.com");
+    expect(one("fetch(new URL(path, `https://api.example.com`))").target).toBe("api.example.com");
+    expect(one("fetch(new URL(userPath, BASE))").target).toBe(null); // base not fixed
+  });
+
+  it("single-argument form is the literal URL", () => {
+    expect(one('fetch(new URL("https://cdn.example.com/x.js"))').target).toBe("cdn.example.com");
+  });
+
+  it("import.meta.url base is not a remote host", () => {
+    expect(one("fetch(new URL('./w.js', import.meta.url))").target).toBe(null);
+  });
+
+  it("a folded const base", () => {
+    expect(one('const B = "https://api.example.com/"; fetch(new URL(p, B))').target).toBe("api.example.com");
+  });
+
+  it("a local URL class is not the global", () => {
+    expect(one('class URL {} fetch(new URL("/x", "https://api.example.com/"))').target).toBe(null);
   });
 });

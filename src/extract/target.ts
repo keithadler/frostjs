@@ -10,7 +10,7 @@
  * their scheme.
  */
 import type { AnyNode } from "./ast.js";
-import { FOLDED } from "./annotations.js";
+import { FOLDED, FREE } from "./annotations.js";
 import { unwrap } from "./typescript.js";
 
 /** The target of a relative URL: the document's own origin. */
@@ -88,7 +88,31 @@ export function resolveTarget(text: string, complete = true, kind: TargetKind = 
 /** Resolve the destination of an argument expression, or null. */
 export function resolveTargetOf(arg: AnyNode | undefined, kind: TargetKind = "url"): string | null {
   if (!arg) return null;
+  // new URL(path, "https://host/..."): the host comes from the base, whatever the (possibly dynamic) first arg.
+  if (arg.type === "NewExpression" && isUrlCtor(arg["callee"] as AnyNode)) {
+    const args = arg["arguments"] as AnyNode[];
+    if (args.length >= 2) return resolveTargetOf(args[1]);
+    return resolveTargetOf(args[0]); // new URL("https://host/...")
+  }
   const lit = leadingLiteral(arg);
   if (lit === null) return null;
   return resolveTarget(lit.text, lit.complete, kind);
 }
+
+/** True for the global `URL` constructor (bare or window.URL), not a local one. */
+function isUrlCtor(callee: AnyNode): boolean {
+  if (callee.type === "Identifier") return callee["name"] === "URL" && callee[FREE] === true;
+  if (callee.type === "MemberExpression" && callee["computed"] !== true) {
+    const prop = callee["property"] as AnyNode;
+    const obj = callee["object"] as AnyNode;
+    return (
+      prop.type === "Identifier" &&
+      prop["name"] === "URL" &&
+      obj.type === "Identifier" &&
+      GLOBAL_OBJECT_NAMES.has(obj["name"] as string)
+    );
+  }
+  return false;
+}
+
+const GLOBAL_OBJECT_NAMES: ReadonlySet<string> = new Set(["window", "globalThis", "self"]);
