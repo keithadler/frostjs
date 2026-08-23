@@ -16,10 +16,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { discover, isHtml } from "../src/discover/index.js";
 import { parseFile, type ParsedFile } from "../src/extract/ast.js";
-import { extract } from "../src/extract/index.js";
+import { extract, stringLiterals } from "../src/extract/index.js";
 import { parseHtml } from "../src/extract/html.js";
 import type { CapabilityUse } from "../src/extract/capability.js";
-import { audit, groupByFile, type Audit } from "../src/audit.js";
+import { audit, type Audit, type FileSource } from "../src/audit.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const cacheDir = path.join(path.resolve(here, ".."), "corpus", ".cache");
@@ -118,25 +118,30 @@ interface Entry {
 function analyze(spec: string): Entry {
   const { dir, integrity, spec: resolved } = ensure(spec);
   const byFile = new Map<string, CapabilityUse[]>();
-  const texts = new Map<string, string>();
+  const sources = new Map<string, FileSource>();
   let parseErrors = 0;
-  for (const file of discover([dir])) {
+  for (const file of discover([dir], { include: ["dist", "build"] })) {
     const rel = path.relative(dir, file);
     const text = fs.readFileSync(file, "utf8");
     const units: ParsedFile[] = isHtml(file) ? parseHtml(file, text) : [parseFile(file)];
     const uses: CapabilityUse[] = [];
+    const strings: string[] = [];
     for (const unit of units) {
       if (unit.errors.length > 0) parseErrors++;
-      else uses.push(...extract(unit).map((u) => ({ ...u, file: rel })));
+      else {
+        uses.push(...extract(unit).map((u) => ({ ...u, file: rel })));
+        strings.push(...stringLiterals(unit));
+      }
     }
     byFile.set(rel, uses);
-    texts.set(rel, text);
+    sources.set(rel, { text, strings });
   }
-  return { spec: resolved, integrity, audit: audit(byFile, texts), parseErrors };
+  return { spec: resolved, integrity, audit: audit(byFile, sources), parseErrors };
 }
 
 const score = (a: Audit): number =>
-  a.remoteCodePaths.length * 100 +
+  a.remoteCodePaths.filter((f) => !f.emscripten).length * 100 +
+  a.remoteCodePaths.filter((f) => f.emscripten).length * 20 +
   a.dynamicCodegen.length * 10 +
   a.hosts.size * 3 +
   a.wildcardPostMessage.length * 2 +
@@ -168,7 +173,8 @@ for (const { spec, integrity, audit: a, parseErrors } of entries) {
   );
   process.stdout.write(flags.length ? flags.map((f) => `- ${f}`).join("\n") + "\n" : "- nothing notable\n");
   for (const f of a.remoteCodePaths) {
-    process.stdout.write(`  ${f.file}${f.readsUrl ? "  [reads the page URL]" : ""}\n`);
+    const tags = [f.readsUrl ? "reads the page URL" : "", f.emscripten ? "Emscripten glue" : ""].filter(Boolean);
+    process.stdout.write(`  ${f.file}${tags.length ? `  [${tags.join(", ")}]` : ""}\n`);
     for (const u of [...f.dynamicCodegen, ...f.scriptInjection].slice(0, 4)) process.stdout.write(`    ${site(u)}\n`);
     const reach = [...f.hosts, ...f.literalHosts.filter((h) => !f.hosts.includes(h)).map((h) => `${h} (named)`)];
     if (reach.length) process.stdout.write(`    reaches: ${reach.slice(0, 8).join(", ")}\n`);

@@ -13,7 +13,7 @@ import { HELP, parseArgs, UsageError, type ParsedArgs } from "./args.js";
 import { VERSION } from "../version.js";
 import { discover, isHtml } from "../discover/index.js";
 import { parseFile, type ParseError } from "../extract/ast.js";
-import { extract } from "../extract/index.js";
+import { extract, stringLiterals } from "../extract/index.js";
 import { parseHtml } from "../extract/html.js";
 import type { CapabilityUse } from "../extract/capability.js";
 import {
@@ -47,7 +47,7 @@ import {
 } from "../registry.js";
 import { includesFor, sync, usesOf } from "../sync.js";
 import { policyNameFor, starterPolicy } from "../init.js";
-import { audit, auditJson, formatAudit, groupByFile } from "../audit.js";
+import { audit, auditJson, formatAudit, groupByFile, type FileSource } from "../audit.js";
 
 export interface Io {
   stdout: (s: string) => void;
@@ -138,13 +138,18 @@ function loadPolicy(args: ParsedArgs, io: Io, inputs: readonly string[], require
 }
 
 /** Resolve the given paths against cwd and discover source files under them. */
-function discoverOrFail(args: ParsedArgs, io: Io, vendored: readonly string[]): string[] | number {
+function discoverOrFail(
+  args: ParsedArgs,
+  io: Io,
+  vendored: readonly string[],
+  include: string[] = [],
+): string[] | number {
   const cwd = cwdOf(io);
   const missing = args.paths.find((p) => !fs.existsSync(path.resolve(cwd, p)));
   if (missing !== undefined) return fail(io, `path not found: ${missing}`);
   return discover(
     args.paths.map((p) => path.resolve(cwd, p)),
-    { exclude: args.exclude, include: includesFor(vendored) },
+    { exclude: args.exclude, include: [...includesFor(vendored), ...include] },
   );
 }
 
@@ -302,14 +307,20 @@ function runAudit(args: ParsedArgs, io: Io): number {
   const cwd = cwdOf(io);
   if (args.paths.length === 0) return fail(io, "frostjs audit needs one or more paths");
   if (args.format !== "text" && args.format !== "json") return fail(io, "frostjs audit prints text or json");
-  const files = discoverOrFail(args, io, []);
+  // A dependency's shipped code lives in dist/ or build/; the default excludes are for a project's own output.
+  const files = discoverOrFail(args, io, [], ["dist", "build"]);
   if (typeof files === "number") return files;
   const uses = extractAll(files, cwd, io);
   if (typeof uses === "number") return uses;
-  const texts = new Map(files.map((f) => [shown(cwd, f), fs.readFileSync(f, "utf8")]));
+  const sources = new Map<string, FileSource>();
+  for (const f of files) {
+    const text = fs.readFileSync(f, "utf8");
+    const units = isHtml(f) ? parseHtml(f, text) : [parseFile(f)];
+    sources.set(shown(cwd, f), { text, strings: units.flatMap((u) => (u.errors.length ? [] : stringLiterals(u))) });
+  }
   const byFile = groupByFile(uses);
   for (const f of files) if (!byFile.has(shown(cwd, f))) byFile.set(shown(cwd, f), []);
-  const a = audit(byFile, texts);
+  const a = audit(byFile, sources);
   io.stdout(args.format === "json" ? auditJson(a) : formatAudit(a));
   return 0;
 }

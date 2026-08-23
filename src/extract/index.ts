@@ -71,6 +71,20 @@ export function extract(parsed: ParsedFile, opts: ExtractOptions = {}): Capabili
   return out;
 }
 
+/** Every string literal and template chunk in the program, for leads like hosts named in strings. */
+export function stringLiterals(parsed: ParsedFile): string[] {
+  const out: string[] = [];
+  walk(parsed.program, ({ node }) => {
+    const n = node as AnyNode;
+    if (n.type === "Literal" && typeof n["value"] === "string") out.push(n["value"]);
+    else if (n.type === "TemplateElement") {
+      const cooked = (n["value"] as { cooked?: string } | undefined)?.cooked;
+      if (typeof cooked === "string") out.push(cooked);
+    }
+  });
+  return out;
+}
+
 /** Run the scope analysis and write its answers onto the identifier nodes for the recognizers to read. */
 function annotate(program: Node): void {
   const info = analyzeScopes(program);

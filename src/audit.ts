@@ -24,6 +24,8 @@ export interface FileAudit {
   unknownDestinations: number;
   /** The file reads the page URL: a switch such a path can be flipped with. */
   readsUrl: boolean;
+  /** Emscripten glue, whose code generation and wasm fetch are a known benign shape. */
+  emscripten: boolean;
 }
 
 export interface Audit {
@@ -57,27 +59,37 @@ export function isDynamicCodegen(u: CapabilityUse): boolean {
 const DOC_HOSTS =
   /(^|\.)(w3\.org|mozilla\.org|github\.com|githubusercontent\.com|example\.com|wikipedia\.org|stackoverflow\.com|ietf\.org|json-schema\.org|whatwg\.org|khronos\.org|ecma-international\.org|npmjs\.com)$/i;
 
-/** Hosts named in quoted URL literals in the text, minus documentation hosts. */
-export function literalHostsIn(text: string): string[] {
+/** Hosts at the start of URL-shaped string literals, minus documentation hosts. Comments are not strings. */
+export function literalHostsIn(strings: readonly string[]): string[] {
   const out = new Set<string>();
-  for (const m of text.matchAll(/["'`]https?:\/\/([a-z0-9.-]+\.[a-z]{2,})(?=[/"'`:?#\s]|$)/gi)) {
-    const h = m[1]!.toLowerCase();
-    if (!DOC_HOSTS.test(h)) out.add(h);
+  for (const s of strings) {
+    const m = /^\s*https?:\/\/([a-z0-9.-]+\.[a-z]{2,})(?=[/:?#\s]|$)/i.exec(s);
+    if (m && !DOC_HOSTS.test(m[1]!)) out.add(m[1]!.toLowerCase());
   }
   return [...out].sort();
 }
 
 const interesting = (t: string | null): t is string =>
-  t !== null && t !== SAME_ORIGIN && t !== "data:" && t !== "blob:" && t !== "*";
+  t !== null && t !== SAME_ORIGIN && t !== "data:" && t !== "blob:" && t !== "javascript:" && t !== "*";
+
+/** Emscripten output: its code generation is embind and its fetch is its own .wasm. Reported, ranked below the rest. */
+export const isEmscripten = (text: string): boolean => /emscripten/i.test(text) && /wasmBinary|WebAssembly/.test(text);
+
+export interface FileSource {
+  /** The file's text, for the reads-the-URL lead. */
+  text: string;
+  /** Its string literals, for the hosts-named-in-strings lead. */
+  strings: readonly string[];
+}
 
 /**
- * Audit uses grouped by file. `texts` supplies each file's source for the
- * literal-host and reads-the-URL leads; a file missing from it just loses
- * those two columns.
+ * Audit uses grouped by file. `sources` supplies each file's text and
+ * string literals for the two leads; a file missing from it just loses
+ * those columns.
  */
 export function audit(
   byFile: ReadonlyMap<string, readonly CapabilityUse[]>,
-  texts: ReadonlyMap<string, string>,
+  sources: ReadonlyMap<string, FileSource>,
 ): Audit {
   const capabilities = new Map<string, number>();
   const hosts = new Map<string, number>();
@@ -91,15 +103,16 @@ export function audit(
 
   for (const [file, fileUses] of byFile) {
     uses += fileUses.length;
-    const text = texts.get(file) ?? "";
+    const { text, strings } = sources.get(file) ?? { text: "", strings: [] };
     const fa: FileAudit = {
       file,
       dynamicCodegen: fileUses.filter(isDynamicCodegen),
       scriptInjection: fileUses.filter((u) => u.capability === "dom-escape.script"),
       hosts: [...new Set(fileUses.map((u) => u.target).filter(interesting))].sort(),
-      literalHosts: literalHostsIn(text),
+      literalHosts: literalHostsIn(strings),
       unknownDestinations: fileUses.filter((u) => u.capability.startsWith("network.") && u.target === null).length,
       readsUrl: /URLSearchParams|location\.search|location\.hash/.test(text),
+      emscripten: isEmscripten(text),
     };
     for (const u of fileUses) {
       capabilities.set(u.capability, (capabilities.get(u.capability) ?? 0) + 1);
@@ -114,6 +127,7 @@ export function audit(
     const reaches = fa.hosts.length > 0 || fa.literalHosts.length > 0 || fa.unknownDestinations > 0;
     if (remoteCode && reaches) remoteCodePaths.push(fa);
   }
+  remoteCodePaths.sort((x, y) => Number(x.emscripten) - Number(y.emscripten));
   const literalHosts = [...literal].filter((h) => !hosts.has(h)).sort();
   return {
     files: byFile.size,
@@ -141,7 +155,8 @@ export function formatAudit(a: Audit): string {
   lines.push("remote code paths (code generation or script injection meets a network reach in one file):");
   if (a.remoteCodePaths.length === 0) lines.push("  none");
   for (const f of a.remoteCodePaths) {
-    lines.push(`  ${f.file}${f.readsUrl ? "   [reads the page URL]" : ""}`);
+    const tags = [f.readsUrl ? "reads the page URL" : "", f.emscripten ? "Emscripten glue" : ""].filter(Boolean);
+    lines.push(`  ${f.file}${tags.length ? `   [${tags.join(", ")}]` : ""}`);
     for (const u of [...f.dynamicCodegen, ...f.scriptInjection]) lines.push(`    ${site(u)}`);
     const reach = [
       ...f.hosts,
@@ -211,6 +226,7 @@ export function auditJson(a: Audit): string {
         remoteCodePaths: a.remoteCodePaths.map((f) => ({
           file: f.file,
           readsUrl: f.readsUrl,
+          emscripten: f.emscripten,
           hosts: f.hosts,
           literalHosts: f.literalHosts,
           unknownDestinations: f.unknownDestinations,
