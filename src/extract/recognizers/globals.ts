@@ -7,6 +7,7 @@ import type { Node } from "../ast.js";
 import type { Confidence } from "../capability.js";
 import { leadingLiteral } from "../target.js";
 import { unwrap } from "../typescript.js";
+import { FOLDED } from "../annotations.js";
 
 type AnyNode = Node & Record<string, unknown>;
 
@@ -44,10 +45,7 @@ export function memberName(n: AnyNode): string | null {
   return lit !== null && lit.complete ? lit.text : null;
 }
 
-/** Annotation keys written onto identifier nodes by the scope analysis. */
-export const FOLDED = "$permitFolded";
-export const FREE = "$permitFree";
-export const AMBIGUOUS = "$permitAmbiguous";
+export { FOLDED, FREE, AMBIGUOUS } from "../annotations.js";
 
 /** True when the member name came from anything other than a plain literal or identifier. */
 export function isFoldedMember(n: AnyNode): boolean {

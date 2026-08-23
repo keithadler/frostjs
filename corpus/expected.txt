@@ -232,7 +232,7 @@ three@0.160.0/examples/jsm/libs/ecsy.module.js:1670:3 dom-escape.html certain in
 three@0.160.0/examples/jsm/libs/ecsy.module.js:1682:3 globals.window certain window.generateNewCode = () => { window.localStorage.clear(); remoteId = generateId(6); window.local
 three@0.160.0/examples/jsm/libs/ecsy.module.js:1683:5 storage.local certain window.localStorage.clear()
 three@0.160.0/examples/jsm/libs/ecsy.module.js:1685:5 storage.local certain window.localStorage.setItem("ecsyRemoteId", remoteId)
-three@0.160.0/examples/jsm/libs/ecsy.module.js:1686:5 navigation.location certain window.location.reload(false)
+three@0.160.0/examples/jsm/libs/ecsy.module.js:1686:5 navigation.location certain -> same-origin window.location.reload(false)
 three@0.160.0/examples/jsm/libs/ecsy.module.js:1689:26 storage.local certain window.localStorage.getItem("ecsyRemoteId")
 three@0.160.0/examples/jsm/libs/ecsy.module.js:1692:5 storage.local certain window.localStorage.setItem("ecsyRemoteId", remoteId)
 three@0.160.0/examples/jsm/libs/ecsy.module.js:1697:3 globals.window certain window.__ECSY_REMOTE_DEVTOOLS_INJECTED = true
@@ -259,7 +259,7 @@ three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:8366:23 identity.device 
 three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:8366:62 identity.device certain navigator.userAgent
 three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:935:25 network.xhr certain new XMLHttpRequest()
 three@0.160.0/examples/jsm/libs/meshopt_decoder.module.js:80:12 worker.dedicated certain new Worker(url)
-three@0.160.0/examples/jsm/libs/mikktspace.module.js:120:22 network.fetch certain fetch(wasmDataURI) .then((res) => res.arrayBuffer()) .then((buffer) => WebAssembly.instantiate(buffe
+three@0.160.0/examples/jsm/libs/mikktspace.module.js:120:22 network.fetch certain -> data: fetch(wasmDataURI) .then((res) => res.arrayBuffer()) .then((buffer) => WebAssembly.instantiate(buffe
 three@0.160.0/examples/jsm/libs/motion-controllers.module.js:48:26 network.fetch certain fetch(path)
 three@0.160.0/examples/jsm/libs/opentype.module.js:13650:5 globals.window certain window.URL = window.URL || window.webkitURL
 three@0.160.0/examples/jsm/libs/opentype.module.js:14136:19 network.xhr certain new XMLHttpRequest()
@@ -300,7 +300,7 @@ three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.module.js:4878:14 codegen.func
 three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.module.js:7318:15 codegen.function certain new Function("requireRegisteredType", "Module", "valueToHandle", "getMemory" , functionBody)
 three@0.160.0/examples/jsm/libs/utif.module.js:1476:13 network.xhr certain new XMLHttpRequest()
 three@0.160.0/examples/jsm/libs/zstddec.module.js:1:162 network.fetch certain fetch
-three@0.160.0/examples/jsm/libs/zstddec.module.js:1:168 network.fetch certain fetch("data:application/wasm;base64,"+C).then(A=>A.arrayBuffer()).then(A=>WebAssembly.instantiate(A,
+three@0.160.0/examples/jsm/libs/zstddec.module.js:1:168 network.fetch certain -> data: fetch("data:application/wasm;base64,"+C).then(A=>A.arrayBuffer()).then(A=>WebAssembly.instantiate(A,
 three@0.160.0/examples/jsm/loaders/3DMLoader.js:904:20 worker.dedicated certain new Worker( this.workerSourceURL )
 three@0.160.0/examples/jsm/loaders/DRACOLoader.js:321:20 worker.dedicated certain new Worker( this.workerSourceURL )
 three@0.160.0/examples/jsm/loaders/GLTFLoader.js:2535:54 identity.device certain navigator.userAgent
@@ -309,7 +309,7 @@ three@0.160.0/examples/jsm/loaders/GLTFLoader.js:2537:33 identity.device certain
 three@0.160.0/examples/jsm/loaders/KTX2Loader.js:199:22 worker.dedicated certain new Worker( this.workerSourceURL )
 three@0.160.0/examples/jsm/misc/ProgressiveLightMap.js:36:54 identity.device certain navigator.userAgent
 three@0.160.0/examples/jsm/nodes/code/ScriptableNode.js:408:18 codegen.function certain new Function( ...parametersProps, code )
-three@0.160.0/examples/jsm/physics/RapierPhysics.js:41:18 network.import certain import( RAPIER_PATH )
+three@0.160.0/examples/jsm/physics/RapierPhysics.js:41:18 network.import certain -> cdn.skypack.dev import( RAPIER_PATH )
 three@0.160.0/examples/jsm/webxr/ARButton.js:199:5 dom-escape.html certain message.innerHTML = 'WEBXR NEEDS HTTPS'
 three@0.160.0/examples/jsm/webxr/ARButton.js:204:5 dom-escape.html certain message.innerHTML = 'WEBXR NOT AVAILABLE'
 three@0.160.0/examples/jsm/webxr/VRButton.js:171:5 dom-escape.html certain message.innerHTML = 'WEBXR NEEDS HTTPS'

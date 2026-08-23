@@ -108,6 +108,18 @@ describe("constant folding", () => {
     expect(uses('function f() { const k = "caches"; return window[k]; }')[0]?.capability).toBe("storage.cache");
   });
 
+  it("a const URL resolves as a target", () => {
+    expect(uses('const BASE = "https://api.example.com/v1/"; fetch(BASE + "items")')[0]?.target).toBe(
+      "api.example.com",
+    );
+    expect(uses('const P = "https://cdn.skypack.dev/x"; import(P)')[0]).toMatchObject({
+      capability: "network.import",
+      target: "cdn.skypack.dev",
+    });
+    expect(uses('let P = "https://cdn.skypack.dev/x"; import(P)')[0]?.target).toBe(null);
+    expect(uses('const P = "./local.js"; import(P)')).toEqual([]);
+  });
+
   it("a string-literal computed member stays certain", () => {
     expect(uses('window["localStorage"]')[0]?.confidence).toBe("certain");
   });

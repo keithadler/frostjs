@@ -10,6 +10,7 @@
  * their scheme.
  */
 import type { Node } from "./ast.js";
+import { FOLDED } from "./annotations.js";
 
 type AnyNode = Node & Record<string, unknown>;
 
@@ -18,6 +19,11 @@ export function leadingLiteral(node: AnyNode): { text: string; complete: boolean
   switch (node.type) {
     case "Literal":
       return typeof node["value"] === "string" ? { text: node["value"], complete: true } : null;
+    case "Identifier": {
+      // A const bound to a string literal, folded by the scope analysis.
+      const v = node[FOLDED];
+      return typeof v === "string" ? { text: v, complete: true } : null;
+    }
     case "TemplateLiteral": {
       const quasis = node["quasis"] as AnyNode[];
       const exprs = node["expressions"] as AnyNode[];

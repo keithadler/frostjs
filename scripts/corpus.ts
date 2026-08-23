@@ -71,8 +71,9 @@ for (const pkg of manifest.packages) {
       }
       for (const u of extract(parsed, { origin: isHtml(file) ? "inline-html" : "first-party" })) {
         const expr = u.expression.replace(/\s+/g, " ").slice(0, 100);
+        const target = u.target !== null ? ` -> ${u.target}` : "";
         lines.push(
-          `${pkg.name}@${pkg.version}/${path.relative(dir, file)}:${u.line}:${u.column} ${u.capability} ${u.confidence} ${expr}`,
+          `${pkg.name}@${pkg.version}/${path.relative(dir, file)}:${u.line}:${u.column} ${u.capability} ${u.confidence}${target} ${expr}`,
         );
       }
     }
