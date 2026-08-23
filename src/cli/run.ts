@@ -9,6 +9,7 @@ import fs from "node:fs";
 import { DENY_ALL, decide, compile, parsePolicy, PolicyError, type Policy } from "../policy/index.js";
 import { commonAncestor, findPolicyFile } from "../policy/config.js";
 import { text } from "../report/text.js";
+import { baselineKey, baselineKeys, readBaseline, writeBaseline } from "../baseline.js";
 
 export interface Io {
   stdout: (s: string) => void;
@@ -43,6 +44,10 @@ export function run(argv: readonly string[], io: Io): number {
   if (args.help) {
     io.stdout(HELP);
     return 0;
+  }
+  if (args.updateBaseline && args.baseline === null) {
+    io.stderr("permit: --update-baseline needs --baseline <file>\n");
+    return 2;
   }
   if (args.paths.length === 0) {
     io.stderr("permit: no paths given\n");
@@ -109,12 +114,47 @@ export function run(argv: readonly string[], io: Io): number {
   }
 
   // Report paths relative to cwd; scope policy globs relative to the policy file.
-  const decisions = decide(uses, policy, {
+  let decisions = decide(uses, policy, {
     scopePath: (u) => path.relative(policyDir, path.resolve(cwd, u.file)),
     ...(args.minConfidence ? { minConfidence: args.minConfidence } : {}),
   });
+
+  // Baseline: denials already on record are reported as baselined, not denied.
+  let baselineNote = "";
+  if (args.baseline !== null) {
+    const baselineFile = path.resolve(cwd, args.baseline);
+    const baselineDir = path.dirname(baselineFile);
+    const relToBaseline = (u: CapabilityUse): string =>
+      path.relative(baselineDir, path.resolve(cwd, u.file)).split(path.sep).join("/");
+    let existing;
+    try {
+      existing = readBaseline(baselineFile);
+    } catch (e) {
+      io.stderr(`permit: ${(e as Error).message}\n`);
+      return 2;
+    }
+    if (args.updateBaseline) {
+      const entries = [
+        ...existing.entries,
+        ...decisions
+          .filter((d) => d.verdict === "denied")
+          .map((d) => ({ file: relToBaseline(d.use), capability: d.use.capability, expression: d.use.expression })),
+      ];
+      const n = writeBaseline(baselineFile, entries);
+      baselineNote = `wrote ${n} ${n === 1 ? "entry" : "entries"} to ${path.relative(cwd, baselineFile) || baselineFile}\n`;
+    } else {
+      const known = baselineKeys(existing);
+      decisions = decisions.map((d) =>
+        d.verdict === "denied" && known.has(baselineKey(relToBaseline(d.use), d.use.capability, d.use.expression))
+          ? { ...d, verdict: "baselined" }
+          : d,
+      );
+    }
+  }
+
   io.stdout(text(decisions, { files: files.length }, { warnings: policy.warnings }));
+  if (baselineNote) io.stdout(baselineNote);
 
   const denied = decisions.some((d) => d.verdict === "denied");
-  return denied && !args.exitZero ? 1 : 0;
+  return denied && !args.exitZero && !args.updateBaseline ? 1 : 0;
 }

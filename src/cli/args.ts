@@ -6,6 +6,8 @@ export interface ParsedArgs {
   policy: string | null;
   today: string | null;
   minConfidence: "certain" | "probable" | "possible" | null;
+  baseline: string | null;
+  updateBaseline: boolean;
   paths: string[];
 }
 
@@ -20,6 +22,8 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
     policy: null,
     today: null,
     minConfidence: null,
+    baseline: null,
+    updateBaseline: false,
     paths: [],
   };
   let positionalOnly = false;
@@ -66,6 +70,12 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
         out.minConfidence = v;
         break;
       }
+      case "--baseline":
+        out.baseline = takeValue();
+        break;
+      case "--update-baseline":
+        out.updateBaseline = true;
+        break;
       case "--today": {
         const v = takeValue();
         if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) throw new UsageError("--today needs a date like 2026-12-01");
@@ -98,6 +108,9 @@ options:
   --min-confidence <c> lowest confidence that can fail the build:
                        certain, probable (default) or possible; uses below
                        it are listed as unknown
+  --baseline <file>    denials recorded in this file do not fail the build
+  --update-baseline    write every current denial into the baseline file
+                       and exit 0; use once to adopt permit on a codebase
 
 policy:
   permit.policy is searched for in the directory shared by all the given

@@ -98,6 +98,8 @@ permit --exit-zero       report findings but always exit 0
 permit --policy <file>   use this policy instead of searching for permit.policy
 permit --today <date>    treat YYYY-MM-DD as today when checking expiry
 permit --min-confidence <c>  lowest confidence that fails: certain, probable (default), possible
+permit --baseline <file>     denials recorded in this file do not fail the build
+permit --update-baseline     write every current denial into the baseline and exit 0
 permit --version         print the version and exit
 permit --help            show usage
 ```
@@ -110,6 +112,18 @@ Exit codes: `0` clean, `1` policy violations, `2` usage or input error
 
 Uses with `possible` confidence are listed under "unknown" and never fail the
 build; `certain` and `probable` uses do.
+
+## Adopting permit on an existing codebase
+
+```bash
+permit --baseline .permit-baseline.json --update-baseline src
+```
+
+That records every current denial, keyed on file, capability and expression
+text (never line numbers), and exits 0. From then on
+`permit --baseline .permit-baseline.json src` fails only on *new* uses;
+existing ones are counted as "baselined". Commit the file; shrink it as the
+debt is paid down. Paths inside it are relative to the file's directory.
 
 ## Suppressing a single use
 
