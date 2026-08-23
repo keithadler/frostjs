@@ -7,6 +7,12 @@ change the policy grammar or the JSON schema; the changelog will say so.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-23
+
+Everything below shipped after 0.1.0. Minor bump: new capability family and
+policy grammar (`forbid tainted flows`), no breaking changes to existing
+policies or the JSON schema.
+
 ### Added
 
 - `frostjs init`: a starter policy granting what the code does today.
