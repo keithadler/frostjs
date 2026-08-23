@@ -246,7 +246,7 @@ Ported directly from `exact`, because it is already proven.
 **Phase A - walking skeleton**
 
 1. Repo, packaging, CI, licence, `--version`. **DONE 2026-08-23.**
-2. Discovery and parsing of `.js`/`.mjs` only.
+2. Discovery and parsing of `.js`/`.mjs` only. **DONE 2026-08-23.**
 3. Extract one capability family end to end: `storage`.
 4. Hardcoded deny-all policy, text output, non-zero exit.
    *Acceptance:* running it on a file containing `localStorage.setItem("a", 1)`

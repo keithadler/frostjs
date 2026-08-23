@@ -1,4 +1,6 @@
 node_modules/
+!test/fixtures/**/node_modules/
 dist/
+!test/fixtures/**/dist/
 coverage/
 .DS_Store

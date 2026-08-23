@@ -12,9 +12,17 @@ Pre-alpha. Phase A (walking skeleton) in progress. See
 ## Usage
 
 ```
-permit --version    print the version and exit
-permit --help       show usage
+permit <paths...>        discover and analyze .js/.mjs files under paths
+permit --exclude <name>  skip directories with this name (repeatable)
+permit --version         print the version and exit
+permit --help            show usage
 ```
+
+`node_modules`, `dist`, `build`, `coverage` and `.git` are always skipped.
+A path that names a file directly is always analyzed.
+
+Exit codes: `0` clean, `1` policy violations, `2` usage or input error
+(bad flag, missing path, syntax error).
 
 ## What this is not
 
