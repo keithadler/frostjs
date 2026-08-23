@@ -7,6 +7,11 @@ change the policy grammar or the JSON schema; the changelog will say so.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-08-23
+
+Additive: new policy grammar (`extends`) and a new flag (`--unused`); no
+breaking changes to existing policies or the JSON/SARIF schema.
+
 ### Added
 
 - `frostjs check --unused` lists policy grants that matched nothing on a
