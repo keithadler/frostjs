@@ -34,6 +34,8 @@ export interface ParsedPolicy {
   file: string;
   name: string;
   rules: Rule[];
+  /** Globs, relative to the policy directory, of third-party files checked by fingerprint rather than analyzed. */
+  vendored: string[];
 }
 
 /**
@@ -67,6 +69,7 @@ type Fail = (at: number, detail: string, tryInstead?: string) => never;
 
 export function parsePolicy(text: string, file: string): ParsedPolicy {
   const rules: Rule[] = [];
+  const vendored: string[] = [];
   let name: string | null = null;
   const lines = text.split(/\r?\n/);
   for (let i = 0; i < lines.length; i++) {
@@ -91,9 +94,27 @@ export function parsePolicy(text: string, file: string): ParsedPolicy {
       name = nameTok.value;
       continue;
     }
+    if (first.kind === "word" && first.value === "vendored") {
+      let pos = 1;
+      if (tokens[pos]?.kind !== "string") {
+        fail(tokens[pos]?.at ?? end, "'vendored' needs one or more quoted paths", 'vendored "vendor/**"');
+      }
+      for (;;) {
+        const t = tokens[pos];
+        if (t?.kind !== "string")
+          fail(t?.at ?? end, "expected another quoted path after the comma", 'vendored "vendor/**"');
+        if (t.value === "") fail(t.at, "empty path; name a file or a glob", 'vendored "vendor/**"');
+        vendored.push(t.value);
+        pos++;
+        if (tokens[pos]?.kind === "comma") pos++;
+        else break;
+      }
+      if (pos < tokens.length) fail(tokens[pos]!.at, `unexpected '${tokens[pos]!.raw}' after the paths`);
+      continue;
+    }
     rules.push(parseRule(tokens, trimmed, hint, n, end, fail));
   }
-  return { file, name: name ?? file, rules };
+  return { file, name: name ?? file, rules, vendored };
 }
 
 function parseRule(tokens: Token[], text: string, hint: string, line: number, end: number, fail: Fail): Rule {

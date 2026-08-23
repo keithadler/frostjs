@@ -363,7 +363,9 @@ Ported directly from `exact`, because it is already proven.
 
 **Phase F - dependencies**
 
-26. Fingerprint registry format and `vendor add`.
+26. Fingerprint registry format and `vendor add`. **DONE 2026-08-23.**
+    `vendored "<glob>"` policy line; `.permit/registry.json` beside the
+    policy keyed on `sha384-` integrity; `permit vendor add`.
 27. `registry sync` against the lockfile.
 28. SRI attribute emission.
 

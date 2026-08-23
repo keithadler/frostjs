@@ -19,6 +19,7 @@ export function denialText(d: Decision): string {
   const hint = rule.hint ? `: ${rule.hint}` : "";
   if (reason === "expired") return `denied, grant expired ${rule.until}: "${where}${hint}`;
   if (reason === "unknown destination") return `denied, destination cannot be read and "${where} names hosts${hint}`;
+  if (reason === "unregistered") return "denied, vendored file is not in the registry";
   return `denied by "${where}${hint}`;
 }
 
@@ -39,6 +40,12 @@ export function text(decisions: readonly Decision[], totals: Totals, opts: TextO
 
   for (const d of denied) {
     const { use } = d;
+    if (d.reason === "unregistered") {
+      lines.push(
+        `${use.file}:${use.line}:${use.column}: vendored file is not in the registry; review it with: permit vendor add ${use.file}`,
+      );
+      continue;
+    }
     lines.push(`${use.file}:${use.line}:${use.column}: ${what(d)} ${denialText(d)}: ${use.expression}`);
   }
   if (unknown.length > 0) {

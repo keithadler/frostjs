@@ -41,6 +41,7 @@ printed whenever that rule refuses something.
 
 ```
 policy "<name>"                                    optional, once
+vendored "<glob>", ...                             third-party files, checked by fingerprint
 may use <capability> [in "<glob>", ...] [until YYYY-MM-DD]
 may reach "<host>", ... [in "<glob>", ...] [until YYYY-MM-DD]
 forbid [using] <capability> [in "<glob>", ...]
@@ -95,6 +96,7 @@ all, every capability is denied and a note says so.
 permit <paths...>        discover and analyze .js/.mjs files under paths
 permit csp               print the Content-Security-Policy header the policy implies
 permit summary           print a plain-English reading of the policy
+permit vendor add <files>  fingerprint third-party files and record their capabilities
 permit --exclude <name>  skip directories with this name (repeatable)
 permit --exit-zero       report findings but always exit 0
 permit --policy <file>   use this policy instead of searching for permit.policy
@@ -142,6 +144,28 @@ repos:
     hooks:
       - id: permit
 ```
+
+## Third-party code
+
+Dependencies are not analyzed line by line; that is a year-long project
+that ends in noise. Instead the policy names which files are vendored:
+
+```
+vendored "vendor/**", "static/lib/*.min.js"
+```
+
+A vendored file is hashed (SHA-384, the same value SRI uses) and looked up
+in `.permit/registry.json` beside the policy. A known hash contributes the
+capability set somebody recorded for it, checked against the policy like
+any first-party use. An unknown hash fails the build:
+
+```
+vendor/widget.min.js:1:1: vendored file is not in the registry; review it with: permit vendor add vendor/widget.min.js
+```
+
+`permit vendor add` analyzes the file once, prints what it found so a
+person can look at it, and records the entry. A patch release changes the
+hash, so the review happens again; that is the point.
 
 ## One policy, three artifacts
 

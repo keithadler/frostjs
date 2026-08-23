@@ -1,4 +1,4 @@
-export type Command = "check" | "csp" | "summary";
+export type Command = "check" | "csp" | "summary" | "vendor-add";
 
 export interface ParsedArgs {
   command: Command;
@@ -45,6 +45,13 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
       first = false;
       if (arg === "csp" || arg === "summary") {
         out.command = arg;
+        continue;
+      }
+      if (arg === "vendor") {
+        const sub = argv[i + 1];
+        if (sub !== "add") throw new UsageError(`permit vendor needs a subcommand: add${sub ? ` (got '${sub}')` : ""}`);
+        out.command = "vendor-add";
+        i++;
         continue;
       }
     }
@@ -124,6 +131,7 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
 export const HELP = `usage: permit [options] <paths...>
        permit csp [--policy <file>]
        permit summary [--policy <file>]
+       permit vendor add <files...>
 
 Deny-by-default capability linter for JavaScript.
 
@@ -133,6 +141,9 @@ commands:
                        implies, and nothing else, for the deploy step
   permit summary       print a plain-English reading of the policy for a
                        reviewer who does not write JavaScript
+  permit vendor add    analyze third-party files once, print the capability
+                       set found, and record it with the file's SHA-384 in
+                       .permit/registry.json beside the policy
 
 options:
   -h, --help           show this help and exit

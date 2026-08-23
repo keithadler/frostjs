@@ -2,7 +2,7 @@ import type { CapabilityUse } from "../extract/capability.js";
 import { matchesGlob } from "./glob.js";
 import type { ParsedPolicy, Rule } from "./parse.js";
 
-export type Reason = "granted" | "forbidden" | "expired" | "not granted" | "unknown destination";
+export type Reason = "granted" | "forbidden" | "expired" | "not granted" | "unknown destination" | "unregistered";
 
 export interface Evaluation {
   verdict: "allowed" | "denied";
@@ -15,6 +15,8 @@ export interface Policy {
   name: string;
   file: string;
   rules: readonly Rule[];
+  /** Globs of vendored files, relative to the policy directory. */
+  vendored: readonly string[];
   /** Grants that expire within the warning window, as printable lines. */
   warnings: readonly string[];
   /** `use.file` must be relative to the policy file's directory. */
@@ -46,6 +48,7 @@ export function compile(parsed: ParsedPolicy, opts: CompileOptions): Policy {
     name: parsed.name,
     file: parsed.file,
     rules: parsed.rules,
+    vendored: parsed.vendored,
     warnings,
     evaluate(use) {
       const inScope = (r: Rule): boolean =>
