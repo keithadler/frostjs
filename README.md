@@ -236,8 +236,8 @@ chain, so `innerHTML = DOMPurify.sanitize(x)` is not flagged while
   `URLSearchParams` reads, and a `window` `message` handler's `event.data`.
 - **Sinks**: `eval`, `Function`, `innerHTML` / `outerHTML` / `srcdoc`,
   `insertAdjacentHTML`, `document.write`, `importScripts`, `import()`,
-  `setAttribute("on*"/"srcdoc", ...)`, and `location` / `window.open`
-  redirects.
+  `setAttribute("on*"/"srcdoc", ...)`, React `dangerouslySetInnerHTML`, and
+  `location` / `window.open` redirects.
 - **One hop across functions**: a tainted argument passed to a local
   function whose parameter reaches a sink is flagged (`setHtml(x) { el.innerHTML = x }`
   called with `location.hash`), reported `... (via setHtml())`. A parameter

@@ -215,6 +215,18 @@ function checkSinks(n: AnyNode, scope: Scope, add: (source: string, sink: string
       }
     }
   }
+  // React: dangerouslySetInnerHTML={{ __html: tainted }}. The __html key is
+  // React's convention and nothing else uses it, so a tainted value there is
+  // unambiguously that sink.
+  if (n.type === "Property" && n["computed"] !== true) {
+    const key = n["key"] as AnyNode;
+    const name =
+      key.type === "Identifier" ? (key["name"] as string) : key.type === "Literal" ? String(key["value"]) : null;
+    if (name === "__html") {
+      const s = taintSource(n["value"] as AnyNode, scope);
+      if (s) add(s, "dangerouslySetInnerHTML", n);
+    }
+  }
   if (n.type === "CallExpression" || n.type === "NewExpression" || n.type === "ImportExpression") {
     const args = (n["arguments"] as AnyNode[] | undefined) ?? [];
     const src = n.type === "ImportExpression" ? n["source"] : undefined;

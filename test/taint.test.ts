@@ -201,3 +201,24 @@ describe("policy forbid tainted flows turns the gate on without --taint", () => 
     expect(cliIn(dir, "summary").stdout).toContain("Untrusted input reaching a dangerous sink");
   });
 });
+
+describe("taint: React dangerouslySetInnerHTML", () => {
+  it("a tainted __html value is a sink", () => {
+    expect(flows("const el = <div dangerouslySetInnerHTML={{ __html: location.hash }} />;")).toEqual([
+      "location.hash->dangerouslySetInnerHTML",
+    ]);
+    expect(flows("const h = document.cookie; render(<x dangerouslySetInnerHTML={{ __html: h }} />);")).toEqual([
+      "document.cookie->dangerouslySetInnerHTML",
+    ]);
+  });
+
+  it("quiet when sanitized, constant, or from a non-source", () => {
+    expect(flows("<div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(location.hash) }} />")).toEqual([]);
+    expect(flows('<div dangerouslySetInnerHTML={{ __html: "<b>ok</b>" }} />')).toEqual([]);
+    expect(flows("<div dangerouslySetInnerHTML={{ __html: post.body }} />")).toEqual([]);
+  });
+
+  it("a plain object with a __html key from untrusted input is caught even outside JSX", () => {
+    expect(flows("const o = { __html: location.search };")).toEqual(["location.search->dangerouslySetInnerHTML"]);
+  });
+});

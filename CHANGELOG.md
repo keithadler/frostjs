@@ -11,6 +11,8 @@ change the policy grammar or the JSON schema; the changelog will say so.
 
 - `frostjs explain <capability>` explains one code, family or phrase: what
   triggers it and the policy line to allow it.
+- Taint sink: React `dangerouslySetInnerHTML={{ __html: tainted }}`. The
+  `__html` key is React-specific, so a tainted value there is unambiguous.
 
 ## [0.4.0] - 2026-08-23
 
