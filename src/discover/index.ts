@@ -2,7 +2,23 @@ import fs from "node:fs";
 import path from "node:path";
 
 /** Extensions discovered by default. */
-export const EXTENSIONS: ReadonlySet<string> = new Set([".js", ".mjs", ".cjs", ".jsx", ".ts", ".tsx", ".mts", ".cts"]);
+export const EXTENSIONS: ReadonlySet<string> = new Set([
+  ".js",
+  ".mjs",
+  ".cjs",
+  ".jsx",
+  ".ts",
+  ".tsx",
+  ".mts",
+  ".cts",
+  ".html",
+  ".htm",
+]);
+
+export function isHtml(name: string): boolean {
+  const ext = path.extname(name).toLowerCase();
+  return ext === ".html" || ext === ".htm";
+}
 
 /** Declaration files contain no code and describe globals the code may use. */
 const DECLARATION = /\.d\.(ts|mts|cts)$/;

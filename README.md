@@ -93,7 +93,7 @@ all, every capability is denied and a note says so.
 ## Usage
 
 ```
-permit <paths...>        discover and analyze .js/.mjs/.cjs/.jsx/.ts/.tsx/.mts/.cts under paths
+permit <paths...>        discover and analyze .js/.mjs/.cjs/.jsx/.ts/.tsx/.mts/.cts and inline <script> in .html under paths
 permit csp               print the Content-Security-Policy header the policy implies
 permit summary           print a plain-English reading of the policy
 permit vendor add <files>  fingerprint third-party files and record their capabilities
@@ -123,6 +123,13 @@ describe, and `as` / `!` / `satisfies` are looked through. In JSX,
 `dangerouslySetInnerHTML={...}` and `srcdoc={...}` are html injection and
 intrinsic `<script>` / `<iframe>` elements count like `createElement`;
 component names and ordinary attributes are quiet.
+
+Inline `<script>` blocks in `.html` and `.htm` files are analyzed in place:
+positions refer to the HTML file, `type="module"` blocks parse as modules,
+and blocks with a `src` or a non-JavaScript `type` (JSON, import maps,
+templates) are data, not code. Script elements are found with a regular
+expression, which is right for markup people write and wrong only for
+markup written to confuse it, which the threat model already excludes.
 
 Exit codes: `0` clean, `1` policy violations, `2` usage or input error
 (bad flag, missing path, syntax error).

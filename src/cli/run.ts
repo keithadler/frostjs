@@ -2,9 +2,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { HELP, parseArgs, UsageError, type ParsedArgs } from "./args.js";
 import { VERSION } from "../version.js";
-import { discover } from "../discover/index.js";
+import { discover, isHtml } from "../discover/index.js";
 import { parseFile, type ParseError } from "../extract/ast.js";
 import { extract } from "../extract/index.js";
+import { parseHtml } from "../extract/html.js";
 import type { CapabilityUse } from "../extract/capability.js";
 import { DENY_ALL, decide, compile, parsePolicy, PolicyError, type Policy } from "../policy/index.js";
 import { commonAncestor, findPolicyFile } from "../policy/config.js";
@@ -181,6 +182,13 @@ function runCheck(args: ParsedArgs, io: Io): number {
     const relToPolicy = path.relative(policyDir, file);
     if (registry !== null && policy.vendored.some((g) => matchesGlob(g, relToPolicy))) {
       uses.push(...vendoredUses(file, shown, registry));
+      continue;
+    }
+    if (isHtml(file)) {
+      for (const block of parseHtml(file, fs.readFileSync(file, "utf8"))) {
+        if (block.errors.length > 0) syntaxErrors.push(...block.errors.map((e) => ({ ...e, file: shown })));
+        else uses.push(...extract(block, { origin: "inline-html" }).map((u) => ({ ...u, file: shown })));
+      }
       continue;
     }
     const parsed = parseFile(file);

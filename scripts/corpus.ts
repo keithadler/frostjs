@@ -11,9 +11,10 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { discover } from "../src/discover/index.js";
-import { parseFile } from "../src/extract/ast.js";
+import { discover, isHtml } from "../src/discover/index.js";
+import { parseFile, type ParsedFile } from "../src/extract/ast.js";
 import { extract } from "../src/extract/index.js";
+import { parseHtml } from "../src/extract/html.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..");
@@ -60,18 +61,20 @@ const t0 = performance.now();
 for (const pkg of manifest.packages) {
   const dir = ensure(pkg);
   for (const file of discover([dir])) {
-    const parsed = parseFile(file);
     files++;
-    bytes += parsed.source.length;
-    if (parsed.errors.length > 0) {
-      lines.push(`${pkg.name}@${pkg.version}/${path.relative(dir, file)}: PARSE ERROR ${parsed.errors[0]!.message}`);
-      continue;
-    }
-    for (const u of extract(parsed)) {
-      const expr = u.expression.replace(/\s+/g, " ").slice(0, 100);
-      lines.push(
-        `${pkg.name}@${pkg.version}/${path.relative(dir, file)}:${u.line}:${u.column} ${u.capability} ${u.confidence} ${expr}`,
-      );
+    const units: ParsedFile[] = isHtml(file) ? parseHtml(file, fs.readFileSync(file, "utf8")) : [parseFile(file)];
+    bytes += units[0]?.source.length ?? 0;
+    for (const parsed of units) {
+      if (parsed.errors.length > 0) {
+        lines.push(`${pkg.name}@${pkg.version}/${path.relative(dir, file)}: PARSE ERROR ${parsed.errors[0]!.message}`);
+        continue;
+      }
+      for (const u of extract(parsed, { origin: isHtml(file) ? "inline-html" : "first-party" })) {
+        const expr = u.expression.replace(/\s+/g, " ").slice(0, 100);
+        lines.push(
+          `${pkg.name}@${pkg.version}/${path.relative(dir, file)}:${u.line}:${u.column} ${u.capability} ${u.confidence} ${expr}`,
+        );
+      }
     }
   }
 }

@@ -381,7 +381,9 @@ Ported directly from `exact`, because it is already proven.
     `import type` skipped; `as`/`!`/`satisfies` unwrapped; parameter
     properties, enums and namespaces bind; JSX `dangerouslySetInnerHTML`,
     `srcdoc`, `<script>`, `<iframe>` recognized; `.d.ts` skipped.
-30. Inline `<script>` in HTML.
+30. Inline `<script>` in HTML. **DONE 2026-08-23.** Blocks parsed with the
+    rest of the file masked to whitespace so positions are exact; origin
+    `inline-html`.
 31. ESLint plugin.
 
 **Phase H - the showpiece**
