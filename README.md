@@ -61,7 +61,7 @@ forbid everything else                             optional, readability only
 | `the network` | `network` (any destination) |
 | `code generation`, `eval` | `codegen` |
 | `html injection` | `dom-escape` |
-| `identity`, `fingerprinting` | `identity` (Phase C) |
+| `identity`, `fingerprinting` | `identity` |
 | `navigation` | `navigation` (Phase C) |
 | `globals` | `globals` (Phase C) |
 | `workers` | `worker` (Phase C) |
@@ -132,12 +132,23 @@ build; `certain` and `probable` uses do.
 | `dom-escape.html` | assignment to `innerHTML` / `outerHTML` / `srcdoc`, `insertAdjacentHTML`, `createContextualFragment` |
 | `dom-escape.script` | `document.createElement("script")` |
 | `dom-escape.iframe` | `document.createElement("iframe")` |
+| `identity.device` | `navigator.userAgent`, `platform`, `vendor`, `plugins`, `hardwareConcurrency`, `deviceMemory`... |
+| `identity.geolocation` | `navigator.geolocation` |
+| `identity.media` | `navigator.mediaDevices`, `getUserMedia` |
+| `identity.clipboard` | `navigator.clipboard`, `document.execCommand("copy" / "paste")` |
+| `identity.credentials` | `navigator.credentials` |
+| `identity.permissions` | `navigator.permissions` |
 
 Each is recognized bare, via `window` / `globalThis` / `self`, and via a
 string-literal computed member (`window["localStorage"]`). Uses via `self`
 are `probable` rather than `certain`, since `self` is often a local alias for
 `this`. If a file declares a variable with the same name as the global, the
 use is downgraded to `possible` until proper scope analysis lands.
+
+Canvas and audio fingerprinting are deliberately **not** recognized: every
+charting and 3D library draws to canvases, and no static signature separates
+that from fingerprinting without false positives. CSP and the network family
+are the backstop for where such a fingerprint would be sent.
 
 Network uses carry a **target** when it can be fixed statically. Frost's
 rule applies: a literal that closes the authority fixes the host, and nothing

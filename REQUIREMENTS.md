@@ -314,8 +314,13 @@ Ported directly from `exact`, because it is already proven.
     on any object (reads are not injection), insertAdjacentHTML,
     createContextualFragment, createElement("script"|"iframe"). Corpus
     159 -> 220, all verified.
-13-16. One step per remaining capability family from section 7 (identity,
-   navigation, globals, worker), each with tests and a corpus check that the
+13. `identity`. **DONE 2026-08-23.** navigator members for device,
+    geolocation, media, clipboard, credentials, permissions; execCommand
+    copy/paste; destructuring from navigator. Canvas/audio fingerprinting
+    signatures deliberately omitted as unseparable from charting and 3D
+    rendering. Corpus 220 -> 246, all verified.
+14-16. One step per remaining capability family from section 7 (navigation,
+   globals, worker), each with tests and a corpus check that the
    false-positive count does not move.
 
 **Phase D - noise control**

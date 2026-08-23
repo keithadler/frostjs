@@ -13,6 +13,9 @@ lodash@4.17.21/lodash.min.js:22:568 codegen.function certain Function("return th
 lodash@4.17.21/template.js:259:12 codegen.function certain Function(importsKeys, sourceURL + 'return ' + source) .apply(undefined, importsValues)
 react-dom@18.3.1/cjs/react-dom.development.js:2435:7 dom-escape.html certain reusableSVGContainer.innerHTML = '<svg>' + html.valueOf().toString() + '</svg>'
 react-dom@18.3.1/cjs/react-dom.development.js:2450:3 dom-escape.html certain node.innerHTML = html
+react-dom@18.3.1/cjs/react-dom.development.js:29890:101 identity.device certain navigator.userAgent.indexOf('Firefox')
+react-dom@18.3.1/cjs/react-dom.development.js:29890:55 identity.device certain navigator.userAgent.indexOf('Edge')
+react-dom@18.3.1/cjs/react-dom.development.js:29890:9 identity.device certain navigator.userAgent.indexOf('Chrome')
 react-dom@18.3.1/cjs/react-dom.development.js:9604:5 dom-escape.html certain testElement.innerHTML = html
 react-dom@18.3.1/cjs/react-dom.development.js:9770:7 dom-escape.html certain div.innerHTML = '<script><' + '/script>'
 react-dom@18.3.1/cjs/react-dom.production.min.js:227:459 dom-escape.html certain a.innerHTML="<script>\x3c/script>"
@@ -23,6 +26,9 @@ react-dom@18.3.1/cjs/react-dom.profiling.min.js:56:250 dom-escape.html certain a
 react-dom@18.3.1/cjs/react-dom.profiling.min.js:56:306 dom-escape.html certain mb.innerHTML="<svg>"+b.valueOf().toString()+"</svg>"
 react-dom@18.3.1/umd/react-dom.development.js:2422:9 dom-escape.html certain reusableSVGContainer.innerHTML = '<svg>' + html.valueOf().toString() + '</svg>'
 react-dom@18.3.1/umd/react-dom.development.js:2437:5 dom-escape.html certain node.innerHTML = html
+react-dom@18.3.1/umd/react-dom.development.js:29900:103 identity.device certain navigator.userAgent.indexOf('Firefox')
+react-dom@18.3.1/umd/react-dom.development.js:29900:11 identity.device certain navigator.userAgent.indexOf('Chrome')
+react-dom@18.3.1/umd/react-dom.development.js:29900:57 identity.device certain navigator.userAgent.indexOf('Edge')
 react-dom@18.3.1/umd/react-dom.development.js:9614:7 dom-escape.html certain testElement.innerHTML = html
 react-dom@18.3.1/umd/react-dom.development.js:9780:9 dom-escape.html certain div.innerHTML = '<script><' + '/script>'
 react-dom@18.3.1/umd/react-dom.production.min.js:150:88 dom-escape.html certain a.innerHTML="<script>\x3c/script>"
@@ -39,10 +45,13 @@ swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:1219381 dom-escape.html certain th
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:1220601 dom-escape.html certain this.innerHTML=s
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:191093 codegen.function certain Function("return this")()
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:229351 codegen.function certain Function("return this")()
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:33127 identity.clipboard certain document.execCommand("copy")
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:333521 dom-escape.html certain s.innerHTML=i
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:333544 dom-escape.html certain (ze=ze||document.createElement("div")).innerHTML="<svg>"+i.valueOf().toString()+"</svg>"
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:33575 identity.device certain navigator.userAgent
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:406140 dom-escape.html certain (s=P.createElement("div")).innerHTML="<script><\/script>"
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:55140 dom-escape.html certain i.documentElement.innerHTML=ir?ut:w
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:567900 identity.device certain navigator.userAgent
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:573046 codegen.function certain Function("return this")()
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:594578 codegen.function certain new Function("return this")()
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:631208 storage.local certain localStorage.setItem("authorized",JSON.stringify(u))
@@ -70,10 +79,13 @@ swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:1219121 dom-escape.html certain
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:1220341 dom-escape.html certain this.innerHTML=s
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:190839 codegen.function certain Function("return this")()
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:229097 codegen.function certain Function("return this")()
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:32873 identity.clipboard certain document.execCommand("copy")
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:33321 identity.device certain navigator.userAgent
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:333267 dom-escape.html certain s.innerHTML=i
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:333290 dom-escape.html certain (ze=ze||document.createElement("div")).innerHTML="<svg>"+i.valueOf().toString()+"</svg>"
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:405886 dom-escape.html certain (s=P.createElement("div")).innerHTML="<script><\/script>"
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:54886 dom-escape.html certain i.documentElement.innerHTML=ir?ut:w
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:567646 identity.device certain navigator.userAgent
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:572792 codegen.function certain Function("return this")()
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:594324 codegen.function certain new Function("return this")()
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:630948 storage.local certain localStorage.setItem("authorized",JSON.stringify(u))
@@ -89,6 +101,7 @@ swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:812861 network.fetch certain fe
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:94157 dom-escape.html certain w.innerHTML=i.value
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:994432 network.fetch certain fetch(s,i)
 swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js:2:118344 codegen.function certain Function("return this")()
+swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js:2:150310 identity.device certain navigator.userAgent
 swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js:2:153967 codegen.function certain Function("return this")()
 swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js:2:161809 codegen.function certain new Function("return this")()
 swagger-ui-dist@5.11.0/swagger-ui.js:1:30575 storage.local certain localStorage.setItem("authorized",JSON.stringify(r))
@@ -97,6 +110,8 @@ swagger-ui-dist@5.11.0/swagger-ui.js:1:33856 storage.cookie certain document.coo
 swagger-ui-dist@5.11.0/swagger-ui.js:1:34295 storage.cookie certain document.cookie
 three@0.160.0/examples/jsm/capabilities/WebGL.js:100:3 dom-escape.html certain element.innerHTML = message
 three@0.160.0/examples/jsm/capabilities/WebGPU.js:45:3 dom-escape.html certain element.innerHTML = message
+three@0.160.0/examples/jsm/controls/ArcballControls.js:2049:3 identity.clipboard certain navigator.clipboard.writeText( state )
+three@0.160.0/examples/jsm/controls/ArcballControls.js:2056:3 identity.clipboard certain navigator.clipboard.readText().then( function resolved( value ) { self.setStateFromJSON( value ); } 
 three@0.160.0/examples/jsm/effects/AsciiEffect.js:251:4 dom-escape.html certain oAscii.innerHTML = `<tr><td style="display:block;width:${width}px;height:${height}px;overflow:hidden
 three@0.160.0/examples/jsm/libs/ammo.wasm.js:15:160 network.xhr certain new XMLHttpRequest
 three@0.160.0/examples/jsm/libs/ammo.wasm.js:15:60 network.xhr certain new XMLHttpRequest
@@ -166,6 +181,11 @@ three@0.160.0/examples/jsm/libs/lil-gui.module.min.js:8:819 dom-escape.html cert
 three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:13973:31 codegen.eval certain eval('[function _expression_function(){' + val + ';scoped_bm_rt=$bm_rt}]')[0]
 three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:14279:52 network.xhr possible XMLHttpRequest
 three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:14279:68 network.fetch possible fetch
+three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:171:56 identity.device certain navigator.userAgent
+three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:8366:102 identity.device certain navigator.userAgent
+three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:8366:144 identity.device certain navigator.userAgent
+three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:8366:23 identity.device certain navigator.userAgent
+three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:8366:62 identity.device certain navigator.userAgent
 three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:935:25 network.xhr possible new XMLHttpRequest()
 three@0.160.0/examples/jsm/libs/mikktspace.module.js:120:22 network.fetch certain fetch(wasmDataURI) .then((res) => res.arrayBuffer()) .then((buffer) => WebAssembly.instantiate(buffe
 three@0.160.0/examples/jsm/libs/motion-controllers.module.js:48:26 network.fetch certain fetch(path)
@@ -207,14 +227,20 @@ three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.module.js:7318:15 codegen.func
 three@0.160.0/examples/jsm/libs/utif.module.js:1476:13 network.xhr certain new XMLHttpRequest()
 three@0.160.0/examples/jsm/libs/zstddec.module.js:1:162 network.fetch certain fetch
 three@0.160.0/examples/jsm/libs/zstddec.module.js:1:168 network.fetch certain fetch("data:application/wasm;base64,"+C).then(A=>A.arrayBuffer()).then(A=>WebAssembly.instantiate(A,
+three@0.160.0/examples/jsm/loaders/GLTFLoader.js:2535:54 identity.device certain navigator.userAgent
+three@0.160.0/examples/jsm/loaders/GLTFLoader.js:2536:16 identity.device certain navigator.userAgent.indexOf( 'Firefox' )
+three@0.160.0/examples/jsm/loaders/GLTFLoader.js:2537:33 identity.device certain navigator.userAgent.match( /Firefox\/([0-9]+)\./ )[ 1 ]
+three@0.160.0/examples/jsm/misc/ProgressiveLightMap.js:36:54 identity.device certain navigator.userAgent
 three@0.160.0/examples/jsm/nodes/code/ScriptableNode.js:408:18 codegen.function certain new Function( ...parametersProps, code )
 three@0.160.0/examples/jsm/physics/RapierPhysics.js:41:18 network.import certain import( RAPIER_PATH )
 three@0.160.0/examples/jsm/webxr/ARButton.js:199:5 dom-escape.html certain message.innerHTML = 'WEBXR NEEDS HTTPS'
 three@0.160.0/examples/jsm/webxr/ARButton.js:204:5 dom-escape.html certain message.innerHTML = 'WEBXR NOT AVAILABLE'
 three@0.160.0/examples/jsm/webxr/VRButton.js:171:5 dom-escape.html certain message.innerHTML = 'WEBXR NEEDS HTTPS'
 three@0.160.0/examples/jsm/webxr/VRButton.js:176:5 dom-escape.html certain message.innerHTML = 'WEBXR NOT AVAILABLE'
+three@0.160.0/examples/jsm/webxr/VRButton.js:198:32 identity.device certain navigator.userAgent
 three@0.160.0/examples/jsm/webxr/XRButton.js:191:5 dom-escape.html certain message.innerHTML = 'WEBXR NEEDS HTTPS'
 three@0.160.0/examples/jsm/webxr/XRButton.js:196:5 dom-escape.html certain message.innerHTML = 'WEBXR NOT AVAILABLE'
 three@0.160.0/src/loaders/FileLoader.js:88:3 network.fetch certain fetch( req ) .then( response => { if ( response.status === 200 || response.status === 0 ) { // Some 
 three@0.160.0/src/loaders/ImageBitmapLoader.js:18:15 network.fetch certain fetch
 three@0.160.0/src/loaders/ImageBitmapLoader.js:87:19 network.fetch certain fetch( url, fetchOptions ).then( function ( res ) { return res.blob(); } ).then( function ( blob ) {
+three@0.160.0/src/renderers/webgl/WebGLTextures.js:11:106 identity.device certain navigator.userAgent

@@ -7,11 +7,12 @@ import { storage } from "./recognizers/storage.js";
 import { network } from "./recognizers/network.js";
 import { codegen } from "./recognizers/codegen.js";
 import { domEscape } from "./recognizers/dom-escape.js";
+import { identity } from "./recognizers/identity.js";
 
 export type { CapabilityUse } from "./capability.js";
 
 /** One recognizer per capability family. Phase C adds the rest. */
-export const RECOGNIZERS: readonly Recognizer[] = [storage, network, codegen, domEscape];
+export const RECOGNIZERS: readonly Recognizer[] = [storage, network, codegen, domEscape, identity];
 
 export interface ExtractOptions {
   origin?: Origin;
