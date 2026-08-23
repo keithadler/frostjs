@@ -39,6 +39,15 @@ describe("changedLines", () => {
     expect(isChanged(c, path.join(dir, "permit.policy"), 1)).toBe(false);
   });
 
+  it("a ref that looks like an option is refused before git sees it", () => {
+    const dir = repo();
+    const marker = path.join(dir, "injected");
+    expect(() => changedLines(`--output=${marker}`, dir)).toThrow(/needs a git ref, not '--output=/);
+    expect(fs.existsSync(marker)).toBe(false);
+    expect(() => changedLines("", dir)).toThrow(/needs a git ref/);
+    expect(() => changedLines("-", dir)).toThrow(/needs a git ref/);
+  });
+
   it("a bad ref is a clear error", () => {
     expect(() => changedLines("no-such-ref", repo())).toThrow(/git diff against no-such-ref failed/);
   });
@@ -68,6 +77,15 @@ describe("permit --changed-since", () => {
     const r = cli("--changed-since", "HEAD", path.join(dir, "a.js"));
     expect(r.code).toBe(0);
     expect(r.stdout).toContain("0 denied, 0 unknown, 1 unchanged");
+  });
+
+  it("an option-shaped ref exits 2 and writes nothing", () => {
+    const dir = repo();
+    const marker = path.join(dir, "injected");
+    const r = cli(`--changed-since=--output=${marker}`, path.join(dir, "a.js"));
+    expect(r.code).toBe(2);
+    expect(r.stderr).toContain("needs a git ref");
+    expect(fs.existsSync(marker)).toBe(false);
   });
 
   it("a bad ref exits 2", () => {
