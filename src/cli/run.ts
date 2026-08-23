@@ -14,7 +14,7 @@ import { VERSION } from "../version.js";
 import { discover, isHtml } from "../discover/index.js";
 import { parseFile, type ParseError } from "../extract/ast.js";
 import { extract, stringLiterals } from "../extract/index.js";
-import { parseHtml } from "../extract/html.js";
+import { parseHtml, htmlAttributeUses } from "../extract/html.js";
 import type { CapabilityUse } from "../extract/capability.js";
 import {
   commonAncestor,
@@ -330,10 +330,12 @@ function extractAll(
     if (claimed !== null) {
       uses.push(...claimed);
     } else if (isHtml(file)) {
-      for (const block of parseHtml(file, fs.readFileSync(file, "utf8"))) {
+      const text = fs.readFileSync(file, "utf8");
+      for (const block of parseHtml(file, text)) {
         if (block.errors.length > 0) syntaxErrors.push(...block.errors.map((e) => ({ ...e, file: name })));
         else uses.push(...extract(block, { origin: "inline-html" }).map((u) => ({ ...u, file: name })));
       }
+      uses.push(...htmlAttributeUses(file, text).map((u) => ({ ...u, file: name })));
     } else {
       const parsed = parseFile(file);
       if (parsed.errors.length > 0) syntaxErrors.push(...parsed.errors.map((e) => ({ ...e, file: name })));

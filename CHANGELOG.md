@@ -13,6 +13,9 @@ change the policy grammar or the JSON schema; the changelog will say so.
   code, as text, json or md. `docs/CAPABILITIES.md` is generated from it and
   a test fails if it drifts.
 - Taint sink: a tainted string into `setTimeout` / `setInterval`.
+- HTML attributes are analyzed, not just `<script>` blocks: inline `on*`
+  event handlers, `javascript:` URLs, `<iframe srcdoc>`, and `src`/`href`
+  to another host (a remote `<script src>` most of all).
 
 ## [0.2.0] - 2026-08-23
 

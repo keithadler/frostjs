@@ -10,6 +10,8 @@
 import path from "node:path";
 import { parseSync } from "oxc-parser";
 import { lineIndex, positionAt, type Comment, type ParsedFile } from "./ast.js";
+import type { CapabilityUse } from "./capability.js";
+import { resolveTarget, SAME_ORIGIN } from "./target.js";
 
 export interface ScriptBlock {
   /** Offset of the first character of the block's content. */
@@ -75,4 +77,58 @@ export function parseHtml(file: string, source: string): ParsedFile[] {
     });
     return { file, source: masked, program: result.program, comments: result.comments as Comment[], errors, lines };
   });
+}
+
+const TAG = /<([a-zA-Z][-a-zA-Z0-9]*)((?:"[^"]*"|'[^']*'|[^>])*)>/g;
+/** Attributes whose value is a URL that loads or navigates. */
+const URL_ATTRS: ReadonlySet<string> = new Set(["src", "href", "data", "poster", "formaction", "xlink:href"]);
+
+/**
+ * Capability uses that live in HTML attributes rather than script content:
+ * inline `on*` event handlers (a handler from markup), `javascript:` URLs,
+ * an `<iframe srcdoc>`, and a `src`/`href` pointing at another host (a
+ * remote resource load, `<script src="https://...">` most of all). Element
+ * type is not checked - the attribute is what matters. Positions refer to
+ * the HTML file. The same tolerant regex as the script scanner; adversarial
+ * markup is out of the threat model.
+ */
+export function htmlAttributeUses(file: string, source: string): CapabilityUse[] {
+  const lines = lineIndex(source);
+  const out: CapabilityUse[] = [];
+  const at = (offset: number): { line: number; column: number } => positionAt(lines, offset);
+  for (const tag of source.matchAll(TAG)) {
+    const attrs = tag[2] ?? "";
+    const attrsStart = tag.index! + 1 + tag[1]!.length;
+    for (const a of attrs.matchAll(ATTR)) {
+      const name = a[1]!.toLowerCase();
+      const value = (a[2] ?? a[3] ?? a[4] ?? "").trim();
+      if (value === "") continue;
+      const start = attrsStart + a.index!;
+      const expr = source.slice(start, start + a[0].length);
+      const add = (capability: string, target: string | null): void => {
+        const p = at(start);
+        out.push({
+          capability,
+          target,
+          file,
+          line: p.line,
+          column: p.column,
+          expression: expr,
+          confidence: "certain",
+          origin: "inline-html",
+          suppressed: false,
+        });
+      };
+      if (/^on[a-z]+$/.test(name)) {
+        add("dom-escape.handler", null);
+      } else if (name === "srcdoc") {
+        add("dom-escape.html", null);
+      } else if (URL_ATTRS.has(name)) {
+        const t = resolveTarget(value);
+        if (t === "javascript:") add("codegen.eval", null);
+        else if (t !== null && t !== SAME_ORIGIN && t !== "data:" && t !== "blob:") add("network.resource", t);
+      }
+    }
+  }
+  return out;
 }

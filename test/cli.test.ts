@@ -213,3 +213,16 @@ describe("frostjs <paths> (policy ignore)", () => {
     expect(r.stdout).toContain("1 file, 1 denied");
   });
 });
+
+describe("frostjs check (HTML attributes)", () => {
+  const fx = path.join(__dirname, "fixtures", "html");
+  it("flags inline handlers, javascript: URLs, remote src and srcdoc in HTML", () => {
+    const r = cli(path.join(fx, "page.html"));
+    expect(r.code).toBe(1);
+    expect(r.stdout).toContain("page.html:4:11: network.resource to cdn.evil.example denied");
+    expect(r.stdout).toContain("dom-escape.handler denied");
+    expect(r.stdout).toContain("codegen.eval denied");
+    expect(r.stdout).toContain("srcdoc");
+    expect(r.stdout).not.toContain("logo.png"); // same-origin img stays quiet
+  });
+});

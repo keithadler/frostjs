@@ -18,7 +18,7 @@ import { discover, isHtml } from "../src/discover/index.js";
 import { parseFile, type ParsedFile } from "../src/extract/ast.js";
 import { extract, stringLiterals } from "../src/extract/index.js";
 import { taint, type TaintFinding } from "../src/extract/taint.js";
-import { parseHtml } from "../src/extract/html.js";
+import { parseHtml, htmlAttributeUses } from "../src/extract/html.js";
 import type { CapabilityUse } from "../src/extract/capability.js";
 import { audit, type Audit, type FileSource } from "../src/audit.js";
 
@@ -128,6 +128,7 @@ function analyze(spec: string): Entry {
     const units: ParsedFile[] = isHtml(file) ? parseHtml(file, text) : [parseFile(file)];
     const uses: CapabilityUse[] = [];
     const strings: string[] = [];
+    if (isHtml(file)) uses.push(...htmlAttributeUses(file, text).map((u) => ({ ...u, file: rel })));
     for (const unit of units) {
       if (unit.errors.length > 0) parseErrors++;
       else {
