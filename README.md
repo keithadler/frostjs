@@ -238,6 +238,7 @@ forbid everything else                             optional, readability only
 | `html injection` | `dom-escape` |
 | `identity`, `fingerprinting` | `identity` |
 | `navigation` | `navigation` |
+
 | `globals` | `globals` |
 | `workers`, `service workers` | `worker` |
 | `device access`, `file access`, `usb`, `bluetooth`, `notifications` | `device` |
@@ -505,6 +506,7 @@ to a reviewer; suppression is for the one-off.
 | `navigation.open` | `window.open` |
 | `navigation.history` | `history.pushState` / `replaceState` / `back` / `forward` / `go` |
 | `navigation.postmessage` | `postMessage` to `parent` / `top` / `opener` / `contentWindow`, or with a string origin |
+| `navigation.message-receive` | `window.addEventListener("message", ...)` whose handler reads `event.data` but never checks `event.origin` |
 | `globals.window` | assignment to `window.*` / `globalThis.*`, `Object.defineProperty(window, ...)` |
 | `globals.prototype` | assignment to a built-in or its prototype (`Array.prototype.x = `, `Error.prepareStackTrace = `), or `Object.defineProperty` / `assign` on one |
 | `worker.dedicated` | `new Worker(url)` |

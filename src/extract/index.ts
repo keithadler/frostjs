@@ -16,6 +16,7 @@ import { navigation } from "./recognizers/navigation.js";
 import { globals } from "./recognizers/globals.js";
 import { worker } from "./recognizers/worker.js";
 import { device } from "./recognizers/device.js";
+import { message } from "./recognizers/message.js";
 
 /** One recognizer per capability family. */
 const RECOGNIZERS: readonly Recognizer[] = [
@@ -28,6 +29,7 @@ const RECOGNIZERS: readonly Recognizer[] = [
   globals,
   worker,
   device,
+  message,
 ];
 
 export interface ExtractOptions {

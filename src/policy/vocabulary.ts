@@ -90,6 +90,7 @@ export const MEMBER_CODES: readonly string[] = [
   "navigation.open",
   "navigation.history",
   "navigation.postmessage",
+  "navigation.message-receive",
   "globals.window",
   "globals.prototype",
   "worker.dedicated",

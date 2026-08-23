@@ -136,6 +136,9 @@ on the same CDN. Reported upstream as
 [mrdoob/three.js#34357](https://github.com/mrdoob/three.js/issues/34357);
 the text is in [`showcase/three/UPSTREAM-ISSUE.md`](showcase/three/UPSTREAM-ISSUE.md).
 
+(The `network.import` of Rapier and, in a worker, `importScripts` of a
+remote script are the same shape frostjs now recognizes directly.)
+
 The threat model's limits apply here as everywhere. frostjs did not find
 this by understanding what ECSY does; it found it because `eval` is `eval`
 and a policy said no. Obfuscated code would not have been caught. The file
