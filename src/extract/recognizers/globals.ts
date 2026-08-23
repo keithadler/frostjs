@@ -6,6 +6,7 @@
 import type { Node } from "../ast.js";
 import type { Confidence } from "../capability.js";
 import { leadingLiteral } from "../target.js";
+import { unwrap } from "../typescript.js";
 
 type AnyNode = Node & Record<string, unknown>;
 
@@ -59,7 +60,8 @@ export function isFoldedMember(n: AnyNode): boolean {
  * If `n` denotes the global object (`window`, `globalThis`, `self`), return
  * the confidence; otherwise null.
  */
-export function asGlobalObject(n: AnyNode): Resolved | null {
+export function asGlobalObject(raw: AnyNode): Resolved | null {
+  const n = unwrap(raw);
   if (isIdentifier(n) && GLOBAL_OBJECTS.has(n.name)) {
     return { confidence: globalConfidence(n.name), via: n };
   }
@@ -70,7 +72,8 @@ export function asGlobalObject(n: AnyNode): Resolved | null {
  * If `n` denotes the named global (e.g. `document`, `navigator`), either as a
  * bare identifier or as `window.<name>`, return the confidence; else null.
  */
-export function asNamedGlobal(n: AnyNode, name: string): Resolved | null {
+export function asNamedGlobal(raw: AnyNode, name: string): Resolved | null {
+  const n = unwrap(raw);
   if (isIdentifier(n, name)) return { confidence: "certain", via: n };
   if (n.type === "MemberExpression" && memberName(n) === name) {
     return asGlobalObject(n["object"] as AnyNode);

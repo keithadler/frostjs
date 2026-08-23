@@ -93,7 +93,7 @@ all, every capability is denied and a note says so.
 ## Usage
 
 ```
-permit <paths...>        discover and analyze .js/.mjs files under paths
+permit <paths...>        discover and analyze .js/.mjs/.cjs/.jsx/.ts/.tsx/.mts/.cts under paths
 permit csp               print the Content-Security-Policy header the policy implies
 permit summary           print a plain-English reading of the policy
 permit vendor add <files>  fingerprint third-party files and record their capabilities
@@ -112,8 +112,17 @@ permit --version         print the version and exit
 permit --help            show usage
 ```
 
-`node_modules`, `dist`, `build`, `coverage` and `.git` are always skipped.
-A path that names a file directly is always analyzed.
+`node_modules`, `dist`, `build`, `coverage` and `.git` are always skipped
+(unless a `vendored` glob reaches into them). `.d.ts` files are skipped:
+they describe globals and contain no code. A path that names a file
+directly is always analyzed.
+
+TypeScript type positions are never references (`let f: typeof fetch` is
+quiet), `declare` statements neither use nor shadow the globals they
+describe, and `as` / `!` / `satisfies` are looked through. In JSX,
+`dangerouslySetInnerHTML={...}` and `srcdoc={...}` are html injection and
+intrinsic `<script>` / `<iframe>` elements count like `createElement`;
+component names and ordinary attributes are quiet.
 
 Exit codes: `0` clean, `1` policy violations, `2` usage or input error
 (bad flag, missing path, syntax error).
@@ -277,9 +286,9 @@ to a reviewer; suppression is for the one-off.
 | `codegen.function` | `Function(...)`, `new Function(...)` |
 | `codegen.timer` | `setTimeout` / `setInterval` with string code |
 | `codegen.write` | `document.write`, `document.writeln` |
-| `dom-escape.html` | assignment to `innerHTML` / `outerHTML` / `srcdoc`, `insertAdjacentHTML`, `createContextualFragment` |
-| `dom-escape.script` | `document.createElement("script")` |
-| `dom-escape.iframe` | `document.createElement("iframe")` |
+| `dom-escape.html` | assignment to `innerHTML` / `outerHTML` / `srcdoc`, `insertAdjacentHTML`, `createContextualFragment`, JSX `dangerouslySetInnerHTML` / `srcdoc` |
+| `dom-escape.script` | `document.createElement("script")`, JSX `<script>` |
+| `dom-escape.iframe` | `document.createElement("iframe")`, JSX `<iframe>` |
 | `identity.device` | `navigator.userAgent`, `platform`, `vendor`, `plugins`, `hardwareConcurrency`, `deviceMemory`... |
 | `identity.geolocation` | `navigator.geolocation` |
 | `identity.media` | `navigator.mediaDevices`, `getUserMedia` |

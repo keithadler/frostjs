@@ -10,6 +10,7 @@
  * and is reported as ambiguous.
  */
 import type { Node } from "./ast.js";
+import { isTypeOnly } from "./typescript.js";
 
 type AnyNode = Node & Record<string, unknown>;
 
@@ -75,9 +76,35 @@ export function analyzeScopes(program: Node): ScopeInfo {
   const root = new Scope(null, true);
 
   const visit = (node: AnyNode, scope: Scope, ambiguous: boolean): void => {
+    if (isTypeOnly(node)) return;
     switch (node.type) {
       case "Identifier":
         refs.push({ node, scope, ambiguous });
+        return;
+
+      case "TSEnumDeclaration": {
+        scope.declare((node["id"] as AnyNode)["name"] as string, { kind: "let", init: null });
+        const body = node["body"] as AnyNode;
+        for (const m of (body["members"] ?? []) as AnyNode[]) {
+          const init = m["initializer"] as AnyNode | null | undefined;
+          if (init) visit(init, scope, ambiguous);
+        }
+        return;
+      }
+      case "TSModuleDeclaration": {
+        const id = node["id"] as AnyNode;
+        if (id.type === "Identifier") scope.declare(id["name"] as string, { kind: "let", init: null });
+        const body = node["body"] as AnyNode | null;
+        if (body) visitChildren(body, new Scope(scope, true), ambiguous);
+        return;
+      }
+      case "JSXIdentifier":
+      case "JSXText":
+      case "JSXMemberExpression":
+      case "JSXNamespacedName":
+        return;
+      case "JSXAttribute":
+        if (isNode(node["value"])) visit(node["value"], scope, ambiguous);
         return;
 
       case "FunctionDeclaration": {
@@ -146,6 +173,7 @@ export function analyzeScopes(program: Node): ScopeInfo {
 
       case "ImportDeclaration":
         for (const s of node["specifiers"] as AnyNode[]) {
+          if (isTypeOnly(s)) continue;
           root.declare((s["local"] as AnyNode)["name"] as string, { kind: "import", init: null });
         }
         return;
@@ -169,6 +197,7 @@ export function analyzeScopes(program: Node): ScopeInfo {
       case "MethodDefinition":
       case "PropertyDefinition":
       case "AccessorProperty":
+        visitDecorators(node, scope, ambiguous);
         if (node["computed"] === true) visit(node["key"] as AnyNode, scope, ambiguous);
         if (isNode(node["value"])) visit(node["value"], scope, ambiguous);
         return;
@@ -209,7 +238,12 @@ export function analyzeScopes(program: Node): ScopeInfo {
     else visit(body, fn, ambiguous);
   };
 
+  const visitDecorators = (node: AnyNode, scope: Scope, ambiguous: boolean): void => {
+    for (const d of (node["decorators"] ?? []) as AnyNode[]) visit(d["expression"] as AnyNode, scope, ambiguous);
+  };
+
   const visitClass = (node: AnyNode, scope: Scope, ambiguous: boolean): void => {
+    visitDecorators(node, scope, ambiguous);
     const sup = node["superClass"] as AnyNode | null;
     if (sup) visit(sup, scope, ambiguous);
     visit(node["body"] as AnyNode, scope, ambiguous);
@@ -225,6 +259,7 @@ export function analyzeScopes(program: Node): ScopeInfo {
   ): void => {
     switch (p.type) {
       case "Identifier":
+        visitDecorators(p, scope, ambiguous);
         scope.declare(p["name"] as string, { kind, init });
         return;
       case "ObjectPattern":
@@ -246,8 +281,11 @@ export function analyzeScopes(program: Node): ScopeInfo {
       case "RestElement":
         declarePattern(p["argument"] as AnyNode, scope, kind, null, ambiguous);
         return;
+      case "TSParameterProperty":
+        visitDecorators(p, scope, ambiguous);
+        declarePattern(p["parameter"] as AnyNode, scope, kind, null, ambiguous);
+        return;
       default:
-        // TypeScript parameter properties and the like arrive in Phase G.
         visitChildren(p, scope, ambiguous);
     }
   };

@@ -377,7 +377,10 @@ Ported directly from `exact`, because it is already proven.
 
 **Phase G - reach**
 
-29. TypeScript and JSX.
+29. TypeScript and JSX. **DONE 2026-08-23.** Type positions, `declare`,
+    `import type` skipped; `as`/`!`/`satisfies` unwrapped; parameter
+    properties, enums and namespaces bind; JSX `dangerouslySetInnerHTML`,
+    `srcdoc`, `<script>`, `<iframe>` recognized; `.d.ts` skipped.
 30. Inline `<script>` in HTML.
 31. ESLint plugin.
 

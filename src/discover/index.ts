@@ -1,8 +1,15 @@
 import fs from "node:fs";
 import path from "node:path";
 
-/** Extensions discovered by default. TS/JSX arrive in Phase G. */
-export const EXTENSIONS: ReadonlySet<string> = new Set([".js", ".mjs"]);
+/** Extensions discovered by default. */
+export const EXTENSIONS: ReadonlySet<string> = new Set([".js", ".mjs", ".cjs", ".jsx", ".ts", ".tsx", ".mts", ".cts"]);
+
+/** Declaration files contain no code and describe globals the code may use. */
+const DECLARATION = /\.d\.(ts|mts|cts)$/;
+
+export function isSourceFile(name: string): boolean {
+  return EXTENSIONS.has(path.extname(name)) && !DECLARATION.test(name);
+}
 
 /** Directory names skipped wherever they appear in the tree. */
 export const DEFAULT_EXCLUDES: readonly string[] = ["node_modules", "dist", "build", "coverage", ".git"];
@@ -48,7 +55,7 @@ function walk(dir: string, excluded: ReadonlySet<string>, out: Set<string>): voi
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       if (!excluded.has(entry.name)) walk(full, excluded, out);
-    } else if (entry.isFile() && EXTENSIONS.has(path.extname(entry.name))) {
+    } else if (entry.isFile() && isSourceFile(entry.name)) {
       out.add(full);
     }
   }

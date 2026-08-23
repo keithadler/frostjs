@@ -1,4 +1,5 @@
 import type { Node } from "./ast.js";
+import { isTypeOnly } from "./typescript.js";
 
 export interface Visit {
   node: Node;
@@ -32,6 +33,10 @@ const BINDING_KEYS: Record<string, ReadonlySet<string>> = {
   LabeledStatement: new Set(["label"]),
   BreakStatement: new Set(["label"]),
   ContinueStatement: new Set(["label"]),
+  TSEnumDeclaration: new Set(["id"]),
+  TSEnumMember: new Set(["id"]),
+  TSModuleDeclaration: new Set(["id"]),
+  TSParameterProperty: new Set(["parameter"]),
 };
 
 /** Non-computed keys are names, not references, under these parents. */
@@ -46,6 +51,7 @@ const NAME_KEYS: Record<string, string> = {
 export function walk(root: Node, visit: (v: Visit) => void): void {
   const ancestors: Node[] = [];
   const go = (node: AnyNode, binding: boolean): void => {
+    if (isTypeOnly(node)) return;
     visit({ node, ancestors, binding });
     ancestors.unshift(node);
     const bindingKeys = BINDING_KEYS[node.type];

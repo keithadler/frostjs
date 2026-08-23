@@ -44,7 +44,7 @@ describe("permit <paths> (step 2: discover and parse)", () => {
     const r = cli(root);
     expect(r.code).toBe(0);
     expect(r.stderr).toBe("permit: no permit.policy found; denying everything\n");
-    expect(r.stdout).toContain("3 files");
+    expect(r.stdout).toContain("4 files");
   });
 
   it("reports syntax errors with file:line:column and exits 2", () => {
@@ -63,7 +63,7 @@ describe("permit <paths> (step 2: discover and parse)", () => {
   it("honours --exclude", () => {
     const r = cli("--exclude", "nested", root);
     expect(r.code).toBe(0);
-    expect(r.stdout).toContain("2 files");
+    expect(r.stdout).toContain("3 files");
   });
 
   it("errors when no paths are given", () => {

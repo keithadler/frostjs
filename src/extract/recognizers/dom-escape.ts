@@ -16,9 +16,32 @@ const HTML_METHODS: ReadonlySet<string> = new Set(["insertAdjacentHTML", "create
  * is injection whatever `el` is - but only writes and calls count. Reading
  * innerHTML is not injection.
  */
+const JSX_ELEMENTS: ReadonlyMap<string, string> = new Map([
+  ["script", "dom-escape.script"],
+  ["iframe", "dom-escape.iframe"],
+]);
+
 export const domEscape: Recognizer = ({ node, ancestors, binding }) => {
   if (binding) return null;
   const n = node as AnyNode;
+
+  // <div dangerouslySetInnerHTML={...} />, <iframe srcdoc={...} />
+  if (n.type === "JSXAttribute") {
+    const name = n["name"] as AnyNode;
+    const attr = name.type === "JSXIdentifier" ? (name["name"] as string) : null;
+    if (attr === "dangerouslySetInnerHTML" || attr === "srcdoc") {
+      return { capability: "dom-escape.html", target: null, confidence: "certain", via: null, node };
+    }
+    return null;
+  }
+  // <script ...>, <iframe ...>: intrinsic elements only; <Script /> is a component.
+  if (n.type === "JSXOpeningElement") {
+    const name = n["name"] as AnyNode;
+    const tag = name.type === "JSXIdentifier" ? (name["name"] as string) : null;
+    const cap = tag === null ? undefined : JSX_ELEMENTS.get(tag);
+    return cap ? { capability: cap, target: null, confidence: "certain", via: null, node } : null;
+  }
+
   if (n.type !== "MemberExpression") return null;
   const prop = memberName(n);
   if (prop === null) return null;

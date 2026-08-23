@@ -6,9 +6,9 @@ const root = path.join(__dirname, "fixtures", "discover");
 const rel = (files: string[]) => files.map((f) => path.relative(root, f).split(path.sep).join("/")).sort();
 
 describe("discover", () => {
-  it("finds .js and .mjs recursively, sorted", () => {
+  it("finds source files recursively, sorted", () => {
     const files = discover([root]);
-    expect(rel(files)).toEqual(["src/a.js", "src/b.mjs", "src/nested/c.js"]);
+    expect(rel(files)).toEqual(["src/a.js", "src/b.mjs", "src/nested/c.js", "src/notyet.ts"]);
   });
 
   it("skips node_modules and dist by default", () => {
@@ -17,10 +17,9 @@ describe("discover", () => {
     expect(files.some((f) => f.startsWith("dist/"))).toBe(false);
   });
 
-  it("ignores non-JS files, including .ts for now", () => {
+  it("ignores non-source files", () => {
     const files = rel(discover([root]));
     expect(files).not.toContain("src/readme.md");
-    expect(files).not.toContain("src/notyet.ts");
   });
 
   it("accepts a single file path even if it would be excluded by name", () => {
@@ -30,12 +29,12 @@ describe("discover", () => {
 
   it("honours extra excludes", () => {
     const files = rel(discover([root], { exclude: ["nested"] }));
-    expect(files).toEqual(["src/a.js", "src/b.mjs"]);
+    expect(files).toEqual(["src/a.js", "src/b.mjs", "src/notyet.ts"]);
   });
 
   it("dedupes overlapping inputs", () => {
     const files = discover([root, path.join(root, "src")]);
-    expect(files.length).toBe(3);
+    expect(files.length).toBe(4);
   });
 
   it("throws on a missing path", () => {

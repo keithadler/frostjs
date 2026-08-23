@@ -34,6 +34,11 @@ export function leadingLiteral(node: AnyNode): { text: string; complete: boolean
       return { text: left.text + right.text, complete: right.complete };
     }
     case "ParenthesizedExpression":
+    case "TSAsExpression":
+    case "TSSatisfiesExpression":
+    case "TSNonNullExpression":
+    case "TSTypeAssertion":
+    case "TSInstantiationExpression":
       return leadingLiteral(node["expression"] as AnyNode);
     default:
       return null;

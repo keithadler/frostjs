@@ -59,7 +59,8 @@ export function positionAt(lines: LineIndex, offset: number): { line: number; co
 export function parseSource(file: string, source: string): ParsedFile {
   const ext = path.extname(file);
   const result = parseSync(file, source, {
-    sourceType: ext === ".mjs" ? "module" : "unambiguous",
+    sourceType:
+      ext === ".mjs" || ext === ".mts" ? "module" : ext === ".cjs" || ext === ".cts" ? "script" : "unambiguous",
   });
   const lines = lineIndex(source);
   const errors: ParseError[] = result.errors.map((e) => {
