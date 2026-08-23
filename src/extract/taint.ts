@@ -36,16 +36,14 @@ export interface TaintFinding {
 
 /** The global objects a source can hang off. */
 const GLOBALS: ReadonlySet<string> = new Set(["window", "globalThis", "self"]);
-/** location members that carry attacker-influenced text. */
-const LOCATION_PROPS: ReadonlySet<string> = new Set([
-  "search",
-  "hash",
-  "href",
-  "pathname",
-  "host",
-  "hostname",
-  "origin",
-]);
+/**
+ * location members that carry attacker-influenced text. Narrowed to the
+ * parts an attacker actually controls (the query, fragment, full URL and
+ * path); host/hostname/origin/protocol are the page's own identity and
+ * are rarely an injection vector, so they are left out to protect the
+ * zero-false-positive property.
+ */
+const LOCATION_PROPS: ReadonlySet<string> = new Set(["search", "hash", "href", "pathname"]);
 /** document members that carry attacker-influenced text. */
 const DOCUMENT_PROPS: ReadonlySet<string> = new Set(["URL", "documentURI", "referrer", "cookie", "baseURI"]);
 

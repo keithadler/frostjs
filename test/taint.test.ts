@@ -73,3 +73,19 @@ describe("taint: must stay quiet", () => {
     expect(flows("el.innerHTML = location.protocol")).toEqual([]);
   });
 });
+
+describe("taint: location sources are narrowed to attacker-influenced parts", () => {
+  const flows2 = (src: string) => taint(parseSource("t.js", src)).map((f) => f.source);
+  it("query, fragment, full URL and path are sources", () => {
+    expect(flows2("el.innerHTML = location.search")).toEqual(["location.search"]);
+    expect(flows2("el.innerHTML = location.hash")).toEqual(["location.hash"]);
+    expect(flows2("el.innerHTML = location.href")).toEqual(["location.href"]);
+    expect(flows2("el.innerHTML = location.pathname")).toEqual(["location.pathname"]);
+  });
+  it("the page's own identity is not a source", () => {
+    expect(flows2("el.innerHTML = location.host")).toEqual([]);
+    expect(flows2("el.innerHTML = location.hostname")).toEqual([]);
+    expect(flows2("el.innerHTML = location.origin")).toEqual([]);
+    expect(flows2("el.innerHTML = location.protocol")).toEqual([]);
+  });
+});
