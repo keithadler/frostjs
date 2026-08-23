@@ -252,9 +252,10 @@ Ported directly from `exact`, because it is already proven.
    rests on (`caches`, `window`, `document`...), the use is `possible`, not
    `certain`. Smoke run over 347 files / 24.5 MB of node_modules: 1 certain
    (true positive in `debug`), 8 possible, 2.2s.
-4. Hardcoded deny-all policy, text output, non-zero exit.
+4. Hardcoded deny-all policy, text output, non-zero exit. **DONE 2026-08-23.**
    *Acceptance:* running it on a file containing `localStorage.setItem("a", 1)`
-   fails the build and names the line.
+   fails the build and names the line. Verified on the built binary.
+   `--exit-zero` (11.4) landed here too since the gate needed it for tests.
 
 **Phase B - the policy language**
 

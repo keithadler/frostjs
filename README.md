@@ -6,14 +6,31 @@ explicitly granted: storage, network, `eval`, DOM injection, identity, and so on
 
 ## Status
 
-Pre-alpha. Phase A (walking skeleton) in progress. See
+Pre-alpha. Phase A (walking skeleton) is complete: it discovers `.js`/`.mjs`,
+recognizes the `storage` capability family, applies a hardcoded deny-all
+policy, and fails the build. Phase B (the frost policy language) is next. See
 [REQUIREMENTS.md](REQUIREMENTS.md) for the full plan and the milestone log.
+
+```
+$ cat widget.js
+function save() {
+  localStorage.setItem("a", 1);
+}
+
+$ permit widget.js
+widget.js:2:3: storage.local denied by "deny everything": localStorage.setItem("a", 1)
+
+1 file, 1 denied, 0 unknown
+$ echo $?
+1
+```
 
 ## Usage
 
 ```
 permit <paths...>        discover and analyze .js/.mjs files under paths
 permit --exclude <name>  skip directories with this name (repeatable)
+permit --exit-zero       report findings but always exit 0
 permit --version         print the version and exit
 permit --help            show usage
 ```
@@ -23,6 +40,9 @@ A path that names a file directly is always analyzed.
 
 Exit codes: `0` clean, `1` policy violations, `2` usage or input error
 (bad flag, missing path, syntax error).
+
+Uses with `possible` confidence are listed under "unknown" and never fail the
+build; `certain` and `probable` uses do.
 
 ## Capabilities recognized so far
 

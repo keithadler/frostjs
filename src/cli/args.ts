@@ -2,13 +2,14 @@ export interface ParsedArgs {
   version: boolean;
   help: boolean;
   exclude: string[];
+  exitZero: boolean;
   paths: string[];
 }
 
 export class UsageError extends Error {}
 
 export function parseArgs(argv: readonly string[]): ParsedArgs {
-  const out: ParsedArgs = { version: false, help: false, exclude: [], paths: [] };
+  const out: ParsedArgs = { version: false, help: false, exclude: [], exitZero: false, paths: [] };
   let positionalOnly = false;
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]!;
@@ -39,6 +40,9 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
       case "--exclude":
         out.exclude.push(takeValue());
         break;
+      case "--exit-zero":
+        out.exitZero = true;
+        break;
       default:
         if (arg.startsWith("-")) {
           throw new UsageError(`unknown option: ${arg}`);
@@ -59,4 +63,10 @@ options:
   --exclude <name>     skip directories with this name (repeatable);
                        node_modules, dist, build, coverage and .git are
                        always skipped
+  --exit-zero          report findings but always exit 0
+
+exit codes:
+  0  no denied capability uses
+  1  at least one denied capability use
+  2  usage or input error (bad flag, missing path, syntax error)
 `;

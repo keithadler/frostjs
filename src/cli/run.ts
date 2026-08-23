@@ -1,11 +1,18 @@
+import path from "node:path";
 import { HELP, parseArgs, UsageError } from "./args.js";
 import { VERSION } from "../version.js";
 import { discover } from "../discover/index.js";
 import { parseFile, type ParseError } from "../extract/ast.js";
+import { extract } from "../extract/index.js";
+import type { CapabilityUse } from "../extract/capability.js";
+import { DENY_ALL, decide } from "../policy/index.js";
+import { text } from "../report/text.js";
 
 export interface Io {
   stdout: (s: string) => void;
   stderr: (s: string) => void;
+  /** Directory that reported paths are made relative to. Defaults to process.cwd(). */
+  cwd?: string;
 }
 
 /**
@@ -49,10 +56,17 @@ export function run(argv: readonly string[], io: Io): number {
     return 2;
   }
 
+  const cwd = io.cwd ?? process.cwd();
   const syntaxErrors: ParseError[] = [];
+  const uses: CapabilityUse[] = [];
   for (const file of files) {
     const parsed = parseFile(file);
-    syntaxErrors.push(...parsed.errors);
+    const shown = path.relative(cwd, file) || ".";
+    if (parsed.errors.length > 0) {
+      syntaxErrors.push(...parsed.errors.map((e) => ({ ...e, file: shown })));
+      continue;
+    }
+    uses.push(...extract(parsed).map((u) => ({ ...u, file: shown })));
   }
 
   for (const e of syntaxErrors) {
@@ -62,6 +76,9 @@ export function run(argv: readonly string[], io: Io): number {
     return 2;
   }
 
-  io.stdout(`${files.length} ${files.length === 1 ? "file" : "files"} parsed, 0 findings\n`);
-  return 0;
+  const decisions = decide(uses, DENY_ALL);
+  io.stdout(text(decisions, { files: files.length }));
+
+  const denied = decisions.some((d) => d.verdict === "denied");
+  return denied && !args.exitZero ? 1 : 0;
 }
