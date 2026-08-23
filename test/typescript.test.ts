@@ -118,7 +118,7 @@ describe("discovery of TypeScript", () => {
     const r = cliIn(dir, ".");
     expect(r.code).toBe(1);
     expect(r.stdout).toContain(
-      'app.tsx:1:27: dom-escape.html denied by "deny everything": dangerouslySetInnerHTML={{ __html: h }}',
+      "app.tsx:1:27: dom-escape.html denied by default (no rule grants it): dangerouslySetInnerHTML={{ __html: h }}",
     );
     expect(r.stdout).toContain("2 files, 1 denied");
   });

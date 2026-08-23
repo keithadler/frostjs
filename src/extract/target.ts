@@ -9,13 +9,16 @@
  * Relative URLs resolve to "same-origin". `data:` and `blob:` URLs resolve to
  * their scheme.
  */
-import type { Node } from "./ast.js";
+import type { AnyNode } from "./ast.js";
 import { FOLDED } from "./annotations.js";
+import { unwrap } from "./typescript.js";
 
-type AnyNode = Node & Record<string, unknown>;
+/** The target of a relative URL: the document's own origin. */
+export const SAME_ORIGIN = "same-origin";
 
 /** The known leading text of an expression, or null if it does not start with a literal. */
-export function leadingLiteral(node: AnyNode): { text: string; complete: boolean } | null {
+export function leadingLiteral(raw: AnyNode): { text: string; complete: boolean } | null {
+  const node = unwrap(raw);
   switch (node.type) {
     case "Literal":
       return typeof node["value"] === "string" ? { text: node["value"], complete: true } : null;
@@ -39,13 +42,6 @@ export function leadingLiteral(node: AnyNode): { text: string; complete: boolean
       if (right === null) return { text: left.text, complete: false };
       return { text: left.text + right.text, complete: right.complete };
     }
-    case "ParenthesizedExpression":
-    case "TSAsExpression":
-    case "TSSatisfiesExpression":
-    case "TSNonNullExpression":
-    case "TSTypeAssertion":
-    case "TSInstantiationExpression":
-      return leadingLiteral(node["expression"] as AnyNode);
     default:
       return null;
   }
@@ -85,8 +81,8 @@ export function resolveTarget(text: string, complete = true, kind: TargetKind = 
     return null; // some other scheme with no authority we understand
   }
   // No scheme and no authority.
-  if (kind === "url") return "same-origin";
-  return t.startsWith("/") || t.startsWith("./") || t.startsWith("../") ? "same-origin" : "bare";
+  if (kind === "url") return SAME_ORIGIN;
+  return t.startsWith("/") || t.startsWith("./") || t.startsWith("../") ? SAME_ORIGIN : "bare";
 }
 
 /** Resolve the destination of an argument expression, or null. */
@@ -94,12 +90,5 @@ export function resolveTargetOf(arg: AnyNode | undefined, kind: TargetKind = "ur
   if (!arg) return null;
   const lit = leadingLiteral(arg);
   if (lit === null) return null;
-  if (!lit.complete) {
-    // An incomplete relative path like "/api/" + x is still same-origin;
-    // an incomplete "https://" + x is not anything.
-    const t = lit.text.trim();
-    if (t === "") return null;
-    if (!ABSOLUTE.test(t) && !t.startsWith("//")) return resolveTarget(t, true, kind);
-  }
   return resolveTarget(lit.text, lit.complete, kind);
 }

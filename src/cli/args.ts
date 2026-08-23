@@ -1,4 +1,11 @@
-export type Command = "check" | "csp" | "summary" | "vendor-add" | "registry-sync" | "sri";
+/**
+ * Command-line parsing and the help text. Every flag here has a usage line
+ * in the README and a test; keep the three in step.
+ */
+import { CONFIDENCE_ORDER, type Confidence } from "../policy/index.js";
+
+/** The subcommand, `check` being the bare `permit <paths>` form. */
+type Command = "check" | "csp" | "summary" | "vendor-add" | "registry-sync" | "sri";
 
 export interface ParsedArgs {
   command: Command;
@@ -8,7 +15,7 @@ export interface ParsedArgs {
   exitZero: boolean;
   policy: string | null;
   today: string | null;
-  minConfidence: "certain" | "probable" | "possible" | null;
+  minConfidence: Confidence | null;
   baseline: string | null;
   updateBaseline: boolean;
   changedSince: string | null;
@@ -16,11 +23,17 @@ export interface ParsedArgs {
   paths: string[];
 }
 
-export const FORMATS = ["text", "json", "sarif", "github", "html"] as const;
-export type Format = (typeof FORMATS)[number];
+const FORMATS = ["text", "json", "sarif", "github", "html"] as const;
+type Format = (typeof FORMATS)[number];
 
+/** A flag or argument the CLI cannot accept; the message is printed with the help text. */
 export class UsageError extends Error {}
 
+/**
+ * Parse argv (without node and script name). The first token may be a
+ * subcommand; `--` ends option parsing; `--name=value` and `--name value`
+ * are both accepted. Throws UsageError.
+ */
 export function parseArgs(argv: readonly string[]): ParsedArgs {
   const out: ParsedArgs = {
     command: "check",
@@ -72,7 +85,7 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
     const takeValue = (): string => {
       if (eq > 0 && arg.startsWith("--")) return arg.slice(eq + 1);
       const next = argv[++i];
-      if (next === undefined) throw new UsageError(`${name} requires a value`);
+      if (next === undefined) throw new UsageError(`${name} needs a value`);
       return next;
     };
     switch (name) {
@@ -98,10 +111,10 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
         break;
       case "--min-confidence": {
         const v = takeValue();
-        if (v !== "certain" && v !== "probable" && v !== "possible") {
+        if (!(CONFIDENCE_ORDER as readonly string[]).includes(v)) {
           throw new UsageError("--min-confidence must be certain, probable or possible");
         }
-        out.minConfidence = v;
+        out.minConfidence = v as Confidence;
         break;
       }
       case "--baseline":
@@ -122,7 +135,7 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
       }
       case "--today": {
         const v = takeValue();
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) throw new UsageError("--today needs a date like 2026-12-01");
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) throw new UsageError("--today must be a date like 2026-12-01");
         out.today = v;
         break;
       }
@@ -136,6 +149,7 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
   return out;
 }
 
+/** The `--help` text, also printed after a usage error. */
 export const HELP = `usage: permit [options] <paths...>
        permit csp [--policy <file>]
        permit summary [--policy <file>]
@@ -182,7 +196,8 @@ options:
                        ref (e.g. origin/main); untracked files count whole
   --format <f>         text (default), json (versioned schema), sarif
                        (2.1.0, one rule per capability), or github
-                       (inline PR annotations followed by the text report)
+                       (inline PR annotations followed by the text report);
+                       html only with permit sri
 
 policy:
   permit.policy is searched for in the directory shared by all the given

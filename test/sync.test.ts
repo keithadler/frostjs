@@ -119,7 +119,7 @@ describe("permit registry sync", () => {
     const dir = project();
     fs.rmSync(path.join(dir, "package-lock.json"));
     const r = cliIn(dir, "registry", "sync");
-    expect(r.stdout).toContain("warning: no lockfile found beside the policy");
+    expect(r.stderr).toContain("warning: no lockfile found beside the policy");
   });
 
   it("says when the lockfile has not changed", () => {

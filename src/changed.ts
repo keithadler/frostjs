@@ -20,7 +20,8 @@ function git(args: string[], cwd: string): string {
   return execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
 }
 
-export function repoRoot(cwd: string): string | null {
+/** The git repository containing `cwd`, or null outside one. */
+function repoRoot(cwd: string): string | null {
   try {
     return git(["rev-parse", "--show-toplevel"], cwd).trim();
   } catch {
@@ -28,6 +29,10 @@ export function repoRoot(cwd: string): string | null {
   }
 }
 
+/**
+ * Lines changed since `ref` in the repository containing `cwd`. Throws
+ * outside a repository or when git cannot diff against the ref.
+ */
 export function changedLines(ref: string, cwd: string): ChangedLines {
   const root = repoRoot(cwd);
   if (root === null) throw new Error("--changed-since needs a git repository");
@@ -62,6 +67,7 @@ export function changedLines(ref: string, cwd: string): ChangedLines {
   return out;
 }
 
+/** True when the line of `file` (an absolute, real path, as git reports it) was added or modified. */
 export function isChanged(changed: ChangedLines, file: string, line: number): boolean {
   const ranges = changed.get(path.resolve(file));
   if (ranges === undefined) return false;

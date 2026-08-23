@@ -1,5 +1,5 @@
 /**
- * Baseline snapshots, ported from exact. A baseline freezes the violations
+ * Baseline snapshots. A baseline freezes the violations
  * a codebase already has so that only new ones fail the build. Entries are
  * keyed on (file, capability, expression text), never on line numbers, so
  * unrelated edits do not invalidate them. Paths are relative to the
@@ -19,14 +19,17 @@ export interface Baseline {
   entries: BaselineEntry[];
 }
 
-export function normalizeExpression(expression: string): string {
+/** Collapse whitespace so a reformatted expression keeps its baseline entry. */
+function normalizeExpression(expression: string): string {
   return expression.replace(/\s+/g, " ").trim();
 }
 
+/** The key an entry is matched on: posix path, capability, normalized expression. Never a line number. */
 export function baselineKey(file: string, capability: string, expression: string): string {
   return `${file.split(path.sep).join("/")} ${capability} ${normalizeExpression(expression)}`;
 }
 
+/** Read a baseline. A missing file is an empty baseline; malformed JSON or an unknown version throws. */
 export function readBaseline(file: string): Baseline {
   if (!fs.existsSync(file)) return { version: 1, entries: [] };
   let raw: unknown;
@@ -40,6 +43,7 @@ export function readBaseline(file: string): Baseline {
   return { version: 1, entries: dedupe(b.entries) };
 }
 
+/** Write entries, deduplicated and sorted, and return how many were written. */
 export function writeBaseline(file: string, entries: readonly BaselineEntry[]): number {
   const out: Baseline = { version: 1, entries: dedupe(entries) };
   fs.writeFileSync(file, JSON.stringify(out, null, 2) + "\n");

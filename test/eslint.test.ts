@@ -55,7 +55,7 @@ describe("eslint plugin", () => {
     );
     expect(msgs.map((m) => [m.line, m.column, m.message])).toEqual([
       [2, 11, 'storage.cookie denied by "forbid cookies" (line 2): consent banner owns these'],
-      [3, 3, 'storage.local denied by "deny everything"'],
+      [3, 3, "storage.local denied by default (no rule grants it)"],
     ]);
     expect(msgs.every((m) => m.ruleId === "permit/capability")).toBe(true);
   });
@@ -63,7 +63,7 @@ describe("eslint plugin", () => {
   it("network targets are named", () => {
     const dir = project();
     const msgs = lint(dir, "app.js", 'fetch("https://api.example.com/x"); fetch("https://evil.example/x");');
-    expect(msgs.map((m) => m.message)).toEqual(['network.fetch to evil.example denied by "deny everything"']);
+    expect(msgs.map((m) => m.message)).toEqual(["network.fetch to evil.example denied by default (no rule grants it)"]);
   });
 
   it("finds the nearest policy above the file and scopes globs to it", () => {

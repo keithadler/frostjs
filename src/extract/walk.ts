@@ -1,4 +1,4 @@
-import type { Node } from "./ast.js";
+import { isNode, type AnyNode, type Node } from "./ast.js";
 import { isTypeOnly } from "./typescript.js";
 
 export interface Visit {
@@ -8,11 +8,6 @@ export interface Visit {
   /** True when this node is (inside) a binding position: a declared name, parameter, pattern, or import. */
   binding: boolean;
 }
-
-type AnyNode = Node & Record<string, unknown>;
-
-const isNode = (v: unknown): v is AnyNode =>
-  typeof v === "object" && v !== null && typeof (v as { type?: unknown }).type === "string";
 
 /**
  * Child keys that introduce bindings rather than references. An Identifier
@@ -48,6 +43,10 @@ const NAME_KEYS: Record<string, string> = {
   AccessorProperty: "key",
 };
 
+/**
+ * Pre-order walk of the tree, skipping type-only subtrees. `Visit.ancestors`
+ * is a live array (nearest first) that is only valid during the callback.
+ */
 export function walk(root: Node, visit: (v: Visit) => void): void {
   const ancestors: Node[] = [];
   const go = (node: AnyNode, binding: boolean): void => {

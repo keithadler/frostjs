@@ -36,7 +36,7 @@ if (data.type === "init") {
 So any page that imports this module will, if someone adds
 `?enable-remote-devtools` to its URL, load a script from a third-party CDN,
 connect to a third-party relay, and evaluate whatever that relay sends. It
-is documented ECSY behaviour, it is meant for development, and none of that
+is documented ECSY behavior, it is meant for development, and none of that
 changes what the capability is: a URL-parameter-gated remote code execution
 path, bundled into one of the most widely used JavaScript libraries there
 is, in a file whose name gives no hint of it.
@@ -63,21 +63,21 @@ Against the two files in question:
 
 ```
 $ permit examples/jsm/libs/ecsy.module.js examples/jsm/physics/RapierPhysics.js
-examples/jsm/libs/ecsy.module.js:1615:16: dom-escape.script denied by "deny everything": document.createElement("script")
-examples/jsm/libs/ecsy.module.js:1670:3: dom-escape.html denied by "deny everything": infoDiv.innerHTML = `Open ECSY devtools to connect to this page using the code:&nbsp;<b style="color: #fff">${remoteId}</b>&nbsp;<button onClick="generateNewCode()">Generate new code</button>`
-examples/jsm/libs/ecsy.module.js:1682:3: globals.window denied by "deny everything": window.generateNewCode = () => { ... }
-examples/jsm/libs/ecsy.module.js:1683:5: storage.local denied by "deny everything": window.localStorage.clear()
-examples/jsm/libs/ecsy.module.js:1685:5: storage.local denied by "deny everything": window.localStorage.setItem("ecsyRemoteId", remoteId)
-examples/jsm/libs/ecsy.module.js:1686:5: navigation.location denied by "deny everything": window.location.reload(false)
-examples/jsm/libs/ecsy.module.js:1689:26: storage.local denied by "deny everything": window.localStorage.getItem("ecsyRemoteId")
-examples/jsm/libs/ecsy.module.js:1692:5: storage.local denied by "deny everything": window.localStorage.setItem("ecsyRemoteId", remoteId)
-examples/jsm/libs/ecsy.module.js:1697:3: globals.window denied by "deny everything": window.__ECSY_REMOTE_DEVTOOLS_INJECTED = true
-examples/jsm/libs/ecsy.module.js:1698:3: globals.window denied by "deny everything": window.__ECSY_REMOTE_DEVTOOLS = {}
-examples/jsm/libs/ecsy.module.js:1734:11: dom-escape.html denied by "deny everything": infoDiv.innerHTML = "Connected"
-examples/jsm/libs/ecsy.module.js:1739:28: dom-escape.script denied by "deny everything": document.createElement("script")
-examples/jsm/libs/ecsy.module.js:1756:15: dom-escape.html denied by "deny everything": script.innerHTML = data.script
-examples/jsm/libs/ecsy.module.js:1762:27: codegen.eval denied by "deny everything": eval(data.script)
-examples/jsm/physics/RapierPhysics.js:41:18: network.import to cdn.skypack.dev denied by "deny everything": import( RAPIER_PATH )
+examples/jsm/libs/ecsy.module.js:1615:16: dom-escape.script denied by default (no rule grants it): document.createElement("script")
+examples/jsm/libs/ecsy.module.js:1670:3: dom-escape.html denied by default (no rule grants it): infoDiv.innerHTML = `Open ECSY devtools to connect to this page using the code:&nbsp;<b style="color: #fff">${remoteId}</b>&nbsp;<button onClick="generateNewCode()">Generate new code</button>`
+examples/jsm/libs/ecsy.module.js:1682:3: globals.window denied by default (no rule grants it): window.generateNewCode = () => { ... }
+examples/jsm/libs/ecsy.module.js:1683:5: storage.local denied by default (no rule grants it): window.localStorage.clear()
+examples/jsm/libs/ecsy.module.js:1685:5: storage.local denied by default (no rule grants it): window.localStorage.setItem("ecsyRemoteId", remoteId)
+examples/jsm/libs/ecsy.module.js:1686:5: navigation.location denied by default (no rule grants it): window.location.reload(false)
+examples/jsm/libs/ecsy.module.js:1689:26: storage.local denied by default (no rule grants it): window.localStorage.getItem("ecsyRemoteId")
+examples/jsm/libs/ecsy.module.js:1692:5: storage.local denied by default (no rule grants it): window.localStorage.setItem("ecsyRemoteId", remoteId)
+examples/jsm/libs/ecsy.module.js:1697:3: globals.window denied by default (no rule grants it): window.__ECSY_REMOTE_DEVTOOLS_INJECTED = true
+examples/jsm/libs/ecsy.module.js:1698:3: globals.window denied by default (no rule grants it): window.__ECSY_REMOTE_DEVTOOLS = {}
+examples/jsm/libs/ecsy.module.js:1734:11: dom-escape.html denied by default (no rule grants it): infoDiv.innerHTML = "Connected"
+examples/jsm/libs/ecsy.module.js:1739:28: dom-escape.script denied by default (no rule grants it): document.createElement("script")
+examples/jsm/libs/ecsy.module.js:1756:15: dom-escape.html denied by default (no rule grants it): script.innerHTML = data.script
+examples/jsm/libs/ecsy.module.js:1762:27: codegen.eval denied by default (no rule grants it): eval(data.script)
+examples/jsm/physics/RapierPhysics.js:41:18: network.import to cdn.skypack.dev denied by default (no rule grants it): import( RAPIER_PATH )
 
 2 files, 15 denied, 0 unknown
 ```

@@ -4,15 +4,13 @@
  * (and therefore a reference to a global)? Also folds `const k = "..."`
  * so that `window[k]` can be recognized.
  *
- * Hoisting is honoured: `var` and function declarations bind for their
+ * Hoisting is honored: `var` and function declarations bind for their
  * whole function, `let`/`const`/`class` for their whole block, regardless
  * of where the reference sits. A reference inside `with` is unresolvable
  * and is reported as ambiguous.
  */
-import type { Node } from "./ast.js";
+import { isNode, type AnyNode, type Node } from "./ast.js";
 import { isTypeOnly } from "./typescript.js";
-
-type AnyNode = Node & Record<string, unknown>;
 
 export interface ScopeInfo {
   /** Reference-position identifiers that resolve to no local binding. */
@@ -39,8 +37,8 @@ class Scope {
   ) {}
 
   declare(name: string, binding: Binding): void {
-    // First declaration wins for folding purposes; a second declaration of the
-    // same name in one scope is either a var re-declaration or an error anyway.
+    // A name declared twice in one scope is never folded: the second
+    // declaration replaces the first with no initializer.
     if (!this.names.has(name)) this.names.set(name, binding);
     else this.names.set(name, { kind: binding.kind, init: null });
   }
@@ -68,9 +66,7 @@ interface Ref {
   ambiguous: boolean;
 }
 
-const isNode = (v: unknown): v is AnyNode =>
-  typeof v === "object" && v !== null && typeof (v as { type?: unknown }).type === "string";
-
+/** Resolve every reference-position identifier in the program; see the module comment. */
 export function analyzeScopes(program: Node): ScopeInfo {
   const refs: Ref[] = [];
   const root = new Scope(null, true);
@@ -312,7 +308,7 @@ export function analyzeScopes(program: Node): ScopeInfo {
 }
 
 /** The value of a string literal or expression-free template, else null. */
-export function stringLiteral(n: AnyNode): string | null {
+function stringLiteral(n: AnyNode): string | null {
   if (n.type === "Literal" && typeof n["value"] === "string") return n["value"];
   if (n.type === "TemplateLiteral" && (n["expressions"] as unknown[]).length === 0) {
     return ((n["quasis"] as AnyNode[])[0]?.["value"] as { cooked?: string } | undefined)?.cooked ?? null;

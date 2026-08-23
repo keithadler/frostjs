@@ -95,7 +95,7 @@ describe("vendored files in the gate", () => {
     const r = cliIn(dir, "lib");
     expect(r.code).toBe(1);
     expect(r.stdout).toContain(
-      'lib/widget.min.js:1:1: network.fetch to telemetry.example denied by "deny everything": widget.min.js@unknown (vendored)',
+      "lib/widget.min.js:1:1: network.fetch to telemetry.example denied by default (no rule grants it): widget.min.js@unknown (vendored)",
     );
     expect(r.stdout).toContain("storage.cookie denied");
     expect(r.stdout).not.toContain("storage.local denied");

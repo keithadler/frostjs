@@ -34,6 +34,7 @@ const JS_TYPES: ReadonlySet<string> = new Set([
   "text/babel",
 ]);
 
+/** Offsets of every inline JavaScript block: no `src`, a JavaScript (or no) `type`, and some content. */
 export function scriptBlocks(html: string): ScriptBlock[] {
   const out: ScriptBlock[] = [];
   for (const m of html.matchAll(SCRIPT)) {

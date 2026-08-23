@@ -12,16 +12,26 @@ import fs from "node:fs";
 import path from "node:path";
 import { parseSource } from "./extract/ast.js";
 import { extract } from "./extract/index.js";
-import { compile, decide, parsePolicy, DENY_ALL, PolicyError, type Policy } from "./policy/index.js";
-import { findPolicyFile } from "./policy/config.js";
-import { denialText } from "./report/text.js";
+import {
+  compilePolicyFile,
+  decide,
+  findPolicyFile,
+  isoToday,
+  DENY_ALL,
+  PolicyError,
+  type Confidence,
+  type Policy,
+} from "./policy/index.js";
+import { denialText, describeUse } from "./report/text.js";
 import { VERSION } from "./version.js";
 
-interface RuleOptions {
+/** Options for the `permit/capability` rule, all optional. */
+export interface RuleOptions {
   /** Explicit policy file; otherwise the nearest permit.policy above the linted file. */
   policy?: string;
-  minConfidence?: "certain" | "probable" | "possible";
-  /** Also report uses below the confidence floor, as they appear under "unknown" in the CLI. */
+  /** Lowest confidence that is reported as an error; default probable. */
+  minConfidence?: Confidence;
+  /** Also report uses below the floor, as they appear under "unknown" in the CLI. */
   reportUnknown?: boolean;
   /** ISO date for expiry checks; defaults to today. */
   today?: string;
@@ -39,35 +49,35 @@ interface Context {
 
 interface Cached {
   policy: Policy;
-  dir: string;
   mtimeMs: number;
-  today: string;
 }
 
 const cache = new Map<string, Cached>();
 
+/** The policy for a file, cached by mtime so edits are picked up without restarting ESLint. */
 function loadPolicy(file: string, today: string, explicit?: string): { policy: Policy; dir: string; error?: string } {
   const policyFile = explicit ? path.resolve(explicit) : findPolicyFile(path.dirname(file));
   if (policyFile === null) return { policy: DENY_ALL, dir: path.dirname(file) };
-  let mtimeMs = 0;
+  const dir = path.dirname(policyFile);
+  let mtimeMs: number;
   try {
     mtimeMs = fs.statSync(policyFile).mtimeMs;
   } catch {
-    return { policy: DENY_ALL, dir: path.dirname(policyFile), error: `policy not found: ${policyFile}` };
+    return { policy: DENY_ALL, dir, error: `cannot read policy ${policyFile}` };
   }
   const hit = cache.get(policyFile);
-  if (hit && hit.mtimeMs === mtimeMs && hit.today === today) return { policy: hit.policy, dir: hit.dir };
+  if (hit && hit.mtimeMs === mtimeMs && hit.policy.today === today) return { policy: hit.policy, dir };
   try {
-    const policy = compile(parsePolicy(fs.readFileSync(policyFile, "utf8"), policyFile), { today });
-    const dir = path.dirname(policyFile);
-    cache.set(policyFile, { policy, dir, mtimeMs, today });
+    const policy = compilePolicyFile(policyFile, today);
+    cache.set(policyFile, { policy, mtimeMs });
     return { policy, dir };
   } catch (e) {
-    if (e instanceof PolicyError) return { policy: DENY_ALL, dir: path.dirname(policyFile), error: e.message };
+    if (e instanceof PolicyError || e instanceof Error) return { policy: DENY_ALL, dir, error: e.message };
     throw e;
   }
 }
 
+/** The `permit/capability` rule. See RuleOptions. */
 export const capabilityRule = {
   meta: {
     type: "problem",
@@ -91,7 +101,7 @@ export const capabilityRule = {
         const filename = context.filename ?? context.getFilename?.() ?? "<input>";
         const text = context.sourceCode?.text ?? context.getSourceCode?.().text ?? "";
         const opts = (context.options[0] ?? {}) as RuleOptions;
-        const today = opts.today ?? new Date().toISOString().slice(0, 10);
+        const today = opts.today ?? isoToday();
         const file = path.resolve(filename);
 
         const { policy, dir, error } = loadPolicy(file, today, opts.policy);
@@ -102,19 +112,18 @@ export const capabilityRule = {
 
         const parsed = parseSource(file, text);
         if (parsed.errors.length > 0) return; // ESLint's own parser will have complained already
-        const uses = extract(parsed);
-        const decisions = decide(uses, policy, {
+        const decisions = decide(extract(parsed), policy, {
           scopePath: (u) => path.relative(dir, u.file),
           ...(opts.minConfidence ? { minConfidence: opts.minConfidence } : {}),
         });
         for (const d of decisions) {
           const { use } = d;
           const loc = { line: use.line, column: use.column - 1 };
+          const subject = describeUse(use.capability, use.target);
           if (d.verdict === "denied") {
-            const target = use.target !== null && use.target !== "same-origin" ? ` to ${use.target}` : "";
-            context.report({ message: `${use.capability}${target} ${denialText(d)}`, loc });
+            context.report({ message: `${subject} ${denialText(d)}`, loc });
           } else if (d.verdict === "unknown" && opts.reportUnknown) {
-            context.report({ message: `${use.capability} ${use.confidence} (not failing the build)`, loc });
+            context.report({ message: `${subject} ${use.confidence} (not failing the build)`, loc });
           }
         }
       },

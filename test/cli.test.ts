@@ -60,7 +60,7 @@ describe("permit <paths> (step 2: discover and parse)", () => {
     expect(r.stderr).toContain("path not found");
   });
 
-  it("honours --exclude", () => {
+  it("honors --exclude", () => {
     const r = cli("--exclude", "nested", root);
     expect(r.code).toBe(0);
     expect(r.stdout).toContain("3 files");
@@ -81,7 +81,7 @@ describe("permit <paths> (step 4: deny-all gate)", () => {
     const r = cli(f);
     expect(r.code).toBe(1);
     expect(r.stdout).toContain(
-      `test/fixtures/deny/violation.js:2:3: storage.local denied by "deny everything": localStorage.setItem("a", 1)`,
+      `test/fixtures/deny/violation.js:2:3: storage.local denied by default (no rule grants it): localStorage.setItem("a", 1)`,
     );
     expect(r.stdout).toContain("1 file, 1 denied, 0 unknown");
   });
@@ -125,7 +125,7 @@ describe("permit <paths> (step 7: policy discovery)", () => {
     const r = cli("--today", "2026-08-23", path.join(proj, "src"));
     expect(r.code).toBe(1);
     expect(r.stdout).toContain(
-      'test/fixtures/proj/src/app.js:2:1: storage.local denied by "deny everything": localStorage.setItem("not-here", 1)',
+      'test/fixtures/proj/src/app.js:2:1: storage.local denied by default (no rule grants it): localStorage.setItem("not-here", 1)',
     );
     expect(r.stdout).toContain(
       'test/fixtures/proj/src/legacy/old.js:2:1: storage.cookie denied by "forbid cookies" (line 4): consent banner owns these: document.cookie',
@@ -147,7 +147,7 @@ describe("permit <paths> (step 7: policy discovery)", () => {
     const r = cli("--today", "2026-09-01", path.join(proj, "src", "sw.js"));
     expect(r.code).toBe(1);
     expect(r.stdout).toContain(
-      'storage.cache denied, grant expired 2026-08-30: "may use the cache until 2026-08-30" (line 5): service worker experiment: caches.open("v1")',
+      'storage.cache denied (grant expired 2026-08-30) by "may use the cache until 2026-08-30" (line 5): service worker experiment: caches.open("v1")',
     );
   });
 
@@ -178,13 +178,13 @@ describe("permit <paths> (step 7: policy discovery)", () => {
   it("--policy pointing at a missing file exits 2", () => {
     const r = cli("--policy", path.join(proj, "nope.policy"), path.join(proj, "src"));
     expect(r.code).toBe(2);
-    expect(r.stderr).toContain("policy not found");
+    expect(r.stderr).toContain("cannot read policy");
   });
 
   it("--today must be a date", () => {
     const r = cli("--today", "yesterday", path.join(proj, "src"));
     expect(r.code).toBe(2);
-    expect(r.stderr).toContain("--today needs a date like 2026-12-01");
+    expect(r.stderr).toContain("--today must be a date like 2026-12-01");
   });
 });
 

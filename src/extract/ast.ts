@@ -10,6 +10,12 @@ import type { Program, Node } from "oxc-parser";
 
 export type { Program, Node };
 
+/** An AST node with its fields open for inspection. oxc's typed tree is narrower than the walkers need. */
+export type AnyNode = Node & Record<string, unknown>;
+
+export const isNode = (v: unknown): v is AnyNode =>
+  typeof v === "object" && v !== null && typeof (v as { type?: unknown }).type === "string";
+
 export interface ParseError {
   file: string;
   line: number;
@@ -36,6 +42,7 @@ export interface ParsedFile {
 /** Offsets of the first character of each line. */
 export type LineIndex = readonly number[];
 
+/** Offsets of the first character of each line, for mapping byte offsets to positions. */
 export function lineIndex(source: string): LineIndex {
   const starts = [0];
   for (let i = 0; i < source.length; i++) {
@@ -56,6 +63,11 @@ export function positionAt(lines: LineIndex, offset: number): { line: number; co
   return { line: lo + 1, column: offset - lines[lo]! + 1 };
 }
 
+/**
+ * Parse source text. `.mjs`/`.mts` are modules, `.cjs`/`.cts` are scripts,
+ * anything else is detected from the content. The language comes from the
+ * extension (oxc handles .ts/.tsx/.jsx natively).
+ */
 export function parseSource(file: string, source: string): ParsedFile {
   const ext = path.extname(file);
   const result = parseSync(file, source, {
@@ -71,6 +83,7 @@ export function parseSource(file: string, source: string): ParsedFile {
   return { file, source, program: result.program, comments: result.comments as Comment[], errors, lines };
 }
 
+/** Read and parse a file from disk. */
 export function parseFile(file: string): ParsedFile {
   return parseSource(file, fs.readFileSync(file, "utf8"));
 }

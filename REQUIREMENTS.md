@@ -98,7 +98,7 @@ Five stages. Each maps to a module.
 
 | Stage | Module | Job |
 | --- | --- | --- |
-| Discover | `discover` | Walk the repo. Find `.js`, `.mjs`, `.ts`, `.jsx`, `.tsx`, plus `<script>` blocks inside `.html`. Honour excludes. |
+| Discover | `discover` | Walk the repo. Find `.js`, `.mjs`, `.ts`, `.jsx`, `.tsx`, plus `<script>` blocks inside `.html`. Honor excludes. |
 | Extract | `extract` | Parse to AST. Emit a flat list of `CapabilityUse` records: what was touched, where, in what expression. |
 | Triage | `triage` | Discard uses that cannot matter (local shadowed identifiers, type-only positions, dead branches after constant folding). |
 | Decide | `policy` | Compare each surviving use against the compiled policy. Allowed, denied, or unknown. |
@@ -268,7 +268,7 @@ Ported directly from `exact`, because it is already proven.
 
 **Phase A - walking skeleton**
 
-1. Repo, packaging, CI, licence, `--version`. **DONE 2026-08-23.**
+1. Repo, packaging, CI, license, `--version`. **DONE 2026-08-23.**
 2. Discovery and parsing of `.js`/`.mjs` only. **DONE 2026-08-23.**
 3. Extract one capability family end to end: `storage`. **DONE 2026-08-23.**
    Interim shadowing rule until step 14: if a file declares the name a match
@@ -405,7 +405,7 @@ Ported directly from `exact`, because it is already proven.
 1. Zero false positives is the product. Any engine change re-runs the corpus scan;
    the finding count must not move unless the step intends it.
 2. Never use em dashes in prose, docs, or comments - use " - " instead.
-3. New behaviour gets a test first or alongside, never after the commit.
+3. New behavior gets a test first or alongside, never after the commit.
 4. Every new CLI flag gets: help text, a README usage line, and a test.
 5. One step, one commit. Mark steps DONE with a date in this file.
 6. The README states the threat model's limits plainly. No security theatre.

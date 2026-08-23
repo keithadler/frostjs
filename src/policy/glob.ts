@@ -8,6 +8,12 @@
 
 const cache = new Map<string, RegExp>();
 
+/** Escape a string for literal use inside a RegExp. */
+export function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** True when `file` (a path relative to the policy directory) matches the glob. */
 export function matchesGlob(pattern: string, file: string): boolean {
   const pat = normalize(pattern);
   const path = normalize(file);
@@ -47,7 +53,7 @@ function toRegExp(pat: string): RegExp {
     } else if (ch === "?") {
       out += "[^/]";
     } else {
-      out += ch.replace(/[.+^${}()|[\]\\]/g, "\\$&");
+      out += escapeRegExp(ch);
     }
   }
   const prefix = anyDepth ? "^(?:.*/)?" : "^";

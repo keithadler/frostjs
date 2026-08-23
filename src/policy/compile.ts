@@ -1,7 +1,24 @@
+/**
+ * Compile a parsed policy into the ruleset the gate runs. Three rules
+ * decide everything:
+ *
+ * - `forbid` always wins over `may`, whatever the order in the file.
+ * - A grant with `until` stops granting the day after its date; inside the
+ *   warning window it produces a printable warning.
+ * - A host list (`may reach`, `forbid reaching`) matches a known
+ *   destination by pattern. A destination that cannot be read from the
+ *   code cannot be shown to match, so a forbid does not fire on it and a
+ *   grant does not cover it: cannot be shown to be allowed is not allowed.
+ */
 import type { CapabilityUse } from "../extract/capability.js";
-import { matchesGlob } from "./glob.js";
-import type { ParsedPolicy, Rule } from "./parse.js";
+import { escapeRegExp, matchesGlob } from "./glob.js";
+import { ymd, type ParsedPolicy, type Rule } from "./parse.js";
 
+/**
+ * Why a use was allowed or denied. `unregistered` is produced by
+ * `decide()` for vendored files the registry does not know, never by
+ * `compile()`.
+ */
 export type Reason = "granted" | "forbidden" | "expired" | "not granted" | "unknown destination" | "unregistered";
 
 export interface Evaluation {
@@ -14,6 +31,8 @@ export interface Evaluation {
 export interface Policy {
   name: string;
   file: string;
+  /** The date the policy was compiled against, YYYY-MM-DD; expiry and warnings are relative to it. */
+  today: string;
   rules: readonly Rule[];
   /** Globs of vendored files, relative to the policy directory. */
   vendored: readonly string[];
@@ -30,15 +49,23 @@ export interface CompileOptions {
   warnDays?: number;
 }
 
+/** True when a grant's `until` date is before `today`. ISO strings compare correctly. */
+export function isExpired(rule: Rule, today: string): boolean {
+  return rule.until !== null && rule.until < today;
+}
+
+/** Compile a parsed policy against a date. See the module comment for the rules. */
 export function compile(parsed: ParsedPolicy, opts: CompileOptions): Policy {
+  const { today } = opts;
   const warnDays = opts.warnDays ?? 14;
   const forbids = parsed.rules.filter((r) => r.verb === "forbid" && r.capability !== "*");
   const grants = parsed.rules.filter((r) => r.verb === "may");
+  const expired = new Set(grants.filter((r) => isExpired(r, today)));
 
   const warnings: string[] = [];
   for (const r of grants) {
     if (r.until === null) continue;
-    const days = daysBetween(opts.today, r.until);
+    const days = daysBetween(today, r.until);
     if (days < 0 || days > warnDays) continue;
     const when = days === 0 ? "today" : `in ${days} ${days === 1 ? "day" : "days"}`;
     warnings.push(`${parsed.file} line ${r.line}: "${r.text}" expires ${when}`);
@@ -47,38 +74,37 @@ export function compile(parsed: ParsedPolicy, opts: CompileOptions): Policy {
   return {
     name: parsed.name,
     file: parsed.file,
+    today,
     rules: parsed.rules,
     vendored: parsed.vendored,
     warnings,
     evaluate(use) {
+      const target = use.target;
       const inScope = (r: Rule): boolean =>
         matchesCapability(r.capability, use.capability) &&
         (r.paths.length === 0 || r.paths.some((p) => matchesGlob(p, use.file)));
-      // A host list matches a known destination by pattern. An unknown
-      // destination cannot be shown to match, so a forbid does not fire on
-      // it and a grant does not cover it.
       const hostMatches = (r: Rule): boolean =>
-        r.hosts.length === 0 || (use.target !== null && r.hosts.some((h) => matchesHost(h, use.target!)));
+        r.hosts.length === 0 || (target !== null && r.hosts.some((h) => matchesHost(h, target)));
 
       const forbid = forbids.find((r) => inScope(r) && hostMatches(r));
       if (forbid) return { verdict: "denied", reason: "forbidden", rule: forbid };
 
-      let expired: Rule | null = null;
+      let expiredGrant: Rule | null = null;
       let hostListed: Rule | null = null;
       for (const g of grants) {
         if (!inScope(g)) continue;
-        if (g.until !== null && daysBetween(opts.today, g.until) < 0) {
-          expired ??= g;
+        if (expired.has(g)) {
+          expiredGrant ??= g;
           continue;
         }
         if (!hostMatches(g)) {
-          if (use.target === null) hostListed ??= g;
+          if (target === null) hostListed ??= g;
           continue;
         }
         return { verdict: "allowed", reason: "granted", rule: g };
       }
       if (hostListed) return { verdict: "denied", reason: "unknown destination", rule: hostListed };
-      if (expired) return { verdict: "denied", reason: "expired", rule: expired };
+      if (expiredGrant) return { verdict: "denied", reason: "expired", rule: expiredGrant };
       return { verdict: "denied", reason: "not granted", rule: null };
     },
   };
@@ -91,14 +117,7 @@ export function matchesCapability(pattern: string, capability: string): boolean 
 
 /** Host patterns: `*` spans any characters including dots; the match is whole-host and case-insensitive. */
 export function matchesHost(pattern: string, host: string): boolean {
-  const rx =
-    "^" +
-    pattern
-      .toLowerCase()
-      .split("*")
-      .map((p) => p.replace(/[.+?^${}()|[\]\\]/g, "\\$&"))
-      .join(".*") +
-    "$";
+  const rx = "^" + pattern.toLowerCase().split("*").map(escapeRegExp).join(".*") + "$";
   return new RegExp(rx).test(host.toLowerCase());
 }
 
@@ -106,9 +125,4 @@ export function matchesHost(pattern: string, host: string): boolean {
 function daysBetween(from: string, to: string): number {
   const ms = Date.UTC(...ymd(to)) - Date.UTC(...ymd(from));
   return Math.round(ms / 86_400_000);
-}
-
-function ymd(s: string): [number, number, number] {
-  const [y, m, d] = s.split("-").map(Number) as [number, number, number];
-  return [y, m - 1, d];
 }

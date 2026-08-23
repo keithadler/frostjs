@@ -1,8 +1,6 @@
-import type { Node } from "../ast.js";
-import type { Recognizer } from "./types.js";
-import { asNamedGlobal, memberName } from "./globals.js";
-
-type AnyNode = Node & Record<string, unknown>;
+import type { AnyNode } from "../ast.js";
+import { callArgs, match, plain, stringValue, type Recognizer } from "./types.js";
+import { asNamedGlobal, memberName } from "./resolve.js";
 
 /** Properties whose assignment parses HTML. */
 const HTML_SINKS: ReadonlySet<string> = new Set(["innerHTML", "outerHTML", "srcdoc"]);
@@ -10,36 +8,33 @@ const HTML_SINKS: ReadonlySet<string> = new Set(["innerHTML", "outerHTML", "srcd
 /** Methods whose call parses HTML. */
 const HTML_METHODS: ReadonlySet<string> = new Set(["insertAdjacentHTML", "createContextualFragment"]);
 
-/**
- * DOM escape hatches: anything that turns a string into markup or creates
- * an element that runs code. The object is not checked - `el.innerHTML = x`
- * is injection whatever `el` is - but only writes and calls count. Reading
- * innerHTML is not injection.
- */
-const JSX_ELEMENTS: ReadonlyMap<string, string> = new Map([
+/** Intrinsic JSX elements, and createElement tag names, that run code. */
+const CODE_ELEMENTS: ReadonlyMap<string, string> = new Map([
   ["script", "dom-escape.script"],
   ["iframe", "dom-escape.iframe"],
 ]);
 
+/**
+ * DOM escape hatches: anything that turns a string into markup or creates
+ * an element that runs code. The object is not checked - `el.innerHTML = x`
+ * is injection whatever `el` is - but only writes and calls count; reading
+ * innerHTML is not injection. In JSX, `dangerouslySetInnerHTML` and
+ * `srcdoc` attributes and intrinsic `<script>` / `<iframe>` elements count;
+ * component names do not.
+ */
 export const domEscape: Recognizer = ({ node, ancestors, binding }) => {
   if (binding) return null;
   const n = node as AnyNode;
 
-  // <div dangerouslySetInnerHTML={...} />, <iframe srcdoc={...} />
   if (n.type === "JSXAttribute") {
     const name = n["name"] as AnyNode;
     const attr = name.type === "JSXIdentifier" ? (name["name"] as string) : null;
-    if (attr === "dangerouslySetInnerHTML" || attr === "srcdoc") {
-      return { capability: "dom-escape.html", target: null, confidence: "certain", via: null, node };
-    }
-    return null;
+    return attr === "dangerouslySetInnerHTML" || attr === "srcdoc" ? plain("dom-escape.html", node) : null;
   }
-  // <script ...>, <iframe ...>: intrinsic elements only; <Script /> is a component.
   if (n.type === "JSXOpeningElement") {
     const name = n["name"] as AnyNode;
-    const tag = name.type === "JSXIdentifier" ? (name["name"] as string) : null;
-    const cap = tag === null ? undefined : JSX_ELEMENTS.get(tag);
-    return cap ? { capability: cap, target: null, confidence: "certain", via: null, node } : null;
+    const cap = name.type === "JSXIdentifier" ? CODE_ELEMENTS.get(name["name"] as string) : undefined;
+    return cap ? plain(cap, node) : null;
   }
 
   if (n.type !== "MemberExpression") return null;
@@ -50,27 +45,16 @@ export const domEscape: Recognizer = ({ node, ancestors, binding }) => {
 
   if (HTML_SINKS.has(prop)) {
     const assigned = parent.type === "AssignmentExpression" && parent["left"] === node;
-    return assigned
-      ? { capability: "dom-escape.html", target: null, confidence: "certain", via: null, node: parent }
-      : null;
+    return assigned ? plain("dom-escape.html", parent) : null;
   }
 
-  const isCallee = parent.type === "CallExpression" && parent["callee"] === node;
-  if (!isCallee) return null;
-
-  if (HTML_METHODS.has(prop)) {
-    return { capability: "dom-escape.html", target: null, confidence: "certain", via: null, node };
-  }
-
+  const args = callArgs(node, parent);
+  if (!args) return null;
+  if (HTML_METHODS.has(prop)) return plain("dom-escape.html", node);
   if (prop === "createElement") {
-    const d = asNamedGlobal(n["object"] as AnyNode, "document");
-    if (!d) return null;
-    const first = (parent["arguments"] as AnyNode[])[0];
-    const tag = first?.type === "Literal" && typeof first["value"] === "string" ? first["value"].toLowerCase() : null;
-    if (tag === "script")
-      return { capability: "dom-escape.script", target: null, confidence: d.confidence, via: d.via, node };
-    if (tag === "iframe")
-      return { capability: "dom-escape.iframe", target: null, confidence: d.confidence, via: d.via, node };
+    const r = asNamedGlobal(n["object"] as AnyNode, "document");
+    const cap = r ? CODE_ELEMENTS.get(stringValue(args[0])?.toLowerCase() ?? "") : undefined;
+    return r && cap ? match(cap, r, node) : null;
   }
   return null;
 };

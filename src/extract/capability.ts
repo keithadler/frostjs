@@ -1,6 +1,7 @@
 /** How sure the extractor is that this use is real. See REQUIREMENTS 6.1. */
 export type Confidence = "certain" | "probable" | "possible";
 
+/** Where a use came from: the project's own code, a vendored file admitted by the registry, or a script block in HTML. */
 export type Origin = "first-party" | "vendored" | "inline-html";
 
 export interface CapabilityUse {

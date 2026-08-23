@@ -92,7 +92,7 @@ describe("HTML in the CLI", () => {
     const r = cliIn(dir, "index.html");
     expect(r.code).toBe(1);
     expect(r.stdout).toContain(
-      'index.html:11:5: network.fetch to api.example.com denied by "deny everything": fetch(`https://api.example.com/${x}`)',
+      "index.html:11:5: network.fetch to api.example.com denied by default (no rule grants it): fetch(`https://api.example.com/${x}`)",
     );
     expect(r.stdout).not.toContain("storage.local denied");
     expect(r.stdout).toContain("1 file, 1 denied");

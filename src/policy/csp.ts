@@ -13,51 +13,35 @@
  * grants do not. Forbids narrow nothing here, since CSP cannot express
  * "everything except"; the build-time gate enforces those.
  */
-import type { Policy } from "./compile.js";
-import { matchesCapability } from "./compile.js";
-import type { Rule } from "./parse.js";
+import { isExpired, matchesCapability, type Policy } from "./compile.js";
+import { SAME_ORIGIN } from "../extract/target.js";
 
-function live(policy: Policy, today: string): Rule[] {
-  return policy.rules.filter((r) => r.verb === "may" && (r.until === null || r.until >= today));
-}
-
-function grants(rules: readonly Rule[], capability: string): Rule[] {
-  return rules.filter((r) => matchesCapability(r.capability, capability) || r.capability === "*");
-}
-
-function hostSource(h: string): string {
-  return h === "same-origin" ? "'self'" : h;
-}
-
-export function csp(policy: Policy, today: string): string {
-  const rules = live(policy, today);
+/** The Content-Security-Policy header string the policy implies, for the date it was compiled against. */
+export function csp(policy: Policy): string {
+  const rules = policy.rules.filter((r) => r.verb === "may" && !isExpired(r, policy.today));
+  const granted = (capability: string): boolean => rules.some((r) => matchesCapability(r.capability, capability));
   const directives: string[] = [];
 
   // connect-src
-  const net = grants(rules, "network.fetch");
+  const net = rules.filter((r) => matchesCapability(r.capability, "network.fetch"));
   const anyDestination = net.some((r) => r.hosts.length === 0);
-  const hosts = [...new Set(net.flatMap((r) => r.hosts.map(hostSource)))];
+  const hosts = [...new Set(net.flatMap((r) => r.hosts.map((h) => (h === SAME_ORIGIN ? "'self'" : h))))];
   if (anyDestination) directives.push("connect-src *");
   else if (hosts.length > 0) directives.push(`connect-src ${hosts.join(" ")}`);
   else directives.push("connect-src 'none'");
 
+  /** 'self' plus every reachable host, or * when any destination is granted. */
+  const selfAndHosts = (): string =>
+    ["'self'", ...(anyDestination ? ["*"] : hosts.filter((h) => h !== "'self'"))].join(" ");
+
   // script-src
-  const script = ["'self'"];
-  if (grants(rules, "codegen.eval").length > 0 || grants(rules, "codegen.function").length > 0)
-    script.push("'unsafe-eval'");
-  if (grants(rules, "network.import").length > 0) {
-    if (anyDestination) script.push("*");
-    else for (const h of hosts) if (!script.includes(h)) script.push(h);
-  }
-  directives.push(`script-src ${script.join(" ")}`);
+  let script = "'self'";
+  if (granted("codegen.eval") || granted("codegen.function")) script += " 'unsafe-eval'";
+  if (granted("network.import")) script += selfAndHosts().slice("'self'".length);
+  directives.push(`script-src ${script}`);
 
   // worker-src
-  if (grants(rules, "worker.dedicated").length > 0 || grants(rules, "worker.service").length > 0) {
-    const w = ["'self'"];
-    if (anyDestination) w.push("*");
-    else for (const h of hosts) if (!w.includes(h)) w.push(h);
-    directives.push(`worker-src ${w.join(" ")}`);
-  }
+  if (granted("worker.dedicated") || granted("worker.service")) directives.push(`worker-src ${selfAndHosts()}`);
 
   return directives.join("; ");
 }

@@ -13,9 +13,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import { discover } from "./discover/index.js";
-import { parseFile } from "./extract/ast.js";
+import { parseFile, type ParsedFile } from "./extract/ast.js";
 import { extract } from "./extract/index.js";
-import { matchesGlob } from "./policy/glob.js";
+import { matchesGlob } from "./policy/index.js";
+import { describeUse } from "./report/text.js";
 import {
   guessPackage,
   integrityOfFile,
@@ -25,17 +26,21 @@ import {
   type RegistryUse,
 } from "./registry.js";
 
-export const LOCKFILES = ["package-lock.json", "npm-shrinkwrap.json", "yarn.lock", "pnpm-lock.yaml", "bun.lockb"];
+const LOCKFILES = ["package-lock.json", "npm-shrinkwrap.json", "yarn.lock", "pnpm-lock.yaml", "bun.lockb"];
 
 export interface SyncResult {
+  /** The reconciled registry. `sync` does not write it; the caller does. */
   registry: Registry;
-  /** Printable lines, in order. */
+  /** What happened, one printable line each, in order. */
   lines: string[];
+  /** Conditions worth a person's attention that are not findings (no lockfile). */
+  warnings: string[];
   /** True when something needs a person: a new package, or a bump with new capabilities. */
   needsReview: boolean;
 }
 
-export function findLockfile(dir: string): string | null {
+/** The first lockfile found in `dir`, or null. */
+function findLockfile(dir: string): string | null {
   for (const name of LOCKFILES) {
     const p = path.join(dir, name);
     if (fs.existsSync(p)) return p;
@@ -53,9 +58,8 @@ export function includesFor(vendored: readonly string[]): string[] {
   return [...out];
 }
 
-export function usesOf(file: string): RegistryUse[] | null {
-  const parsed = parseFile(file);
-  if (parsed.errors.length > 0) return null;
+/** Distinct (capability, target) pairs of at least probable confidence, sorted. */
+export function usesOf(parsed: ParsedFile): RegistryUse[] {
   const seen = new Map<string, RegistryUse>();
   for (const u of extract(parsed)) {
     if (u.confidence === "possible") continue;
@@ -68,17 +72,19 @@ export function usesOf(file: string): RegistryUse[] | null {
   );
 }
 
-const key = (u: RegistryUse): string => `${u.capability}${u.target !== null ? ` to ${u.target}` : ""}`;
+const key = (u: RegistryUse): string => describeUse(u.capability, u.target);
 
+/** Reconcile the registry with the vendored files under `policyDir`. See the module comment. */
 export function sync(registry: Registry, policyDir: string, vendored: readonly string[], today: string): SyncResult {
   const lines: string[] = [];
+  const warnings: string[] = [];
   let needsReview = false;
   let entries = [...registry.entries];
 
   const lockfile = findLockfile(policyDir);
   let lock: Registry["lockfile"];
   if (lockfile === null) {
-    lines.push("warning: no lockfile found beside the policy; there is nothing to pin dependency versions to");
+    warnings.push("no lockfile found beside the policy; there is nothing to pin dependency versions to");
   } else {
     lock = { path: path.basename(lockfile), integrity: integrityOfFile(lockfile) };
     if (registry.lockfile && registry.lockfile.integrity === lock.integrity)
@@ -86,10 +92,7 @@ export function sync(registry: Registry, policyDir: string, vendored: readonly s
     else if (registry.lockfile) lines.push(`${lock.path} changed since last sync`);
   }
 
-  const roots = includesFor(vendored)
-    .map((d) => path.join(policyDir, d))
-    .filter((d) => fs.existsSync(d));
-  const files = roots.length ? discover([policyDir], { include: includesFor(vendored) }) : discover([policyDir]);
+  const files = discover([policyDir], { include: includesFor(vendored) });
   const present = new Set<string>();
   for (const file of files) {
     const rel = path.relative(policyDir, file).split(path.sep).join("/");
@@ -100,12 +103,13 @@ export function sync(registry: Registry, policyDir: string, vendored: readonly s
 
     const pkg = guessPackage(file, policyDir);
     const previous = entries.filter((e) => e.package === pkg.package).sort((a, b) => b.added.localeCompare(a.added))[0];
-    const uses = usesOf(file);
-    if (uses === null) {
+    const parsed = parseFile(file);
+    if (parsed.errors.length > 0) {
       lines.push(`${rel}: does not parse; not added`);
       needsReview = true;
       continue;
     }
+    const uses = usesOf(parsed);
     if (!previous) {
       lines.push(
         `${rel} (${pkg.package}@${pkg.version}): new package, not in the registry; review it with: permit vendor add ${rel}`,
@@ -127,7 +131,6 @@ export function sync(registry: Registry, policyDir: string, vendored: readonly s
         added: today,
       };
       entries.push(entry);
-      present.add(integrity);
       const note = removed.length ? `; no longer uses ${removed.join(", ")}` : "";
       lines.push(
         `${rel}: ${pkg.package} ${previous.version} -> ${pkg.version}, capabilities unchanged, re-admitted${note}`,
@@ -148,5 +151,5 @@ export function sync(registry: Registry, policyDir: string, vendored: readonly s
   }
   entries = kept;
 
-  return { registry: { version: 1, ...(lock ? { lockfile: lock } : {}), entries }, lines, needsReview };
+  return { registry: { version: 1, ...(lock ? { lockfile: lock } : {}), entries }, lines, warnings, needsReview };
 }

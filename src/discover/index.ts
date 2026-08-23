@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 /** Extensions discovered by default. */
-export const EXTENSIONS: ReadonlySet<string> = new Set([
+const EXTENSIONS: ReadonlySet<string> = new Set([
   ".js",
   ".mjs",
   ".cjs",
@@ -15,6 +15,7 @@ export const EXTENSIONS: ReadonlySet<string> = new Set([
   ".htm",
 ]);
 
+/** True for .html and .htm, whose inline script blocks are analyzed. */
 export function isHtml(name: string): boolean {
   const ext = path.extname(name).toLowerCase();
   return ext === ".html" || ext === ".htm";
@@ -23,12 +24,13 @@ export function isHtml(name: string): boolean {
 /** Declaration files contain no code and describe globals the code may use. */
 const DECLARATION = /\.d\.(ts|mts|cts)$/;
 
-export function isSourceFile(name: string): boolean {
-  return EXTENSIONS.has(path.extname(name)) && !DECLARATION.test(name);
+/** True for a file discovery analyzes: a source extension (any case) that is not a declaration file. */
+function isSourceFile(name: string): boolean {
+  return EXTENSIONS.has(path.extname(name).toLowerCase()) && !DECLARATION.test(name.toLowerCase());
 }
 
 /** Directory names skipped wherever they appear in the tree. */
-export const DEFAULT_EXCLUDES: readonly string[] = ["node_modules", "dist", "build", "coverage", ".git"];
+const DEFAULT_EXCLUDES: readonly string[] = ["node_modules", "dist", "build", "coverage", ".git"];
 
 export interface DiscoverOptions {
   /** Extra directory names to skip, added to DEFAULT_EXCLUDES. */

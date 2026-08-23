@@ -1,5 +1,8 @@
+/** Finding and loading the policy file. */
 import fs from "node:fs";
 import path from "node:path";
+import { compile, type Policy } from "./compile.js";
+import { parsePolicy } from "./parse.js";
 
 export const POLICY_FILENAME = "permit.policy";
 
@@ -41,4 +44,24 @@ export function findPolicyFile(start: string, stopAt?: string): string | null {
     if (parent === dir) return null;
     dir = parent;
   }
+}
+
+/** Today as YYYY-MM-DD, the form every expiry check uses. */
+export function isoToday(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/**
+ * Read and compile a policy file. Throws PolicyError when it cannot be
+ * read as a policy, or a plain Error when the file cannot be read at all.
+ * `shownAs` is the name used in messages, typically relative to the cwd.
+ */
+export function compilePolicyFile(policyFile: string, today: string, shownAs: string = policyFile): Policy {
+  let source: string;
+  try {
+    source = fs.readFileSync(policyFile, "utf8");
+  } catch (e) {
+    throw new Error(`cannot read policy ${shownAs}: ${(e as NodeJS.ErrnoException).code ?? (e as Error).message}`);
+  }
+  return compile(parsePolicy(source, shownAs), { today });
 }

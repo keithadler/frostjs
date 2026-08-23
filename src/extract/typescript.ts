@@ -4,9 +4,7 @@
  * `declare` statements describe globals rather than create bindings. JSX
  * element and attribute names are not identifiers.
  */
-import type { Node } from "./ast.js";
-
-type AnyNode = Node & Record<string, unknown>;
+import type { AnyNode } from "./ast.js";
 
 const TYPE_LEVEL: ReadonlySet<string> = new Set([
   "TSTypeAnnotation",
@@ -51,7 +49,7 @@ export function isTypeOnly(node: AnyNode): boolean {
 }
 
 /** Expression wrappers TypeScript adds around a value: the value is the `expression` child. */
-export const VALUE_WRAPPERS: ReadonlySet<string> = new Set([
+const VALUE_WRAPPERS: ReadonlySet<string> = new Set([
   "TSAsExpression",
   "TSSatisfiesExpression",
   "TSNonNullExpression",

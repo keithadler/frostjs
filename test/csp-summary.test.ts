@@ -10,40 +10,40 @@ const policy = (text: string) => compile(parsePolicy(text, "permit.policy"), { t
 
 describe("csp", () => {
   it("empty policy locks connections down", () => {
-    expect(csp(policy(""), TODAY)).toBe("connect-src 'none'; script-src 'self'");
+    expect(csp(policy(""))).toBe("connect-src 'none'; script-src 'self'");
   });
 
   it("may reach becomes connect-src", () => {
-    expect(csp(policy('may reach "api.example.com", "*.internal", "same-origin"'), TODAY)).toBe(
+    expect(csp(policy('may reach "api.example.com", "*.internal", "same-origin"'))).toBe(
       // may reach grants the whole network family to those hosts, dynamic import included.
       "connect-src api.example.com *.internal 'self'; script-src 'self' api.example.com *.internal",
     );
   });
 
   it("may use the network is any destination", () => {
-    expect(csp(policy("may use the network"), TODAY)).toContain("connect-src *");
+    expect(csp(policy("may use the network"))).toContain("connect-src *");
   });
 
   it("code generation needs unsafe-eval", () => {
-    expect(csp(policy("may use eval"), TODAY)).toContain("script-src 'self' 'unsafe-eval'");
-    expect(csp(policy("may use code generation"), TODAY)).toContain("'unsafe-eval'");
-    expect(csp(policy("may use storage"), TODAY)).not.toContain("unsafe-eval");
+    expect(csp(policy("may use eval"))).toContain("script-src 'self' 'unsafe-eval'");
+    expect(csp(policy("may use code generation"))).toContain("'unsafe-eval'");
+    expect(csp(policy("may use storage"))).not.toContain("unsafe-eval");
   });
 
   it("dynamic import and workers add hosts to script-src and worker-src", () => {
     const p = policy('may reach "cdn.example.com"\nmay use workers');
-    expect(csp(p, TODAY)).toBe(
+    expect(csp(p)).toBe(
       "connect-src cdn.example.com; script-src 'self' cdn.example.com; worker-src 'self' cdn.example.com",
     );
   });
 
   it("expired grants do not widen the header; scoped ones do", () => {
-    expect(csp(policy('may reach "old.example.com" until 2026-01-01'), TODAY)).toContain("connect-src 'none'");
-    expect(csp(policy('may reach "x.example.com" in "src/legacy/*"'), TODAY)).toContain("connect-src x.example.com");
+    expect(csp(policy('may reach "old.example.com" until 2026-01-01'))).toContain("connect-src 'none'");
+    expect(csp(policy('may reach "x.example.com" in "src/legacy/*"'))).toContain("connect-src x.example.com");
   });
 
   it("everything", () => {
-    expect(csp(policy("may use everything"), TODAY)).toBe(
+    expect(csp(policy("may use everything"))).toBe(
       "connect-src *; script-src 'self' 'unsafe-eval' *; worker-src 'self' *",
     );
   });
@@ -60,7 +60,7 @@ describe("summary", () => {
         "forbid cookies -- consent banner owns these",
       ].join("\n"),
     );
-    expect(summary(p, TODAY)).toBe(
+    expect(summary(p)).toBe(
       [
         'Policy "checkout-widget" (permit.policy)',
         "",
@@ -79,13 +79,13 @@ describe("summary", () => {
   });
 
   it("empty policy", () => {
-    const s = summary(policy(""), TODAY);
+    const s = summary(policy(""));
     expect(s).toContain("  - nothing; every capability is denied");
     expect(s).toContain("may not use: storage, the network, code generation");
   });
 
   it("marks expired grants and repeats warnings", () => {
-    const s = summary(policy("may use storage until 2026-01-01\nmay use eval until 2026-08-30"), TODAY);
+    const s = summary(policy("may use storage until 2026-01-01\nmay use eval until 2026-08-30"));
     expect(s).toContain("use storage, expired 2026-01-01");
     expect(s).toContain("Warning: permit.policy line 2");
   });

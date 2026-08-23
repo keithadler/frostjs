@@ -66,7 +66,7 @@ describe("--format sarif", () => {
     expect(first.level).toBe("error");
     expect(first.locations[0].physicalLocation.artifactLocation.uri).toBe("test/fixtures/proj/src/app.js");
     expect(first.locations[0].physicalLocation.region).toEqual({ startLine: 2, startColumn: 1 });
-    expect(first.message.text).toContain('storage.local denied by "deny everything"');
+    expect(first.message.text).toContain("storage.local denied by default (no rule grants it)");
   });
 
   it("baselined results carry baselineState unchanged", () => {
@@ -90,7 +90,7 @@ describe("--format github", () => {
     expect(r.code).toBe(1);
     const lines = r.stdout.split("\n");
     expect(lines[0]).toBe(
-      '::error file=test/fixtures/proj/src/app.js,line=2,col=1,title=permit%3A storage.local denied::storage.local denied by "deny everything": localStorage.setItem("not-here", 1)',
+      '::error file=test/fixtures/proj/src/app.js,line=2,col=1,title=permit%3A storage.local denied::storage.local denied by default (no rule grants it): localStorage.setItem("not-here", 1)',
     );
     expect(lines[1]).toContain(
       "::error file=test/fixtures/proj/src/legacy/old.js,line=2,col=1,title=permit%3A storage.cookie denied::",

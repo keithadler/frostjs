@@ -1,80 +1,116 @@
-/**
- * Shared helpers for recognizing references to well-known browser globals.
- * Scope analysis (is `window` shadowed here?) is Phase D; until then a
- * reference-position identifier with a global's name is taken at face value.
- */
-import type { Node } from "../ast.js";
-import type { Confidence } from "../capability.js";
-import { leadingLiteral } from "../target.js";
-import { unwrap } from "../typescript.js";
-import { FOLDED } from "../annotations.js";
+import type { AnyNode } from "../ast.js";
+import { callArgs, match, type Recognizer, type Resolved } from "./types.js";
+import { asGlobalObject, isIdentifier, memberName } from "./resolve.js";
 
-type AnyNode = Node & Record<string, unknown>;
+/** Built-in constructors and namespaces whose mutation affects every script on the page. */
+const BUILTINS: ReadonlySet<string> = new Set([
+  "Object",
+  "Array",
+  "String",
+  "Number",
+  "Boolean",
+  "Function",
+  "Symbol",
+  "BigInt",
+  "Date",
+  "RegExp",
+  "Error",
+  "Promise",
+  "Map",
+  "Set",
+  "WeakMap",
+  "WeakSet",
+  "WeakRef",
+  "Math",
+  "JSON",
+  "Reflect",
+  "Proxy",
+  "Intl",
+  "ArrayBuffer",
+  "DataView",
+  "Uint8Array",
+  "Int8Array",
+  "Uint16Array",
+  "Int16Array",
+  "Uint32Array",
+  "Int32Array",
+  "Float32Array",
+  "Float64Array",
+  "Uint8ClampedArray",
+  "EventTarget",
+  "Event",
+  "Node",
+  "Element",
+  "HTMLElement",
+  "Document",
+  "Window",
+  "Text",
+  "CharacterData",
+  "DocumentFragment",
+  "ShadowRoot",
+  "HTMLCollection",
+  "NodeList",
+  "Navigator",
+  "Storage",
+  "Location",
+  "History",
+  "XMLHttpRequest",
+  "Response",
+  "Request",
+  "Headers",
+  "URL",
+]);
 
-/** A resolved reference to a global: the confidence, and the identifier node the resolution rests on. */
-export interface Resolved {
-  confidence: Confidence;
-  via: Node | null;
-}
+const MUTATORS: ReadonlySet<string> = new Set(["defineProperty", "defineProperties", "assign", "setPrototypeOf"]);
 
-export const GLOBAL_OBJECTS: ReadonlySet<string> = new Set(["window", "globalThis", "self"]);
-
-/** `self` is routinely a local alias for `this` in older code, so it is only probable. */
-export function globalConfidence(name: string): Confidence {
-  return name === "self" ? "probable" : "certain";
-}
-
-export function isIdentifier(n: unknown, name?: string): n is AnyNode & { name: string } {
-  if (!n || (n as AnyNode).type !== "Identifier") return false;
-  return name === undefined || (n as AnyNode)["name"] === name;
-}
-
-/**
- * The static property name of a member expression, or null if it is dynamic.
- * A computed name is resolved from a string literal, an expression-free
- * template, a concatenation of literals, or an identifier the scope
- * analysis folded from `const k = "..."` (see FOLDED).
- */
-export function memberName(n: AnyNode): string | null {
-  if (n.type !== "MemberExpression") return null;
-  const prop = n["property"] as AnyNode;
-  if (n["computed"] !== true) return isIdentifier(prop) ? prop.name : null;
-  if (prop.type === "Literal") return typeof prop["value"] === "string" ? prop["value"] : null;
-  if (isIdentifier(prop)) return (prop[FOLDED] as string | undefined) ?? null;
-  const lit = leadingLiteral(prop);
-  return lit !== null && lit.complete ? lit.text : null;
-}
-
-export { FOLDED, FREE, AMBIGUOUS } from "../annotations.js";
-
-/** True when the member name came from anything other than a plain literal or identifier. */
-export function isFoldedMember(n: AnyNode): boolean {
-  const m = (n.type === "AssignmentExpression" ? n["left"] : n) as AnyNode;
-  if (m.type !== "MemberExpression" || m["computed"] !== true) return false;
-  return (m["property"] as AnyNode).type !== "Literal";
-}
-
-/**
- * If `n` denotes the global object (`window`, `globalThis`, `self`), return
- * the confidence; otherwise null.
- */
-export function asGlobalObject(raw: AnyNode): Resolved | null {
-  const n = unwrap(raw);
-  if (isIdentifier(n) && GLOBAL_OBJECTS.has(n.name)) {
-    return { confidence: globalConfidence(n.name), via: n };
+/** `<Builtin>` or `<Builtin>.prototype`, as a resolved reference. */
+function asBuiltinSurface(n: AnyNode): Resolved | null {
+  if (isIdentifier(n) && BUILTINS.has(n.name)) return { confidence: "certain", via: n };
+  if (n.type === "MemberExpression" && memberName(n) === "prototype") {
+    const obj = n["object"] as AnyNode;
+    if (isIdentifier(obj) && BUILTINS.has(obj.name)) return { confidence: "certain", via: obj };
   }
   return null;
 }
 
 /**
- * If `n` denotes the named global (e.g. `document`, `navigator`), either as a
- * bare identifier or as `window.<name>`, return the confidence; else null.
+ * Mutation of shared state: properties added to the global object, and
+ * built-ins or their prototypes changed. Reads are not reported, and neither
+ * are window's own event-handler properties (`window.onload = f`), which
+ * install a handler rather than a global.
  */
-export function asNamedGlobal(raw: AnyNode, name: string): Resolved | null {
-  const n = unwrap(raw);
-  if (isIdentifier(n, name)) return { confidence: "certain", via: n };
-  if (n.type === "MemberExpression" && memberName(n) === name) {
-    return asGlobalObject(n["object"] as AnyNode);
+export const globals: Recognizer = ({ node, ancestors, binding }) => {
+  if (binding) return null;
+  const n = node as AnyNode;
+  const parent = ancestors[0] as AnyNode | undefined;
+  if (!parent) return null;
+
+  // window.x = v, Array.prototype.x = v, Array.from = v
+  if (parent.type === "AssignmentExpression" && parent["left"] === node && n.type === "MemberExpression") {
+    const prop = memberName(n);
+    const obj = n["object"] as AnyNode;
+    const g = asGlobalObject(obj);
+    if (g) {
+      if (prop !== null && (prop === "location" || prop.startsWith("on"))) return null;
+      return match("globals.window", g, parent);
+    }
+    if (prop === "prototype") return null; // Foo.prototype = {...} replaces a whole prototype; not a mutation of a built-in
+    const b = asBuiltinSurface(obj);
+    if (b) return match("globals.prototype", b, parent);
+    return null;
+  }
+
+  // Object.defineProperty(window, ...), Object.assign(Array.prototype, ...)
+  const args = callArgs(node, parent);
+  if (args && n.type === "MemberExpression") {
+    const prop = memberName(n);
+    if (prop === null || !MUTATORS.has(prop) || !isIdentifier(n["object"], "Object")) return null;
+    const first = args[0];
+    if (!first) return null;
+    const g = asGlobalObject(first);
+    if (g) return match("globals.window", g, node);
+    const b = asBuiltinSurface(first);
+    if (b) return match("globals.prototype", b, node);
   }
   return null;
-}
+};

@@ -1,3 +1,12 @@
+/**
+ * The command-line orchestrator: one function per command, sharing policy
+ * loading, discovery and registry access. Nothing here calls process.exit;
+ * every command returns its exit code so tests drive it directly.
+ *
+ * Exit codes: 0 clean; 1 a use was denied, or (registry sync, sri) something
+ * needs a person; 2 usage or input error (bad flag, missing path, syntax
+ * error, unreadable policy).
+ */
 import fs from "node:fs";
 import path from "node:path";
 import { HELP, parseArgs, UsageError, type ParsedArgs } from "./args.js";
@@ -7,11 +16,19 @@ import { parseFile, type ParseError } from "../extract/ast.js";
 import { extract } from "../extract/index.js";
 import { parseHtml } from "../extract/html.js";
 import type { CapabilityUse } from "../extract/capability.js";
-import { DENY_ALL, decide, compile, parsePolicy, PolicyError, type Policy } from "../policy/index.js";
-import { commonAncestor, findPolicyFile } from "../policy/config.js";
-import { matchesGlob } from "../policy/glob.js";
-import { csp } from "../policy/csp.js";
-import { text } from "../report/text.js";
+import {
+  commonAncestor,
+  compilePolicyFile,
+  csp,
+  decide,
+  findPolicyFile,
+  isoToday,
+  matchesGlob,
+  DENY_ALL,
+  PolicyError,
+  type Policy,
+} from "../policy/index.js";
+import { text, describeUse } from "../report/text.js";
 import { json } from "../report/json.js";
 import { sarif } from "../report/sarif.js";
 import { github } from "../report/github.js";
@@ -27,46 +44,26 @@ import {
   upsert,
   writeRegistry,
   type Registry,
-  type RegistryUse,
 } from "../registry.js";
-import { includesFor, sync } from "../sync.js";
+import { includesFor, sync, usesOf } from "../sync.js";
 
 export interface Io {
   stdout: (s: string) => void;
   stderr: (s: string) => void;
-  /** Directory that inputs are resolved against and reported paths are made relative to. Defaults to process.cwd(). */
+  /** Directory inputs are resolved against and reported paths are made relative to. Defaults to process.cwd(). */
   cwd?: string;
 }
 
-/** git reports paths under the repository's real location; temp dirs on macOS are symlinked. */
-function realpath(p: string): string {
-  try {
-    return fs.realpathSync(p);
-  } catch {
-    return p;
-  }
-}
-
-const isoToday = (): string => new Date().toISOString().slice(0, 10);
-
-/**
- * Run the CLI against argv (without node and script name). Returns the exit
- * code instead of calling process.exit so tests can drive it directly.
- *
- * Exit codes: 0 clean, 1 policy violations, 2 usage or input error (bad
- * flag, missing path, syntax error, unreadable policy).
- */
+/** Run the CLI against argv (without node and script name) and return the exit code. */
 export function run(argv: readonly string[], io: Io): number {
   let args: ParsedArgs;
   try {
     args = parseArgs(argv);
   } catch (e) {
-    if (e instanceof UsageError) {
-      io.stderr(`permit: ${e.message}\n`);
-      io.stderr(HELP);
-      return 2;
-    }
-    throw e;
+    if (!(e instanceof UsageError)) throw e;
+    io.stderr(`permit: ${e.message}\n`);
+    io.stderr(HELP);
+    return 2;
   }
   if (args.version) {
     io.stdout(`permit ${VERSION}\n`);
@@ -91,120 +88,131 @@ export function run(argv: readonly string[], io: Io): number {
   }
 }
 
+// Shared pieces. Each returns a value or an exit code, having already
+// printed the reason; callers test `typeof x === "number"`.
+
+const cwdOf = (io: Io): string => io.cwd ?? process.cwd();
+
+/** A path as it should appear in reports: relative to cwd, forward slashes. */
+const shown = (cwd: string, file: string): string => path.relative(cwd, file).split(path.sep).join("/") || ".";
+
+/** A path relative to the policy directory, forward slashes, for globs and the registry. */
+const relToPolicy = (policyDir: string, file: string): string =>
+  path.relative(policyDir, file).split(path.sep).join("/");
+
+/** git reports paths under the repository's real location; temp dirs on macOS are symlinked. */
+function realpath(p: string): string {
+  try {
+    return fs.realpathSync(p);
+  } catch {
+    return p;
+  }
+}
+
+function fail(io: Io, message: string): number {
+  io.stderr(`permit: ${message}\n`);
+  return 2;
+}
+
 interface Loaded {
   policy: Policy;
   policyDir: string;
-  policyFile: string | null;
 }
 
-/** Find and compile the policy for the given inputs, or DENY_ALL when there is none. */
+/** Find and compile the policy for the inputs; DENY_ALL with a note when there is none and it is not required. */
 function loadPolicy(args: ParsedArgs, io: Io, inputs: readonly string[], required: boolean): Loaded | number {
-  const cwd = io.cwd ?? process.cwd();
-  const today = args.today ?? isoToday();
+  const cwd = cwdOf(io);
+  const command = `permit ${args.command.replace("-", " ")}`;
   const policyFile = args.policy
     ? path.resolve(cwd, args.policy)
     : findPolicyFile(inputs.length ? commonAncestor(inputs) : cwd);
   if (policyFile === null) {
-    if (required) {
-      io.stderr(`permit: no permit.policy found; ${args.command.replace("-", " ")} needs one\n`);
-      return 2;
-    }
+    if (required) return fail(io, `no permit.policy found; ${command} needs one`);
     io.stderr("permit: no permit.policy found; denying everything\n");
-    return { policy: DENY_ALL, policyDir: cwd, policyFile: null };
-  }
-  let source: string;
-  try {
-    source = fs.readFileSync(policyFile, "utf8");
-  } catch {
-    io.stderr(`permit: policy not found: ${args.policy ?? policyFile}\n`);
-    return 2;
+    return { policy: DENY_ALL, policyDir: cwd };
   }
   try {
-    const policy = compile(parsePolicy(source, path.relative(cwd, policyFile) || policyFile), { today });
-    return { policy, policyDir: path.dirname(policyFile), policyFile };
+    const policy = compilePolicyFile(
+      policyFile,
+      args.today ?? isoToday(),
+      path.relative(cwd, policyFile) || policyFile,
+    );
+    return { policy, policyDir: path.dirname(policyFile) };
   } catch (e) {
-    if (e instanceof PolicyError) {
-      io.stderr(`permit: ${e.message}\n`);
-      return 2;
-    }
+    if (e instanceof PolicyError || e instanceof Error) return fail(io, e.message);
     throw e;
   }
 }
 
+/** Resolve the given paths against cwd and discover source files under them. */
+function discoverOrFail(args: ParsedArgs, io: Io, vendored: readonly string[]): string[] | number {
+  const cwd = cwdOf(io);
+  const missing = args.paths.find((p) => !fs.existsSync(path.resolve(cwd, p)));
+  if (missing !== undefined) return fail(io, `path not found: ${missing}`);
+  return discover(
+    args.paths.map((p) => path.resolve(cwd, p)),
+    { exclude: args.exclude, include: includesFor(vendored) },
+  );
+}
+
+function readRegistryOrFail(policyDir: string, io: Io): Registry | number {
+  try {
+    return readRegistry(registryPath(policyDir));
+  } catch (e) {
+    return fail(io, (e as Error).message);
+  }
+}
+
+// permit <paths...>
+
 function runCheck(args: ParsedArgs, io: Io): number {
-  const cwd = io.cwd ?? process.cwd();
-  if (args.updateBaseline && args.baseline === null) {
-    io.stderr("permit: --update-baseline needs --baseline <file>\n");
-    return 2;
-  }
-  if (args.format === "html") {
-    io.stderr("permit: --format html is only for permit sri\n");
-    return 2;
-  }
+  const cwd = cwdOf(io);
+  if (args.updateBaseline && args.baseline === null) return fail(io, "--update-baseline needs --baseline <file>");
+  if (args.format === "html") return fail(io, "--format html is only for permit sri");
   if (args.paths.length === 0) {
     io.stderr("permit: no paths given\n");
     io.stderr(HELP);
     return 2;
   }
   const inputs = args.paths.map((p) => path.resolve(cwd, p));
-  const missing = args.paths.find((p) => !fs.existsSync(path.resolve(cwd, p)));
-  if (missing !== undefined) {
-    io.stderr(`permit: path not found: ${missing}\n`);
-    return 2;
-  }
 
   const loaded = loadPolicy(args, io, inputs, false);
   if (typeof loaded === "number") return loaded;
   const { policy, policyDir } = loaded;
 
-  let files: string[];
-  try {
-    files = discover(inputs, { exclude: args.exclude, include: includesFor(policy.vendored) });
-  } catch (e) {
-    io.stderr(`permit: ${(e as Error).message}\n`);
-    return 2;
-  }
+  const files = discoverOrFail(args, io, policy.vendored);
+  if (typeof files === "number") return files;
 
   let registry: Registry | null = null;
   if (policy.vendored.length > 0) {
-    try {
-      registry = readRegistry(registryPath(policyDir));
-    } catch (e) {
-      io.stderr(`permit: ${(e as Error).message}\n`);
-      return 2;
-    }
+    const r = readRegistryOrFail(policyDir, io);
+    if (typeof r === "number") return r;
+    registry = r;
   }
 
   const syntaxErrors: ParseError[] = [];
   const uses: CapabilityUse[] = [];
   for (const file of files) {
-    const shown = path.relative(cwd, file) || ".";
-    const relToPolicy = path.relative(policyDir, file);
-    if (registry !== null && policy.vendored.some((g) => matchesGlob(g, relToPolicy))) {
-      uses.push(...vendoredUses(file, shown, registry));
-      continue;
-    }
-    if (isHtml(file)) {
+    const name = shown(cwd, file);
+    if (registry !== null && policy.vendored.some((g) => matchesGlob(g, relToPolicy(policyDir, file)))) {
+      uses.push(...vendoredUses(file, name, registry));
+    } else if (isHtml(file)) {
       for (const block of parseHtml(file, fs.readFileSync(file, "utf8"))) {
-        if (block.errors.length > 0) syntaxErrors.push(...block.errors.map((e) => ({ ...e, file: shown })));
-        else uses.push(...extract(block, { origin: "inline-html" }).map((u) => ({ ...u, file: shown })));
+        if (block.errors.length > 0) syntaxErrors.push(...block.errors.map((e) => ({ ...e, file: name })));
+        else uses.push(...extract(block, { origin: "inline-html" }).map((u) => ({ ...u, file: name })));
       }
-      continue;
+    } else {
+      const parsed = parseFile(file);
+      if (parsed.errors.length > 0) syntaxErrors.push(...parsed.errors.map((e) => ({ ...e, file: name })));
+      else uses.push(...extract(parsed).map((u) => ({ ...u, file: name })));
     }
-    const parsed = parseFile(file);
-    if (parsed.errors.length > 0) {
-      syntaxErrors.push(...parsed.errors.map((e) => ({ ...e, file: shown })));
-      continue;
-    }
-    uses.push(...extract(parsed).map((u) => ({ ...u, file: shown })));
   }
-
   for (const e of syntaxErrors) io.stderr(`${e.file}:${e.line}:${e.column}: syntax error: ${e.message}\n`);
   if (syntaxErrors.length > 0) return 2;
 
-  // Report paths relative to cwd; scope policy globs relative to the policy file.
+  // Report paths are relative to cwd; policy globs are relative to the policy file.
   let decisions = decide(uses, policy, {
-    scopePath: (u) => path.relative(policyDir, path.resolve(cwd, u.file)),
+    scopePath: (u) => relToPolicy(policyDir, path.resolve(cwd, u.file)),
     ...(args.minConfidence ? { minConfidence: args.minConfidence } : {}),
   });
 
@@ -213,14 +221,12 @@ function runCheck(args: ParsedArgs, io: Io): number {
   if (args.baseline !== null) {
     const baselineFile = path.resolve(cwd, args.baseline);
     const baselineDir = path.dirname(baselineFile);
-    const relToBaseline = (u: CapabilityUse): string =>
-      path.relative(baselineDir, path.resolve(cwd, u.file)).split(path.sep).join("/");
+    const relToBaseline = (u: CapabilityUse): string => relToPolicy(baselineDir, path.resolve(cwd, u.file));
     let existing;
     try {
       existing = readBaseline(baselineFile);
     } catch (e) {
-      io.stderr(`permit: ${(e as Error).message}\n`);
-      return 2;
+      return fail(io, (e as Error).message);
     }
     if (args.updateBaseline) {
       const entries = [
@@ -230,7 +236,7 @@ function runCheck(args: ParsedArgs, io: Io): number {
           .map((d) => ({ file: relToBaseline(d.use), capability: d.use.capability, expression: d.use.expression })),
       ];
       const n = writeBaseline(baselineFile, entries);
-      baselineNote = `wrote ${n} ${n === 1 ? "entry" : "entries"} to ${path.relative(cwd, baselineFile) || baselineFile}\n`;
+      baselineNote = `wrote ${n} ${n === 1 ? "entry" : "entries"} to ${shown(cwd, baselineFile)}\n`;
     } else {
       const known = baselineKeys(existing);
       decisions = decisions.map((d) =>
@@ -247,8 +253,7 @@ function runCheck(args: ParsedArgs, io: Io): number {
     try {
       changed = changedLines(args.changedSince, commonAncestor(inputs));
     } catch (e) {
-      io.stderr(`permit: ${(e as Error).message}\n`);
-      return 2;
+      return fail(io, (e as Error).message);
     }
     decisions = decisions.map((d) =>
       d.verdict === "denied" && !isChanged(changed, realpath(path.resolve(cwd, d.use.file)), d.use.line)
@@ -277,160 +282,111 @@ function runCheck(args: ParsedArgs, io: Io): number {
 }
 
 /** A vendored file contributes its registry entry's capability set, or one unregistered use. */
-function vendoredUses(file: string, shown: string, registry: Registry): CapabilityUse[] {
+function vendoredUses(file: string, name: string, registry: Registry): CapabilityUse[] {
   const integrity = integrityOfFile(file);
   const base = {
-    file: shown,
+    file: name,
     line: 1,
     column: 1,
-    confidence: "certain" as const,
-    origin: "vendored" as const,
+    confidence: "certain",
+    origin: "vendored",
     suppressed: false,
-  };
+  } as const;
   const entry = lookup(registry, integrity);
-  if (entry === null) {
-    return [{ ...base, capability: "vendor.unregistered", target: null, expression: integrity }];
-  }
+  if (entry === null) return [{ ...base, capability: "vendor.unregistered", target: null, expression: integrity }];
   const expression = `${entry.package}@${entry.version} (vendored)`;
   return entry.uses.map((u) => ({ ...base, capability: u.capability, target: u.target, expression }));
 }
 
-/** `permit vendor add <files>`: analyze each file once, record its capability set and hash. */
+// permit vendor add <files...>
+
 function runVendorAdd(args: ParsedArgs, io: Io): number {
-  const cwd = io.cwd ?? process.cwd();
-  if (args.paths.length === 0) {
-    io.stderr("permit: permit vendor add needs one or more files\n");
-    return 2;
-  }
+  const cwd = cwdOf(io);
+  if (args.paths.length === 0) return fail(io, "permit vendor add needs one or more files");
   const inputs = args.paths.map((p) => path.resolve(cwd, p));
   const loaded = loadPolicy(args, io, inputs, true);
   if (typeof loaded === "number") return loaded;
   const { policy, policyDir } = loaded;
   const regFile = registryPath(policyDir);
-  let registry: Registry;
-  try {
-    registry = readRegistry(regFile);
-  } catch (e) {
-    io.stderr(`permit: ${(e as Error).message}\n`);
-    return 2;
-  }
+  let registry = readRegistryOrFail(policyDir, io);
+  if (typeof registry === "number") return registry;
+  const files = discoverOrFail(args, io, policy.vendored);
+  if (typeof files === "number") return files;
 
-  let files: string[];
-  try {
-    files = discover(inputs, { exclude: args.exclude, include: includesFor(policy.vendored) });
-  } catch (e) {
-    io.stderr(`permit: ${(e as Error).message}\n`);
-    return 2;
-  }
   const today = args.today ?? isoToday();
   for (const file of files) {
-    const shown = path.relative(cwd, file) || file;
-    const relToPolicy = path.relative(policyDir, file).split(path.sep).join("/");
-    if (!policy.vendored.some((g) => matchesGlob(g, relToPolicy))) {
+    const name = shown(cwd, file);
+    const rel = relToPolicy(policyDir, file);
+    if (!policy.vendored.some((g) => matchesGlob(g, rel))) {
       io.stderr(
-        `permit: note: ${shown} is not covered by a 'vendored' line in the policy; add one or it will be analyzed line by line\n`,
+        `permit: note: ${name} is not covered by a 'vendored' line in the policy; add one or it will be analyzed line by line\n`,
       );
     }
     const parsed = parseFile(file);
     if (parsed.errors.length > 0) {
       const e = parsed.errors[0]!;
-      io.stderr(`${shown}:${e.line}:${e.column}: syntax error: ${e.message}\n`);
-      return 2;
+      return fail(io, `${name}:${e.line}:${e.column}: syntax error: ${e.message}`);
     }
-    const seen = new Map<string, RegistryUse>();
-    for (const u of extract(parsed)) {
-      if (u.confidence === "possible") continue;
-      seen.set(`${u.capability}\0${u.target ?? ""}`, { capability: u.capability, target: u.target });
-    }
-    const uses = [...seen.values()].sort((a, b) =>
-      a.capability === b.capability
-        ? (a.target ?? "").localeCompare(b.target ?? "")
-        : a.capability.localeCompare(b.capability),
-    );
+    const uses = usesOf(parsed);
     const pkg = guessPackage(file, policyDir);
-    registry = upsert(registry, {
-      integrity: integrityOfFile(file),
-      package: pkg.package,
-      version: pkg.version,
-      file: relToPolicy,
-      uses,
-      added: today,
-    });
+    registry = upsert(registry, { integrity: integrityOfFile(file), ...pkg, file: rel, uses, added: today });
     io.stdout(
-      `${shown} (${pkg.package}@${pkg.version}): ${uses.length} capability ${uses.length === 1 ? "use" : "uses"}\n`,
+      `${name} (${pkg.package}@${pkg.version}): ${uses.length} capability ${uses.length === 1 ? "use" : "uses"}\n`,
     );
-    for (const u of uses) {
-      io.stdout(`  ${u.capability}${u.target !== null && u.target !== "same-origin" ? ` to ${u.target}` : ""}\n`);
-    }
+    for (const u of uses) io.stdout(`  ${describeUse(u.capability, u.target)}\n`);
   }
   writeRegistry(regFile, registry);
   io.stdout(
-    `added to ${path.relative(cwd, regFile) || regFile}; review the capabilities above and grant them in the policy if they are acceptable\n`,
+    `added to ${shown(cwd, regFile)}; review the capabilities above and grant them in the policy if they are acceptable\n`,
   );
   return 0;
 }
 
-/** `permit registry sync`: reconcile the registry with the tree after a dependency bump. */
+// permit registry sync
+
 function runRegistrySync(args: ParsedArgs, io: Io): number {
-  const cwd = io.cwd ?? process.cwd();
+  const cwd = cwdOf(io);
   const loaded = loadPolicy(args, io, [], true);
   if (typeof loaded === "number") return loaded;
   const { policy, policyDir } = loaded;
-  if (policy.vendored.length === 0) {
-    io.stderr("permit: the policy has no 'vendored' line, so there is nothing to sync\n");
-    return 2;
-  }
-  const regFile = registryPath(policyDir);
-  let registry: Registry;
-  try {
-    registry = readRegistry(regFile);
-  } catch (e) {
-    io.stderr(`permit: ${(e as Error).message}\n`);
-    return 2;
-  }
+  if (policy.vendored.length === 0) return fail(io, "the policy has no 'vendored' line, so there is nothing to sync");
+  const registry = readRegistryOrFail(policyDir, io);
+  if (typeof registry === "number") return registry;
+
   const result = sync(registry, policyDir, policy.vendored, args.today ?? isoToday());
+  const regFile = registryPath(policyDir);
   writeRegistry(regFile, result.registry);
+  for (const w of result.warnings) io.stderr(`permit: warning: ${w}\n`);
   for (const line of result.lines) io.stdout(line + "\n");
-  io.stdout(
-    `${path.relative(cwd, regFile) || regFile}: ${result.registry.entries.length} ${result.registry.entries.length === 1 ? "entry" : "entries"}\n`,
-  );
+  const n = result.registry.entries.length;
+  io.stdout(`${shown(cwd, regFile)}: ${n} ${n === 1 ? "entry" : "entries"}\n`);
   return result.needsReview ? 1 : 0;
 }
 
-/** `permit sri`: integrity values for registered vendored files, in the registry's own hash form. */
+// permit sri [paths...]
+
 function runSri(args: ParsedArgs, io: Io): number {
-  const cwd = io.cwd ?? process.cwd();
-  const inputs = (args.paths.length ? args.paths : ["."]).map((p) => path.resolve(cwd, p));
+  const cwd = cwdOf(io);
+  if (args.paths.length === 0) args = { ...args, paths: ["."] };
+  const inputs = args.paths.map((p) => path.resolve(cwd, p));
   const loaded = loadPolicy(args, io, inputs, true);
   if (typeof loaded === "number") return loaded;
   const { policy, policyDir } = loaded;
-  let registry: Registry;
-  try {
-    registry = readRegistry(registryPath(policyDir));
-  } catch (e) {
-    io.stderr(`permit: ${(e as Error).message}\n`);
-    return 2;
-  }
-  let files: string[];
-  try {
-    files = discover(inputs, { exclude: args.exclude, include: includesFor(policy.vendored) });
-  } catch (e) {
-    io.stderr(`permit: ${(e as Error).message}\n`);
-    return 2;
-  }
+  const registry = readRegistryOrFail(policyDir, io);
+  if (typeof registry === "number") return registry;
+  const files = discoverOrFail(args, io, policy.vendored);
+  if (typeof files === "number") return files;
+
   const out: { file: string; integrity: string }[] = [];
   let missing = 0;
   for (const file of files) {
-    const rel = path.relative(policyDir, file).split(path.sep).join("/");
-    if (!policy.vendored.some((g) => matchesGlob(g, rel))) continue;
+    if (!policy.vendored.some((g) => matchesGlob(g, relToPolicy(policyDir, file)))) continue;
     const integrity = integrityOfFile(file);
-    const shown = path.relative(cwd, file).split(path.sep).join("/");
+    const name = shown(cwd, file);
     if (lookup(registry, integrity) === null) {
-      io.stderr(`${shown}: not in the registry; review it with: permit vendor add ${shown}\n`);
+      io.stderr(`${name}: not in the registry; review it with: permit vendor add ${name}\n`);
       missing++;
-      continue;
-    }
-    out.push({ file: shown, integrity });
+    } else out.push({ file: name, integrity });
   }
   switch (args.format) {
     case "json":
@@ -446,13 +402,17 @@ function runSri(args: ParsedArgs, io: Io): number {
   return missing > 0 ? 1 : 0;
 }
 
-/** `permit csp` and `permit summary`: read the policy, print the derived artifact. */
+// permit csp, permit summary
+
 function runPolicyCommand(args: ParsedArgs, io: Io): number {
-  const cwd = io.cwd ?? process.cwd();
-  const today = args.today ?? isoToday();
-  const inputs = args.paths.map((p) => path.resolve(cwd, p));
-  const loaded = loadPolicy(args, io, inputs, true);
+  const cwd = cwdOf(io);
+  const loaded = loadPolicy(
+    args,
+    io,
+    args.paths.map((p) => path.resolve(cwd, p)),
+    true,
+  );
   if (typeof loaded === "number") return loaded;
-  io.stdout(args.command === "csp" ? csp(loaded.policy, today) + "\n" : summary(loaded.policy, today));
+  io.stdout(args.command === "csp" ? csp(loaded.policy) + "\n" : summary(loaded.policy));
   return 0;
 }

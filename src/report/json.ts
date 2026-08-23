@@ -2,10 +2,10 @@
  * JSON output. The schema is versioned; bump SCHEMA_VERSION on any
  * incompatible change and say so in the changelog.
  */
-import type { Decision } from "../policy/index.js";
-import type { Policy } from "../policy/compile.js";
+import type { Decision, Policy, Verdict } from "../policy/index.js";
 import { VERSION } from "../version.js";
 
+/** Bumped on any incompatible change to JsonReport. */
 export const SCHEMA_VERSION = 1;
 
 export interface JsonRule {
@@ -27,18 +27,23 @@ export interface JsonDecision {
   rule: JsonRule | null;
 }
 
+/** The document `--format json` prints. `schema` is SCHEMA_VERSION; `permit` is the tool version. */
 export interface JsonReport {
   schema: number;
   permit: string;
   policy: { file: string; name: string };
+  /** Files analyzed. */
   files: number;
-  summary: Record<string, number>;
+  /** Count of decisions by verdict. */
+  summary: Record<Verdict, number>;
+  /** Expiry warnings from the policy. */
   warnings: string[];
+  /** Every use, including allowed ones. */
   decisions: JsonDecision[];
 }
 
-export function buildJson(decisions: readonly Decision[], files: number, policy: Policy): JsonReport {
-  const summary: Record<string, number> = {
+function buildJson(decisions: readonly Decision[], files: number, policy: Policy): JsonReport {
+  const summary: Record<Verdict, number> = {
     allowed: 0,
     denied: 0,
     unknown: 0,
@@ -46,7 +51,7 @@ export function buildJson(decisions: readonly Decision[], files: number, policy:
     baselined: 0,
     unchanged: 0,
   };
-  for (const d of decisions) summary[d.verdict] = (summary[d.verdict] ?? 0) + 1;
+  for (const d of decisions) summary[d.verdict]++;
   return {
     schema: SCHEMA_VERSION,
     permit: VERSION,
@@ -69,6 +74,7 @@ export function buildJson(decisions: readonly Decision[], files: number, policy:
   };
 }
 
+/** `--format json`: the JsonReport, pretty-printed. */
 export function json(decisions: readonly Decision[], files: number, policy: Policy): string {
   return JSON.stringify(buildJson(decisions, files, policy), null, 2) + "\n";
 }

@@ -1,8 +1,6 @@
-import type { Node } from "../ast.js";
-import type { Recognizer } from "./types.js";
-import { asNamedGlobal, memberName } from "./globals.js";
-
-type AnyNode = Node & Record<string, unknown>;
+import type { AnyNode } from "../ast.js";
+import { callArgs, match, stringValue, type Recognizer } from "./types.js";
+import { asNamedGlobal, memberName } from "./resolve.js";
 
 /** navigator members that identify the device, user, or their surroundings. */
 const NAVIGATOR: ReadonlyMap<string, string> = new Map([
@@ -54,7 +52,7 @@ export const identity: Recognizer = ({ node, ancestors, binding }) => {
         key.type === "Identifier" ? (key["name"] as string) : key.type === "Literal" ? String(key["value"]) : null;
       const cap = name === null ? undefined : NAVIGATOR.get(name);
       // One match per declarator is enough to name the capability; report the first.
-      if (cap) return { capability: cap, target: null, confidence: r.confidence, via: r.via, node };
+      if (cap) return match(cap, r, node);
     }
     return null;
   }
@@ -67,17 +65,15 @@ export const identity: Recognizer = ({ node, ancestors, binding }) => {
   const cap = NAVIGATOR.get(prop);
   if (cap) {
     const r = asNamedGlobal(obj, "navigator");
-    return r ? { capability: cap, target: null, confidence: r.confidence, via: r.via, node } : null;
+    return r ? match(cap, r, node) : null;
   }
 
   if (prop === "execCommand") {
-    const parent = ancestors[0] as AnyNode | undefined;
-    if (!parent || parent.type !== "CallExpression" || parent["callee"] !== node) return null;
-    const first = (parent["arguments"] as AnyNode[])[0];
-    const cmd = first?.type === "Literal" && typeof first["value"] === "string" ? first["value"].toLowerCase() : null;
-    if (cmd === null || !CLIPBOARD_COMMANDS.has(cmd)) return null;
-    const d = asNamedGlobal(obj, "document");
-    return d ? { capability: "identity.clipboard", target: null, confidence: d.confidence, via: d.via, node } : null;
+    const args = callArgs(node, ancestors[0] as AnyNode | undefined);
+    const cmd = stringValue(args?.[0])?.toLowerCase();
+    if (cmd === undefined || !CLIPBOARD_COMMANDS.has(cmd)) return null;
+    const r = asNamedGlobal(obj, "document");
+    return r ? match("identity.clipboard", r, node) : null;
   }
   return null;
 };

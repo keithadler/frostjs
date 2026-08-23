@@ -88,9 +88,7 @@ export const MEMBER_CODES: readonly string[] = [
 ];
 
 /** Every code a policy may name directly: the families and each member the extractor can emit. */
-export const KNOWN_CODES: ReadonlySet<string> = new Set(
-  [...FAMILIES, ...MEMBER_CODES, ...CAPABILITY_PHRASES.values()].filter((c) => c !== "*"),
-);
+export const KNOWN_CODES: ReadonlySet<string> = new Set([...FAMILIES, ...MEMBER_CODES]);
 
 /** Resolve a phrase or code to a capability code, or null. */
 export function resolveCapability(words: string): string | null {

@@ -1,5 +1,5 @@
 /**
- * Inline suppression, following exact's convention:
+ * Inline suppression:
  *
  *   // permit: ignore                      suppress every capability on this line
  *   // permit: ignore[storage.local, net]  suppress the listed codes or families
@@ -11,7 +11,9 @@ import type { ParsedFile } from "./ast.js";
 import { positionAt } from "./ast.js";
 
 export interface Suppression {
+  /** A bare `permit: ignore`: every capability on the line. */
   all: boolean;
+  /** Codes or families listed in brackets. */
   codes: string[];
 }
 
@@ -48,6 +50,7 @@ function merge(a: Suppression | undefined, b: Suppression): Suppression {
   return { all: a.all || b.all, codes: [...a.codes, ...b.codes] };
 }
 
+/** True when the suppression covers the capability: exactly, or by its family (`storage` covers `storage.local`). */
 export function isSuppressed(s: Suppression | undefined, capability: string): boolean {
   if (!s) return false;
   if (s.all) return true;

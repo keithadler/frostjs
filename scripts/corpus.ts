@@ -4,7 +4,7 @@
  * against corpus/expected.txt.
  *
  *   npm run corpus            fail if the findings changed
- *   npm run corpus -- --update  rewrite expected.txt (only when a step intends it)
+ *   npm run corpus -- --update  rewrite expected.txt (only when the change is intended)
  */
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
@@ -101,7 +101,7 @@ for (const l of removed) process.stdout.write(`- ${l}\n`);
 process.stderr.write(`${files} files, ${(bytes / 1e6).toFixed(1)} MB, ${lines.length} findings, ${seconds}s`);
 if (added.length || removed.length) {
   process.stderr.write(
-    `: ${added.length} new, ${removed.length} gone. If this step intended the change, run: npm run corpus -- --update\n`,
+    `: ${added.length} new, ${removed.length} gone. If the change is intended, run: npm run corpus -- --update\n`,
   );
   process.exit(1);
 }

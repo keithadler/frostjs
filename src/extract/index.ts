@@ -1,9 +1,10 @@
-import type { Node, ParsedFile } from "./ast.js";
+import type { AnyNode, Node, ParsedFile } from "./ast.js";
 import { positionAt } from "./ast.js";
 import type { CapabilityUse, Origin } from "./capability.js";
 import { walk } from "./walk.js";
 import { analyzeScopes } from "./scope.js";
-import { AMBIGUOUS, FOLDED, FREE, isFoldedMember } from "./recognizers/globals.js";
+import { AMBIGUOUS, FOLDED, FREE } from "./annotations.js";
+import { isFoldedMember } from "./recognizers/resolve.js";
 import { suppressions, isSuppressed } from "./suppress.js";
 import type { Recognizer } from "./recognizers/types.js";
 import { storage } from "./recognizers/storage.js";
@@ -12,28 +13,25 @@ import { codegen } from "./recognizers/codegen.js";
 import { domEscape } from "./recognizers/dom-escape.js";
 import { identity } from "./recognizers/identity.js";
 import { navigation } from "./recognizers/navigation.js";
-import { globalsFamily } from "./recognizers/globals-family.js";
+import { globals } from "./recognizers/globals.js";
 import { worker } from "./recognizers/worker.js";
 
-export type { CapabilityUse } from "./capability.js";
-
-/** One recognizer per capability family. Phase C adds the rest. */
-export const RECOGNIZERS: readonly Recognizer[] = [
+/** One recognizer per capability family. */
+const RECOGNIZERS: readonly Recognizer[] = [
   storage,
   network,
   codegen,
   domEscape,
   identity,
   navigation,
-  globalsFamily,
+  globals,
   worker,
 ];
 
 export interface ExtractOptions {
+  /** Where the file came from; stamped on every use. Defaults to first-party. */
   origin?: Origin;
 }
-
-type AnyNode = Node & Record<string, unknown>;
 
 /** Run every recognizer over every node and return the flat list of uses. */
 export function extract(parsed: ParsedFile, opts: ExtractOptions = {}): CapabilityUse[] {

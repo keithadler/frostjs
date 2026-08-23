@@ -10,7 +10,7 @@ three.js 0.160.0 ships `examples/jsm/libs/ecsy.module.js`, which, if a page
 that imports it is opened with `?enable-remote-devtools` in the URL, loads a
 script from a third-party CDN, connects to a third-party relay, and `eval`s
 whatever the relay sends. permit reports it as
-`codegen.eval denied by "deny everything": eval(data.script)` under any policy
+`codegen.eval denied by default (no rule grants it): eval(data.script)` under any policy
 an application would plausibly write. The same run names a runtime
 `import()` of physics engine code from `cdn.skypack.dev`. The full story, the
 policy, the CSP it emits and the honest count of what else the policy
@@ -33,7 +33,7 @@ forbid cookies                               -- consent banner owns these
 may use the cache until 2026-08-30           -- service worker experiment
 
 $ permit src
-src/app.js:2:1: storage.local denied by "deny everything": localStorage.setItem("not-here", 1)
+src/app.js:2:1: storage.local denied by default (no rule grants it): localStorage.setItem("not-here", 1)
 src/legacy/old.js:2:1: storage.cookie denied by "forbid cookies" (line 4): consent banner owns these: document.cookie
 
 warning: permit.policy line 5: "may use the cache until 2026-08-30" expires in 7 days
@@ -387,9 +387,12 @@ not a ceiling.
 
 ```
 npm install
-npm test
-npm run build
+npm test              vitest (npm run test:watch to keep it running)
+npm run lint          prettier --check, then typecheck src, test and scripts
+npm run format        prettier --write
+npm run build         tsc to dist/
 npm run corpus        scan the pinned corpus; fails if findings changed
+npm run showcase      reproduce SHOWCASE.md
 ```
 
 Zero false positives is the product. `npm run corpus` runs the extractor over
@@ -398,6 +401,21 @@ diffs the findings against `corpus/expected.txt`. Any change to `src/extract/`
 must leave that diff empty, or update the file deliberately with
 `npm run corpus -- --update` and explain why in the commit.
 
-## Licence
+- [ARCHITECTURE.md](ARCHITECTURE.md): how the code is laid out and the
+  contract a recognizer signs.
+- [CONTRIBUTING.md](CONTRIBUTING.md): how to add a recognizer or a policy
+  form, and the conventions.
+- [SECURITY.md](SECURITY.md): what a green run does and does not promise,
+  and how to report a bypass.
+- [CHANGELOG.md](CHANGELOG.md).
+- [REQUIREMENTS.md](REQUIREMENTS.md): the original plan, with every step
+  marked done and every decision recorded.
 
-MIT.
+## License
+
+[MIT](LICENSE), the same license as [frost](https://github.com/keithadler/frost)
+and [exact](https://github.com/keithadler/magic-float-linter). A build-time
+linter wants the widest possible adoption and gives nobody a reason to
+hesitate: no copyleft, no patent clause to have reviewed, nothing to
+attribute beyond the notice. Contributions are accepted under the same
+license.

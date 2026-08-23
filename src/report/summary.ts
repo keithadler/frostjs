@@ -3,12 +3,12 @@
  * JavaScript. Says what the code may do, what it may not, and that
  * everything else is denied, which the policy file leaves implicit.
  */
-import type { Policy } from "../policy/compile.js";
-import type { Rule } from "../policy/parse.js";
+import { isExpired, type Policy, type Rule } from "../policy/index.js";
 import { CAPABILITY_PHRASES, FAMILIES } from "../policy/vocabulary.js";
+import { SAME_ORIGIN } from "../extract/target.js";
 
 /** The friendliest phrase for a code: the first vocabulary entry that maps to it. */
-export function phraseFor(code: string): string {
+function phraseFor(code: string): string {
   if (code === "*") return "everything";
   for (const [phrase, c] of CAPABILITY_PHRASES) if (c === code) return phrase;
   return code;
@@ -16,18 +16,20 @@ export function phraseFor(code: string): string {
 
 function describe(r: Rule, today: string): string {
   const parts: string[] = [];
-  if (r.hosts.length > 0)
-    parts.push(`reach ${r.hosts.map((h) => (h === "same-origin" ? "its own origin" : h)).join(", ")}`);
-  else parts.push(`use ${phraseFor(r.capability)}`);
+  if (r.hosts.length > 0) {
+    parts.push(`reach ${r.hosts.map((h) => (h === SAME_ORIGIN ? "its own origin" : h)).join(", ")}`);
+  } else parts.push(`use ${phraseFor(r.capability)}`);
   if (r.paths.length > 0) parts.push(`only in ${r.paths.join(", ")}`);
-  if (r.until !== null) parts.push(r.until < today ? `expired ${r.until}` : `until ${r.until}`);
+  if (r.until !== null) parts.push(isExpired(r, today) ? `expired ${r.until}` : `until ${r.until}`);
   let s = parts.join(", ");
   s += ` (line ${r.line})`;
   if (r.hint) s += ` - ${r.hint}`;
   return s;
 }
 
-export function summary(policy: Policy, today: string): string {
+/** The plain-English reading of a policy, for the date it was compiled against. */
+export function summary(policy: Policy): string {
+  const { today } = policy;
   const lines: string[] = [];
   lines.push(`Policy "${policy.name}" (${policy.file})`);
   lines.push("");

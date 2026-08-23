@@ -21,7 +21,7 @@ describe("text report", () => {
     const ds: Decision[] = [{ use: use(), verdict: "denied", reason: "not granted", rule: null }];
     const out = text(ds, { files: 1 });
     expect(out).toBe(
-      'src/a.js:2:3: storage.local denied by "deny everything": localStorage.setItem("a", 1)\n' +
+      'src/a.js:2:3: storage.local denied by default (no rule grants it): localStorage.setItem("a", 1)\n' +
         "\n1 file, 1 denied, 0 unknown\n",
     );
   });
@@ -87,7 +87,7 @@ describe("text report", () => {
       },
     ];
     expect(text(ds, { files: 1 })).toContain(
-      'storage.local denied, grant expired 2026-01-01: "may use storage until 2026-01-01" (line 2): localStorage',
+      'storage.local denied (grant expired 2026-01-01) by "may use storage until 2026-01-01" (line 2): localStorage',
     );
   });
 
@@ -118,7 +118,7 @@ describe("text report: network", () => {
       },
     ];
     expect(text(ds, { files: 1 })).toContain(
-      'src/a.js:2:3: network.fetch denied, destination cannot be read and "may reach "api.example.com"" (line 2) names hosts: fetch(url)',
+      'src/a.js:2:3: network.fetch denied (destination cannot be read) by "may reach "api.example.com"" (line 2), which names hosts: fetch(url)',
     );
   });
 
@@ -132,7 +132,7 @@ describe("text report: network", () => {
       },
     ];
     expect(text(ds, { files: 1 })).toContain(
-      'network.fetch to t.example denied by "deny everything": fetch("https://t.example/x")',
+      'network.fetch to t.example denied by default (no rule grants it): fetch("https://t.example/x")',
     );
   });
 });

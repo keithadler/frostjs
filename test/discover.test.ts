@@ -27,7 +27,7 @@ describe("discover", () => {
     expect(discover([f])).toEqual([f]);
   });
 
-  it("honours extra excludes", () => {
+  it("honors extra excludes", () => {
     const files = rel(discover([root], { exclude: ["nested"] }));
     expect(files).toEqual(["src/a.js", "src/b.mjs", "src/notyet.ts"]);
   });

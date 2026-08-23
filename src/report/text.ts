@@ -1,6 +1,12 @@
+/**
+ * The default, human-readable report, and the wording of a denial that
+ * every other format reuses so the same use reads the same everywhere.
+ */
 import type { Decision } from "../policy/index.js";
+import { SAME_ORIGIN } from "../extract/target.js";
 
 export interface Totals {
+  /** Files analyzed, for the summary line. */
   files: number;
 }
 
@@ -11,60 +17,82 @@ export interface TextOptions {
 
 const plural = (n: number, word: string): string => `${n} ${word}${n === 1 ? "" : "s"}`;
 
-/** Why a use was denied, in the words of the policy line that did it. */
+/** A capability plus its destination when one is known: `network.fetch to api.example.com`. */
+export function describeUse(capability: string, target: string | null): string {
+  return target !== null && target !== SAME_ORIGIN ? `${capability} to ${target}` : capability;
+}
+
+/**
+ * Why a use was denied, in the words of the policy line that did it:
+ *
+ *   denied by default (no rule grants it)
+ *   denied by "forbid cookies" (line 4): consent banner owns these
+ *   denied (grant expired 2026-08-30) by "may use the cache until 2026-08-30" (line 5)
+ *   denied (destination cannot be read) by "may reach "api.example.com"" (line 2), which names hosts
+ *
+ * An unregistered vendored file has no capability or expression to show,
+ * so its whole message is the sentence `vendored file is not in the
+ * registry; review it with: permit vendor add lib/x.js`; see denialMessage.
+ */
 export function denialText(d: Decision): string {
-  const { rule, reason } = d;
-  if (rule === null || reason === "not granted") return 'denied by "deny everything"';
-  const where = `${rule.text}" (line ${rule.line})`;
+  const { rule, reason, use } = d;
+  if (reason === "unregistered")
+    return `vendored file is not in the registry; review it with: permit vendor add ${use.file}`;
+  if (rule === null) return "denied by default (no rule grants it)";
+  const where = `"${rule.text}" (line ${rule.line})`;
   const hint = rule.hint ? `: ${rule.hint}` : "";
-  if (reason === "expired") return `denied, grant expired ${rule.until}: "${where}${hint}`;
-  if (reason === "unknown destination") return `denied, destination cannot be read and "${where} names hosts${hint}`;
-  if (reason === "unregistered") return "denied, vendored file is not in the registry";
-  return `denied by "${where}${hint}`;
+  switch (reason) {
+    case "expired":
+      return `denied (grant expired ${rule.until}) by ${where}${hint}`;
+    case "unknown destination":
+      return `denied (destination cannot be read) by ${where}, which names hosts${hint}`;
+    default:
+      return `denied by ${where}${hint}`;
+  }
 }
 
-/** The capability plus its destination when one is known. */
-function what(d: Decision): string {
-  const { capability, target } = d.use;
-  return target !== null && target !== "same-origin" ? `${capability} to ${target}` : capability;
+/** The message for a denied (or baselined, or unchanged) use, without the position: subject, reason, expression. */
+export function denialMessage(d: Decision): string {
+  const { use } = d;
+  if (d.reason === "unregistered") return denialText(d);
+  return `${describeUse(use.capability, use.target)} ${denialText(d)}: ${use.expression}`;
 }
 
-/** Default human-readable output. One line per denial, unknowns in their own section, then a summary. */
+/** One report line for a denied (or baselined, or unchanged) use. */
+export function denialLine(d: Decision): string {
+  const { use } = d;
+  return `${use.file}:${use.line}:${use.column}: ${denialMessage(d)}`;
+}
+
+/** One report line for a use below the confidence floor. */
+export function unknownLine(d: Decision): string {
+  const { use } = d;
+  return `${use.file}:${use.line}:${use.column}: ${describeUse(use.capability, use.target)} ${use.confidence}: ${use.expression}`;
+}
+
+/** One line per denial, unknowns in their own section, warnings, then a summary. */
 export function text(decisions: readonly Decision[], totals: Totals, opts: TextOptions = {}): string {
   const denied = decisions.filter((d) => d.verdict === "denied");
   const unknown = decisions.filter((d) => d.verdict === "unknown");
-  const suppressed = decisions.filter((d) => d.verdict === "suppressed").length;
-  const baselined = decisions.filter((d) => d.verdict === "baselined").length;
-  const unchanged = decisions.filter((d) => d.verdict === "unchanged").length;
-  const lines: string[] = [];
+  const count = (verdict: string): number => decisions.filter((d) => d.verdict === verdict).length;
+  const warnings = opts.warnings ?? [];
+  const lines: string[] = denied.map(denialLine);
 
-  for (const d of denied) {
-    const { use } = d;
-    if (d.reason === "unregistered") {
-      lines.push(
-        `${use.file}:${use.line}:${use.column}: vendored file is not in the registry; review it with: permit vendor add ${use.file}`,
-      );
-      continue;
-    }
-    lines.push(`${use.file}:${use.line}:${use.column}: ${what(d)} ${denialText(d)}: ${use.expression}`);
-  }
   if (unknown.length > 0) {
     if (lines.length > 0) lines.push("");
-    lines.push("unknown (not failing the build):");
-    for (const { use } of unknown) {
-      lines.push(`${use.file}:${use.line}:${use.column}: ${use.capability} ${use.confidence}: ${use.expression}`);
-    }
+    lines.push("unknown (not failing the build):", ...unknown.map(unknownLine));
   }
-  for (const w of opts.warnings ?? []) {
-    if (lines.length > 0 && !lines[lines.length - 1]!.startsWith("warning:")) lines.push("");
-    lines.push(`warning: ${w}`);
+  if (warnings.length > 0) {
+    if (lines.length > 0) lines.push("");
+    lines.push(...warnings.map((w) => `warning: ${w}`));
   }
   if (lines.length > 0) lines.push("");
-  lines.push(
-    `${plural(totals.files, "file")}, ${denied.length} denied, ${unknown.length} unknown` +
-      (suppressed > 0 ? `, ${suppressed} suppressed` : "") +
-      (baselined > 0 ? `, ${baselined} baselined` : "") +
-      (unchanged > 0 ? `, ${unchanged} unchanged` : ""),
-  );
+
+  let summary = `${plural(totals.files, "file")}, ${denied.length} denied, ${unknown.length} unknown`;
+  for (const verdict of ["suppressed", "baselined", "unchanged"]) {
+    const n = count(verdict);
+    if (n > 0) summary += `, ${n} ${verdict}`;
+  }
+  lines.push(summary);
   return lines.join("\n") + "\n";
 }

@@ -8,7 +8,7 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
-export const REGISTRY_RELATIVE = path.join(".permit", "registry.json");
+const REGISTRY_RELATIVE = path.join(".permit", "registry.json");
 
 export interface RegistryUse {
   capability: string;
@@ -34,18 +34,22 @@ export interface Registry {
   entries: RegistryEntry[];
 }
 
-export function integrityOf(bytes: Buffer): string {
+/** The SRI-form SHA-384 of some bytes. */
+function integrityOf(bytes: Buffer): string {
   return "sha384-" + createHash("sha384").update(bytes).digest("base64");
 }
 
+/** The SRI-form SHA-384 of a file's contents. */
 export function integrityOfFile(file: string): string {
   return integrityOf(fs.readFileSync(file));
 }
 
+/** Where the registry lives for a policy: .permit/registry.json beside it. */
 export function registryPath(policyDir: string): string {
   return path.join(policyDir, REGISTRY_RELATIVE);
 }
 
+/** Read a registry. A missing file is an empty registry; malformed JSON or an unknown version throws. */
 export function readRegistry(file: string): Registry {
   if (!fs.existsSync(file)) return { version: 1, entries: [] };
   let raw: unknown;
@@ -59,6 +63,7 @@ export function readRegistry(file: string): Registry {
   return { version: 1, ...(r.lockfile ? { lockfile: r.lockfile } : {}), entries: r.entries };
 }
 
+/** Write the registry with entries sorted by package, version and file, creating .permit/ if needed. */
 export function writeRegistry(file: string, registry: Registry): void {
   const sorted = [...registry.entries].sort((a, b) =>
     a.package === b.package
@@ -76,6 +81,7 @@ export function upsert(registry: Registry, entry: RegistryEntry): Registry {
   return { ...registry, entries: [...registry.entries.filter((e) => e.integrity !== entry.integrity), entry] };
 }
 
+/** The entry for a hash, or null. */
 export function lookup(registry: Registry, integrity: string): RegistryEntry | null {
   return registry.entries.find((e) => e.integrity === integrity) ?? null;
 }

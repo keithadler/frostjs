@@ -70,7 +70,7 @@ describe("scope: the same name elsewhere does not shadow", () => {
   });
 });
 
-describe("scope: the grey areas stay possible", () => {
+describe("scope: the gray areas stay possible", () => {
   it("inside a with statement nothing can be resolved", () => {
     expect(conf("with (obj) { localStorage.x; }")).toEqual(["possible"]);
   });
