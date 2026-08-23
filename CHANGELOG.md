@@ -7,6 +7,12 @@ change the policy grammar or the JSON schema; the changelog will say so.
 
 ## [Unreleased]
 
+### Added
+
+- New capabilities: `network.webtransport` (WebTransport), `network.webrtc`
+  (RTCPeerConnection peer-to-peer connections), `device.payment`
+  (PaymentRequest).
+
 ## [0.5.0] - 2026-08-23
 
 Additive: new command (`frostjs explain`) and broader taint coverage; no

@@ -9,6 +9,10 @@ const NETWORK_GLOBALS: ReadonlyMap<string, string> = new Map([
   ["XMLHttpRequest", "network.xhr"],
   ["WebSocket", "network.websocket"],
   ["EventSource", "network.eventsource"],
+  ["WebTransport", "network.webtransport"],
+  ["RTCPeerConnection", "network.webrtc"],
+  ["webkitRTCPeerConnection", "network.webrtc"],
+  ["mozRTCPeerConnection", "network.webrtc"],
 ]);
 const NETWORK_NAMES: ReadonlySet<string> = new Set(NETWORK_GLOBALS.keys());
 const IMPORT_SCRIPTS = "importScripts";

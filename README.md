@@ -581,6 +581,8 @@ to a reviewer; suppression is for the one-off.
 | `network.eventsource` | `EventSource` |
 | `network.beacon` | `navigator.sendBeacon` |
 | `network.import` | dynamic `import()` of an absolute URL or an expression |
+| `network.webtransport` | `new WebTransport(url)` |
+| `network.webrtc` | `new RTCPeerConnection()` (peer-to-peer connection) |
 | `network.importscripts` | `importScripts(url)` in a worker (loads and runs a script) |
 | `network.resource` | `el.src = "https://..."` or `setAttribute("src", ...)` naming another host (literal or folded const only) |
 | `codegen.eval` | `eval` |
@@ -612,6 +614,7 @@ to a reviewer; suppression is for the one-off.
 | `device.usb` / `device.bluetooth` / `device.serial` / `device.hid` / `device.midi` | `navigator.usb` etc. (hardware access) |
 | `device.wakelock` | `navigator.wakeLock` |
 | `device.notification` | `Notification` |
+| `device.payment` | `PaymentRequest` (the browser payment sheet) |
 
 Each is recognized bare, via `window` / `globalThis` / `self`, and via a
 computed member whose name is a string literal (`window["localStorage"]`),

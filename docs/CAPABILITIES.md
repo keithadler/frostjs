@@ -37,6 +37,8 @@ Policy phrase: `network`, `the network`.
 | `network.import` | dynamic import() of an absolute URL or an unresolvable expression | `network.import` |
 | `network.importscripts` | importScripts(url) in a worker (loads and runs a script) | `network.importscripts` |
 | `network.resource` | el.src = "https://..." to another host | `network.resource` |
+| `network.webtransport` | new WebTransport(url) | `network.webtransport` |
+| `network.webrtc` | new RTCPeerConnection() (peer-to-peer connection) | `webrtc` |
 
 ## codegen
 
@@ -119,7 +121,7 @@ Policy phrase: `workers`, `service workers`.
 
 ## device
 
-Reaching the machine: hardware, files, notifications.
+Reaching the machine: hardware, files, notifications, payment.
 
 Policy phrase: `device access`.
 
@@ -133,3 +135,4 @@ Policy phrase: `device access`.
 | `device.midi` | navigator.requestMIDIAccess (Web MIDI) | `device.midi` |
 | `device.wakelock` | navigator.wakeLock | `device.wakelock` |
 | `device.notification` | Notification | `notifications` |
+| `device.payment` | PaymentRequest (the browser payment sheet) | `payments` |

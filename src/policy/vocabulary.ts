@@ -41,6 +41,8 @@ export const CAPABILITY_PHRASES: ReadonlyMap<string, string> = new Map([
   ["usb", "device.usb"],
   ["bluetooth", "device.bluetooth"],
   ["notifications", "device.notification"],
+  ["payments", "device.payment"],
+  ["webrtc", "network.webrtc"],
 ]);
 
 /** Every capability family code, for validating a bare code and for hints. */
@@ -72,6 +74,8 @@ export const MEMBER_CODES: readonly string[] = [
   "network.import",
   "network.importscripts",
   "network.resource",
+  "network.webtransport",
+  "network.webrtc",
   "codegen.eval",
   "codegen.function",
   "codegen.timer",
@@ -105,6 +109,7 @@ export const MEMBER_CODES: readonly string[] = [
   "device.midi",
   "device.wakelock",
   "device.notification",
+  "device.payment",
 ];
 
 /** Every code a policy may name directly: the families and each member the extractor can emit. */

@@ -30,12 +30,16 @@ export const device: Recognizer = ({ node, binding }) => {
   const picker = asGlobalIn(n, FILE_PICKERS);
   if (picker) return match("device.filesystem", picker.r, node);
 
-  // Notification: new Notification(...), Notification.requestPermission(), Notification.permission
-  if (isIdentifier(n, "Notification"))
-    return { capability: "device.notification", target: null, confidence: "certain", via: n, node };
-  if (n.type === "MemberExpression" && memberName(n) === "Notification") {
+  // Notification / PaymentRequest: new X(...) or X.something, bare or via window.
+  const globalCtor: ReadonlyMap<string, string> = new Map([
+    ["Notification", "device.notification"],
+    ["PaymentRequest", "device.payment"],
+  ]);
+  if (isIdentifier(n) && globalCtor.has(n.name))
+    return { capability: globalCtor.get(n.name)!, target: null, confidence: "certain", via: n, node };
+  if (n.type === "MemberExpression" && globalCtor.has(memberName(n) ?? "")) {
     const r = asNamedGlobal(n["object"] as AnyNode, "window");
-    if (r) return match("device.notification", r, node);
+    if (r) return match(globalCtor.get(memberName(n)!)!, r, node);
   }
 
   // navigator.usb, navigator.bluetooth, navigator.requestMIDIAccess, ...

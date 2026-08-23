@@ -17,7 +17,7 @@ export const FAMILY_SUMMARY: Readonly<Record<string, string>> = {
   navigation: "Moving the page, or talking to another window.",
   globals: "Mutating shared global state that every script sees.",
   worker: "Running code off the main thread, or intercepting requests.",
-  device: "Reaching the machine: hardware, files, notifications.",
+  device: "Reaching the machine: hardware, files, notifications, payment.",
 };
 
 /** What triggers each member code. Keep terse; no trailing period needed. */
@@ -36,6 +36,8 @@ export const CODE_TRIGGER: Readonly<Record<string, string>> = {
   "network.import": "dynamic import() of an absolute URL or an unresolvable expression",
   "network.importscripts": "importScripts(url) in a worker (loads and runs a script)",
   "network.resource": 'el.src = "https://..." to another host',
+  "network.webtransport": "new WebTransport(url)",
+  "network.webrtc": "new RTCPeerConnection() (peer-to-peer connection)",
   "codegen.eval": "eval(...)",
   "codegen.function": "Function(...) or new Function(...)",
   "codegen.timer": "setTimeout / setInterval with a string first argument",
@@ -70,6 +72,7 @@ export const CODE_TRIGGER: Readonly<Record<string, string>> = {
   "device.midi": "navigator.requestMIDIAccess (Web MIDI)",
   "device.wakelock": "navigator.wakeLock",
   "device.notification": "Notification",
+  "device.payment": "PaymentRequest (the browser payment sheet)",
 };
 
 export interface CapabilityDoc {
