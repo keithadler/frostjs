@@ -2,7 +2,16 @@
   "name": "permit",
   "version": "0.1.0",
   "description": "Policy-driven, deny-by-default capability linter for JavaScript",
+  "author": "Keith Adler <keith.adler@icloud.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/keithadler/permit.git"
+  },
+  "homepage": "https://github.com/keithadler/permit#readme",
+  "bugs": {
+    "url": "https://github.com/keithadler/permit/issues"
+  },
   "type": "module",
   "bin": {
     "permit": "./dist/cli/main.js"
