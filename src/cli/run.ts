@@ -11,10 +11,11 @@ import fs from "node:fs";
 import path from "node:path";
 import { HELP, parseArgs, UsageError, type ParsedArgs } from "./args.js";
 import { VERSION } from "../version.js";
-import { discover, isHtml } from "../discover/index.js";
+import { discover, isHtml, isTemplate } from "../discover/index.js";
 import { parseFile, type ParseError } from "../extract/ast.js";
 import { extract, stringLiterals } from "../extract/index.js";
 import { parseHtml, htmlAttributeUses } from "../extract/html.js";
+import { parseTemplate } from "../extract/templates.js";
 import type { CapabilityUse } from "../extract/capability.js";
 import {
   commonAncestor,
@@ -220,7 +221,11 @@ function runCheck(args: ParsedArgs, io: Io): number {
     for (const file of files) {
       if (vendored(file)) continue;
       const name = shown(cwd, file);
-      const units = isHtml(file) ? parseHtml(file, fs.readFileSync(file, "utf8")) : [parseFile(file)];
+      const units = isHtml(file)
+        ? parseHtml(file, fs.readFileSync(file, "utf8"))
+        : isTemplate(file)
+          ? parseTemplate(file, fs.readFileSync(file, "utf8")).scripts
+          : [parseFile(file)];
       for (const unit of units) {
         if (unit.errors.length > 0) continue;
         const ignores = suppressions(unit);
@@ -351,6 +356,13 @@ function extractAll(
         else uses.push(...extract(block, { origin: "inline-html" }).map((u) => ({ ...u, file: name })));
       }
       uses.push(...htmlAttributeUses(file, text).map((u) => ({ ...u, file: name })));
+    } else if (isTemplate(file)) {
+      const { scripts, uses: templateUses } = parseTemplate(file, fs.readFileSync(file, "utf8"));
+      for (const block of scripts) {
+        if (block.errors.length > 0) syntaxErrors.push(...block.errors.map((e) => ({ ...e, file: name })));
+        else uses.push(...extract(block, { origin: "inline-html" }).map((u) => ({ ...u, file: name })));
+      }
+      uses.push(...templateUses.map((u) => ({ ...u, file: name })));
     } else {
       const parsed = parseFile(file);
       if (parsed.errors.length > 0) syntaxErrors.push(...parsed.errors.map((e) => ({ ...e, file: name })));
@@ -399,7 +411,7 @@ function runAudit(args: ParsedArgs, io: Io): number {
   for (const f of files) {
     const name = shown(cwd, f);
     const text = fs.readFileSync(f, "utf8");
-    const units = isHtml(f) ? parseHtml(f, text) : [parseFile(f)];
+    const units = isHtml(f) ? parseHtml(f, text) : isTemplate(f) ? parseTemplate(f, text).scripts : [parseFile(f)];
     sources.set(name, { text, strings: units.flatMap((u) => (u.errors.length ? [] : stringLiterals(u))) });
     for (const u of units) if (!u.errors.length) taintFlows.push(...taint(u).map((t) => ({ ...t, file: name })));
   }

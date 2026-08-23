@@ -146,7 +146,7 @@ flags are in [SHOWCASE.md](SHOWCASE.md).
 ## Status
 
 Published as [`@keithadler/frostjs`](https://www.npmjs.com/package/@keithadler/frostjs).
-Nine capability families across JavaScript, TypeScript, JSX and HTML (inline
+Nine capability families across JavaScript, TypeScript, JSX, HTML, and Vue/Svelte/Angular templates (inline
 scripts and attribute surfaces: `on*` handlers, `javascript:` URLs, remote
 `<script src>`). Frost-dialect policies with shared bases (`extends`), scope
 analysis, taint analysis (source -> sink, one hop across functions; sockets, React and worker registration included),

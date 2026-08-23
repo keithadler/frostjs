@@ -13,12 +13,20 @@ const EXTENSIONS: ReadonlySet<string> = new Set([
   ".cts",
   ".html",
   ".htm",
+  ".vue",
+  ".svelte",
 ]);
 
 /** True for .html and .htm, whose inline script blocks are analyzed. */
 export function isHtml(name: string): boolean {
   const ext = path.extname(name).toLowerCase();
   return ext === ".html" || ext === ".htm";
+}
+
+/** True for a framework single-file component (.vue, .svelte). */
+export function isTemplate(name: string): boolean {
+  const ext = path.extname(name).toLowerCase();
+  return ext === ".vue" || ext === ".svelte";
 }
 
 /** Declaration files contain no code and describe globals the code may use. */

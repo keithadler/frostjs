@@ -130,5 +130,22 @@ export function htmlAttributeUses(file: string, source: string): CapabilityUse[]
       }
     }
   }
+  // Angular binds HTML with `[innerHTML]="expr"`; the bracketed name is not a
+  // normal attribute the tag scan sees, so it is matched directly.
+  for (const a of source.matchAll(/\[innerHTML\]\s*=\s*("[^"]*"|'[^']*')/gi)) {
+    if (a[1]!.length <= 2) continue; // empty binding
+    const p = positionAt(lines, a.index!);
+    out.push({
+      capability: "dom-escape.html",
+      target: null,
+      file,
+      line: p.line,
+      column: p.column,
+      expression: a[0].replace(/\s+/g, " ").slice(0, 80),
+      confidence: "certain",
+      origin: "inline-html",
+      suppressed: false,
+    });
+  }
   return out;
 }

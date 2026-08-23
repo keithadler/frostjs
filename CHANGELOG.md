@@ -12,6 +12,9 @@ change the policy grammar or the JSON schema; the changelog will say so.
 - New capabilities: `network.webtransport` (WebTransport), `network.webrtc`
   (RTCPeerConnection peer-to-peer connections), `device.payment`
   (PaymentRequest).
+- Framework templates: Vue `.vue` (`<script>`/`<script setup>` and `v-html`),
+  Svelte `.svelte` (`<script>` and `{@html}`), and Angular `[innerHTML]` in
+  HTML templates are now analyzed.
 
 ## [0.5.0] - 2026-08-23
 
