@@ -5,7 +5,7 @@
 import { CONFIDENCE_ORDER, type Confidence } from "../policy/index.js";
 
 /** The subcommand, `check` being the bare `frostjs <paths>` form. */
-type Command = "check" | "init" | "csp" | "summary" | "vendor-add" | "registry-sync" | "sri";
+type Command = "check" | "init" | "audit" | "csp" | "summary" | "vendor-add" | "registry-sync" | "sri";
 
 export interface ParsedArgs {
   command: Command;
@@ -56,7 +56,7 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
     const arg = argv[i]!;
     if (first) {
       first = false;
-      if (arg === "csp" || arg === "summary" || arg === "sri" || arg === "init") {
+      if (arg === "csp" || arg === "summary" || arg === "sri" || arg === "init" || arg === "audit") {
         out.command = arg;
         continue;
       }
@@ -153,6 +153,7 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
 /** The `--help` text, also printed after a usage error. */
 export const HELP = `usage: frostjs [options] <paths...>
        frostjs init [paths...]
+       frostjs audit [--format text|json] <paths...>
        frostjs csp [--policy <file>]
        frostjs summary [--policy <file>]
        frostjs vendor add <files...>
@@ -163,6 +164,11 @@ Deny-by-default capability linter for JavaScript.
 
 commands:
   (default)            analyze the given paths against the policy
+  frostjs audit        what the code does, with no policy: hosts reached,
+                       code generation from non-constant input, script
+                       injection, service workers, and files where those
+                       meet a network reach (a remote code path). Point it
+                       at a dependency before adopting it.
   frostjs init         write a starter frostjs.policy in the current
                        directory granting exactly what the code under the
                        paths (default .) does today, with a note on each

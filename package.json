@@ -64,7 +64,8 @@
     "corpus": "vite-node scripts/corpus.ts",
     "showcase": "npm run build && vite-node scripts/showcase.ts",
     "prepare": "npm run build",
-    "prepublishOnly": "npm run lint && npm test"
+    "prepublishOnly": "npm run lint && npm test",
+    "sweep": "vite-node scripts/sweep.ts"
   },
   "dependencies": {
     "oxc-parser": "~0.146.0"

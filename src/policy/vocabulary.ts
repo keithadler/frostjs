@@ -62,6 +62,7 @@ export const MEMBER_CODES: readonly string[] = [
   "network.eventsource",
   "network.beacon",
   "network.import",
+  "network.resource",
   "codegen.eval",
   "codegen.function",
   "codegen.timer",

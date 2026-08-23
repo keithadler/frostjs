@@ -124,3 +124,44 @@ describe("network: must stay quiet", () => {
     expect(uses("const fetch = require('node-fetch'); fetch(u);")).toEqual([]);
   });
 });
+
+describe("network.resource: loading a resource from another host", () => {
+  it("src assignment with a literal absolute URL", () => {
+    expect(one('s.src = "https://cdn.jsdelivr.net/npm/peerjs@0.3.20/dist/peer.min.js"')).toMatchObject({
+      capability: "network.resource",
+      target: "cdn.jsdelivr.net",
+      confidence: "certain",
+      expression: 's.src = "https://cdn.jsdelivr.net/npm/peerjs@0.3.20/dist/peer.min.js"',
+    });
+    expect(one('img.src = "//images.example.com/a.png"').target).toBe("images.example.com");
+    expect(caps("el.src = `https://${host}/x.js`")).toEqual([]); // host not fixed
+  });
+
+  it("setAttribute src", () => {
+    expect(one('s.setAttribute("src", "https://scripts.simpleanalyticscdn.com/latest.js")')).toMatchObject({
+      capability: "network.resource",
+      target: "scripts.simpleanalyticscdn.com",
+    });
+  });
+
+  it("a folded const", () => {
+    expect(one('const URL = "https://unpkg.com/ammo.js"; s.src = URL').target).toBe("unpkg.com");
+  });
+
+  it("an unreadable value is not reported: .src is set on tokens and props as often as on elements", () => {
+    expect(caps("script.src = src; token.src = text; el.src = props.src")).toEqual([]);
+  });
+
+  it("relative, data and blob sources say nothing a policy would deny", () => {
+    expect(caps('img.src = "/logo.png"; s.src = "./w.js"; v.src = "data:..."; a.src = URL.createObjectURL(b)')).toEqual(
+      [],
+    );
+  });
+
+  it("not src: href, srcset, other attributes, reads", () => {
+    expect(caps('a.href = "https://x.example/"; img.srcset = "https://x.example/a 1x"; const u = img.src;')).toEqual(
+      [],
+    );
+    expect(caps('el.setAttribute("href", "https://x.example/"); el.setAttribute(name, v)')).toEqual([]);
+  });
+});

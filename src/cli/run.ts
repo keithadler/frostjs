@@ -47,6 +47,7 @@ import {
 } from "../registry.js";
 import { includesFor, sync, usesOf } from "../sync.js";
 import { policyNameFor, starterPolicy } from "../init.js";
+import { audit, auditJson, formatAudit, groupByFile } from "../audit.js";
 
 export interface Io {
   stdout: (s: string) => void;
@@ -77,6 +78,8 @@ export function run(argv: readonly string[], io: Io): number {
   switch (args.command) {
     case "init":
       return runInit(args, io);
+    case "audit":
+      return runAudit(args, io);
     case "csp":
     case "summary":
       return runPolicyCommand(args, io);
@@ -291,6 +294,24 @@ function extractAll(
   }
   for (const e of syntaxErrors) io.stderr(`${e.file}:${e.line}:${e.column}: syntax error: ${e.message}\n`);
   return syntaxErrors.length > 0 ? 2 : uses;
+}
+
+// frostjs audit <paths...>
+
+function runAudit(args: ParsedArgs, io: Io): number {
+  const cwd = cwdOf(io);
+  if (args.paths.length === 0) return fail(io, "frostjs audit needs one or more paths");
+  if (args.format !== "text" && args.format !== "json") return fail(io, "frostjs audit prints text or json");
+  const files = discoverOrFail(args, io, []);
+  if (typeof files === "number") return files;
+  const uses = extractAll(files, cwd, io);
+  if (typeof uses === "number") return uses;
+  const texts = new Map(files.map((f) => [shown(cwd, f), fs.readFileSync(f, "utf8")]));
+  const byFile = groupByFile(uses);
+  for (const f of files) if (!byFile.has(shown(cwd, f))) byFile.set(shown(cwd, f), []);
+  const a = audit(byFile, texts);
+  io.stdout(args.format === "json" ? auditJson(a) : formatAudit(a));
+  return 0;
 }
 
 // frostjs init [paths...]

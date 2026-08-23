@@ -61,7 +61,7 @@ describe("dom-escape: must stay quiet", () => {
   });
 
   it("textContent and friends", () => {
-    expect(caps("el.textContent = s; el.innerText = s; el.src = s")).toEqual([]);
+    expect(caps("el.textContent = s; el.innerText = s; el.title = s")).toEqual([]);
   });
 
   it("keys and strings", () => {

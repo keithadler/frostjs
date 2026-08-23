@@ -96,6 +96,8 @@ reading of a policy.
   `loadPolicy`, exit codes 0 (clean), 1 (denied), 2 (usage or input
   error). `src/cli/main.ts` is the bin shim.
 - `src/init.ts`: the starter policy `frostjs init` writes.
+- `src/audit.ts`: `frostjs audit`, which `scripts/sweep.ts` runs over
+  popular packages.
 - `src/baseline.ts`, `src/changed.ts`: adoption helpers (baseline
   snapshots keyed on file, capability and expression text; changed lines
   from `git diff -U0`).

@@ -189,6 +189,21 @@ code builds at runtime is called out in a hint rather than quietly widened
 to `may use the network`. For a large codebase with debt you would rather
 pay down than grant, use `--baseline` instead (below).
 
+## Auditing a dependency before you adopt it
+
+```bash
+npx frostjs audit node_modules/some-widget
+```
+
+No policy involved. It prints, alarming things first: files where code
+generation or script injection meets a network reach (a *remote code
+path*, the shape that found three.js's bundled remote eval), code
+generation from non-constant input, every host reached, hosts merely
+named in strings (a lead, not a finding), service workers, `postMessage`
+to any origin, and the capability counts. `--format json` for tooling.
+Run it on a pull request's new dependency, or on the one you already have
+and never read.
+
 ## Policy files
 
 A policy is a `frostjs.policy` file in frost's policy dialect: one rule per
@@ -255,6 +270,7 @@ all, every capability is denied and a note says so.
 
 ```
 frostjs init [paths]     write a starter frostjs.policy granting what the code does today
+frostjs audit <paths>    what the code does, no policy needed: hosts, codegen, script injection, remote code paths
 frostjs <paths...>        discover and analyze .js/.mjs/.cjs/.jsx/.ts/.tsx/.mts/.cts and inline <script> in .html under paths
 frostjs csp               print the Content-Security-Policy header the policy implies
 frostjs summary           print a plain-English reading of the policy
@@ -468,6 +484,7 @@ to a reviewer; suppression is for the one-off.
 | `network.eventsource` | `EventSource` |
 | `network.beacon` | `navigator.sendBeacon` |
 | `network.import` | dynamic `import()` of an absolute URL or an expression |
+| `network.resource` | `el.src = "https://..."` or `setAttribute("src", ...)` naming another host (literal or folded const only) |
 | `codegen.eval` | `eval` |
 | `codegen.function` | `Function(...)`, `new Function(...)` |
 | `codegen.timer` | `setTimeout` / `setInterval` with string code |
