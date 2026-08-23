@@ -14,7 +14,11 @@ function action(env: Record<string, string>) {
   });
 }
 
-describe("GitHub Action", () => {
+// The action's entry point is a bash script and the action runs on Linux; the
+// workflow's own job exercises it there. Windows has no npm binary to spawn
+// without a shell and its Git Bash path rules differ, so the script test is
+// Linux and macOS only.
+describe.skipIf(process.platform === "win32")("GitHub Action", () => {
   it("action.yml passes every input through env, never into the script body", () => {
     const yml = fs.readFileSync(path.join(root, "action.yml"), "utf8");
     expect(yml).toContain("FROSTJS_PATHS: ${{ inputs.paths }}");

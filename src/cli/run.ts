@@ -135,11 +135,7 @@ function loadPolicy(args: ParsedArgs, io: Io, inputs: readonly string[], require
     return { policy: DENY_ALL, policyDir: cwd };
   }
   try {
-    const policy = compilePolicyFile(
-      policyFile,
-      args.today ?? isoToday(),
-      path.relative(cwd, policyFile) || policyFile,
-    );
+    const policy = compilePolicyFile(policyFile, args.today ?? isoToday(), shown(cwd, policyFile));
     return { policy, policyDir: path.dirname(policyFile) };
   } catch (e) {
     if (e instanceof PolicyError || e instanceof Error) return fail(io, e.message);

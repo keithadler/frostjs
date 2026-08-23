@@ -13,7 +13,7 @@ export interface LineRange {
   end: number;
 }
 
-/** Absolute file path -> changed line ranges on the new side, or "all" for an untracked file. */
+/** Absolute file path (native form, as path.resolve gives it) -> changed line ranges on the new side, or "all" for an untracked file. */
 export type ChangedLines = Map<string, LineRange[] | "all">;
 
 function git(args: string[], cwd: string): string {
@@ -52,7 +52,7 @@ export function changedLines(ref: string, cwd: string): ChangedLines {
   for (const line of diff.split("\n")) {
     if (line.startsWith("+++ ")) {
       const name = line.slice(4).trim();
-      current = name === "/dev/null" ? null : path.join(root, name.replace(/^b\//, ""));
+      current = name === "/dev/null" ? null : path.resolve(root, name.replace(/^b\//, ""));
       if (current !== null && !out.has(current)) out.set(current, []);
     } else if (line.startsWith("@@") && current !== null) {
       const m = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/.exec(line);
@@ -66,7 +66,7 @@ export function changedLines(ref: string, cwd: string): ChangedLines {
   }
 
   const untracked = git(["ls-files", "--others", "--exclude-standard", "-z"], root).split("\0").filter(Boolean);
-  for (const f of untracked) out.set(path.join(root, f), "all");
+  for (const f of untracked) out.set(path.resolve(root, f), "all");
   return out;
 }
 
