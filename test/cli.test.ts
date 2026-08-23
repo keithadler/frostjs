@@ -226,3 +226,41 @@ describe("frostjs check (HTML attributes)", () => {
     expect(r.stdout).not.toContain("logo.png"); // same-origin img stays quiet
   });
 });
+
+describe("frostjs check --unused", () => {
+  const project = (policy: string, code: string) => {
+    const fs = require("node:fs") as typeof import("node:fs");
+    const os = require("node:os") as typeof import("node:os");
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "frostjs-unused-"));
+    fs.writeFileSync(path.join(dir, "frostjs.policy"), policy);
+    fs.writeFileSync(path.join(dir, "a.js"), code);
+    return dir;
+  };
+
+  it("lists grants that matched nothing, on stderr, without changing the exit code", () => {
+    const dir = project(
+      'policy "t"\nmay use local storage\nmay use session storage\nmay reach "api.example.com"\n',
+      'localStorage.setItem("a", 1);\n',
+    );
+    const r = cli("--unused", dir);
+    expect(r.code).toBe(0);
+    expect(r.stderr).toContain("2 grants matched nothing");
+    expect(r.stderr).toContain("line 3: may use session storage");
+    expect(r.stderr).toContain('line 4: may reach "api.example.com"');
+    expect(r.stderr).not.toContain("local storage"); // it matched
+  });
+
+  it("flags a redundant specific grant shadowed by a family grant", () => {
+    const dir = project('policy "t"\nmay use storage\nmay use local storage\n', "localStorage.x;\n");
+    const r = cli("--unused", dir);
+    expect(r.stderr).toContain("line 3: may use local storage"); // family on line 2 decides
+    expect(r.stderr).not.toContain("line 2");
+  });
+
+  it("says so when every grant is used, and stays off stdout (json stays valid)", () => {
+    const dir = project('policy "t"\nmay use local storage\n', "localStorage.x;\n");
+    const r = cli("--unused", "--format", "json", dir);
+    expect(r.stderr).toContain("every grant matched at least one use");
+    expect(() => JSON.parse(r.stdout)).not.toThrow();
+  });
+});

@@ -307,6 +307,19 @@ function runCheck(args: ParsedArgs, io: Io): number {
   }
   if (baselineNote) io.stderr(baselineNote);
 
+  // --unused: grants that were the deciding rule for nothing. On a full scan
+  // these are over-broad or redundant policy lines that can be removed. Goes
+  // to stderr so it never disturbs a machine format on stdout.
+  if (args.unused) {
+    const usedLines = new Set(decisions.filter((d) => d.verdict === "allowed" && d.rule).map((d) => d.rule!.line));
+    const unused = policy.rules.filter((r) => r.verb === "may" && !usedLines.has(r.line));
+    if (unused.length === 0) io.stderr("every grant matched at least one use\n");
+    else {
+      io.stderr(`${unused.length} grant${unused.length === 1 ? "" : "s"} matched nothing (remove, or scan more):\n`);
+      for (const r of unused) io.stderr(`  ${policy.file} line ${r.line}: ${r.text}\n`);
+    }
+  }
+
   const denied = decisions.some((d) => d.verdict === "denied");
   return denied && !args.exitZero && !args.updateBaseline ? 1 : 0;
 }

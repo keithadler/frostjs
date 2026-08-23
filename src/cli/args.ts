@@ -20,6 +20,7 @@ export interface ParsedArgs {
   updateBaseline: boolean;
   changedSince: string | null;
   taint: boolean;
+  unused: boolean;
   format: Format;
   paths: string[];
 }
@@ -49,6 +50,7 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
     updateBaseline: false,
     changedSince: null,
     taint: false,
+    unused: false,
     format: "text",
     paths: [],
   };
@@ -139,6 +141,9 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
       case "--taint":
         out.taint = true;
         break;
+      case "--unused":
+        out.unused = true;
+        break;
       case "--format": {
         const v = takeValue();
         if (!(FORMATS as readonly string[]).includes(v))
@@ -220,6 +225,8 @@ options:
   --baseline <file>    denials recorded in this file do not fail the build
   --update-baseline    write every current denial into the baseline file
                        and exit 0; use once to adopt frostjs on a codebase
+  --unused             after the check, list policy grants that matched
+                       nothing on a full scan, so they can be removed
   --taint              also fail on untrusted input (a URL, cookie, or
                        postMessage) reaching a dangerous sink (eval,
                        innerHTML, importScripts, a redirect); intraprocedural

@@ -515,6 +515,21 @@ For pull-request checks, `frostjs --changed-since origin/main src` fails only
 on uses that sit in lines the branch added or modified; the rest are counted
 as "unchanged". Untracked files count as entirely changed.
 
+## Tightening a policy
+
+`frostjs check --unused src` lists grants that matched nothing on the scan,
+so an over-broad or redundant line can be removed:
+
+```
+2 grants matched nothing (remove, or scan more):
+  frostjs.policy line 3: may use session storage
+  frostjs.policy line 5: may use cookies
+```
+
+It prints to stderr and does not change the exit code. Run it on a full
+scan, not a changed-lines subset, or a grant will look unused only because
+the file that needs it was not scanned.
+
 ## Shared base policies
 
 An organization or monorepo can keep one base policy and extend it:

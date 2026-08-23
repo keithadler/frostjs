@@ -9,6 +9,9 @@ change the policy grammar or the JSON schema; the changelog will say so.
 
 ### Added
 
+- `frostjs check --unused` lists policy grants that matched nothing on a
+  full scan (over-broad or redundant lines to remove), on stderr, without
+  changing the exit code.
 - Policies can `extends "<base.frostjs.policy>"`: a shared org or monorepo
   base is merged in first, its path globs rebased to the extending policy's
   directory, `forbid` and `forbid tainted flows` inherited. Cycles and
