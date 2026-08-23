@@ -63,7 +63,7 @@ forbid everything else                             optional, readability only
 | `html injection` | `dom-escape` |
 | `identity`, `fingerprinting` | `identity` |
 | `navigation` | `navigation` |
-| `globals` | `globals` (Phase C) |
+| `globals` | `globals` |
 | `workers` | `worker` (Phase C) |
 | `everything` | `*` |
 
@@ -142,6 +142,8 @@ build; `certain` and `probable` uses do.
 | `navigation.open` | `window.open` |
 | `navigation.history` | `history.pushState` / `replaceState` / `back` / `forward` / `go` |
 | `navigation.postmessage` | `postMessage` to `parent` / `top` / `opener` / `contentWindow`, or with a string origin |
+| `globals.window` | assignment to `window.*` / `globalThis.*`, `Object.defineProperty(window, ...)` |
+| `globals.prototype` | assignment to a built-in or its prototype (`Array.prototype.x = `, `Error.prepareStackTrace = `), or `Object.defineProperty` / `assign` on one |
 
 Each is recognized bare, via `window` / `globalThis` / `self`, and via a
 string-literal computed member (`window["localStorage"]`). Uses via `self`

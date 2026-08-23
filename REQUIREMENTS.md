@@ -322,8 +322,12 @@ Ported directly from `exact`, because it is already proven.
 14. `navigation`. **DONE 2026-08-23.** location writes and calls (reads and
     `hash` excluded), window.open, history, postMessage to another window.
     Targets resolved from the assigned URL or origin. Corpus 246 -> 258.
-15-16. `globals`, `worker`, each with tests and a corpus check that the
-   false-positive count does not move.
+15. `globals`. **DONE 2026-08-23.** Assignment through window/globalThis
+    (event-handler properties and location excluded), mutation of built-ins
+    and their prototypes directly or via Object.defineProperty/assign.
+    Implicit globals wait for Phase D scope analysis. Corpus 258 -> 506, of
+    which 180 are `possible` (minified locals named like built-ins).
+16. `worker`, with tests and a corpus check.
 
 **Phase D - noise control**
 
