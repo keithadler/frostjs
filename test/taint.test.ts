@@ -153,3 +153,19 @@ describe("frostjs check --taint", () => {
     expect(r.stdout).toContain("new.js:1:1: location.search reaches eval");
   });
 });
+
+describe("policy forbid tainted flows turns the gate on without --taint", () => {
+  it("gates on taint from the policy alone", () => {
+    const fs = require("node:fs") as typeof import("node:fs");
+    const os = require("node:os") as typeof import("node:os");
+    const path = require("node:path") as typeof import("node:path");
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "frostjs-ptaint-"));
+    fs.writeFileSync(path.join(dir, "frostjs.policy"), 'policy "t"\nmay use html injection\nforbid tainted flows\n');
+    fs.writeFileSync(path.join(dir, "app.js"), "el.innerHTML = location.hash;\n");
+    const r = cliIn(dir, ".");
+    expect(r.code).toBe(1);
+    expect(r.stdout).toContain("location.hash reaches innerHTML");
+    // summary mentions it
+    expect(cliIn(dir, "summary").stdout).toContain("Untrusted input reaching a dangerous sink");
+  });
+});

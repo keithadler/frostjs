@@ -18,7 +18,8 @@ change the policy grammar or the JSON schema; the changelog will say so.
   so sanitizers break the chain. `frostjs check --taint` makes it a gate:
   each flow is a `taint.<sink>` finding across text/json/sarif/github,
   failing the build, and honoring --baseline, --changed-since and inline
-  suppression.
+  suppression. `forbid tainted flows` in the policy turns the gate on
+  without the flag.
 - `network.resource`: `el.src = "https://..."` naming another host.
 - `network.importscripts`: `importScripts(url)` in a worker.
 - `device` family: File System Access pickers, WebUSB/Bluetooth/Serial/HID/MIDI,

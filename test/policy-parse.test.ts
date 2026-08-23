@@ -332,3 +332,26 @@ describe("policy: ignore", () => {
     expect(() => parsePolicy('ignore "a" please', "p")).toThrow(/unexpected 'please' after the paths/);
   });
 });
+
+describe("policy: forbid tainted flows", () => {
+  it("sets the taint flag", () => {
+    expect(parse("forbid tainted flows").taint).toBe(true);
+    expect(parse('policy "x"\nmay use storage').taint).toBe(false);
+    expect(parse("forbid tainted flow").taint).toBe(true);
+    expect(parse("forbid tainted input").taint).toBe(true);
+  });
+  it("does not consume the capability grammar", () => {
+    const p = parse("forbid tainted flows\nmay use storage\nforbid cookies");
+    expect(p.taint).toBe(true);
+    expect(p.rules.length).toBe(2);
+  });
+  it("a near miss is a precise error", () => {
+    let msg = "";
+    try {
+      parse("forbid tainted stuff");
+    } catch (e) {
+      msg = (e as { message: string }).message;
+    }
+    expect(msg).toContain("did you mean 'forbid tainted flows'?");
+  });
+});

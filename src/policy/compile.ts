@@ -37,6 +37,8 @@ export interface Policy {
   rules: readonly Rule[];
   /** Globs of vendored files, relative to the policy directory. */
   vendored: readonly string[];
+  /** The policy asks frostjs check to gate on taint flows. */
+  taint: boolean;
   /** Globs of files not analyzed at all, relative to the policy directory. */
   ignore: readonly string[];
   /** Grants that expire within the warning window, as printable lines. */
@@ -80,6 +82,7 @@ export function compile(parsed: ParsedPolicy, opts: CompileOptions): Policy {
     today,
     rules: parsed.rules,
     vendored: parsed.vendored,
+    taint: parsed.taint,
     ignore: parsed.ignore,
     warnings,
     evaluate(use) {

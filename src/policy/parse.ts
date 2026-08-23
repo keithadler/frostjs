@@ -43,6 +43,8 @@ export interface ParsedPolicy {
   rules: Rule[];
   /** Globs, relative to the policy directory, of third-party files checked by fingerprint rather than analyzed. */
   vendored: string[];
+  /** True when the policy asks frostjs check to gate on taint flows (`forbid tainted flows`). */
+  taint: boolean;
   /** Globs, relative to the policy directory, of files not analyzed at all (generated bundles, fixtures). */
   ignore: string[];
 }
@@ -108,6 +110,7 @@ export function parsePolicy(text: string, file: string): ParsedPolicy {
   const rules: Rule[] = [];
   const vendored: string[] = [];
   const ignore: string[] = [];
+  let taint = false;
   let name: string | null = null;
   const lines = text.split(/\r?\n/);
   for (let i = 0; i < lines.length; i++) {
@@ -129,6 +132,15 @@ export function parsePolicy(text: string, file: string): ParsedPolicy {
       name = nameTok.value;
       continue;
     }
+    // `forbid tainted flows`: turn on the taint gate from the policy itself.
+    if (c.word() === "forbid" && c.word(1) === "tainted") {
+      const third = c.word(2);
+      if ((third !== "flows" && third !== "flow" && third !== "input") || c.tokens.length !== 3) {
+        fail(c.tokens[1]!.at, "did you mean 'forbid tainted flows'?", "forbid tainted flows");
+      }
+      taint = true;
+      continue;
+    }
     const pathList = c.word() === "vendored" ? vendored : c.word() === "ignore" ? ignore : null;
     if (pathList !== null) {
       const keyword = c.word()!;
@@ -141,7 +153,7 @@ export function parsePolicy(text: string, file: string): ParsedPolicy {
     }
     rules.push(parseRule(c, trimmed, hint, n));
   }
-  return { file, name: name ?? file, rules, vendored, ignore };
+  return { file, name: name ?? file, rules, vendored, ignore, taint };
 }
 
 /** The verb forms a rule may start with, longest first so `forbid using` beats `forbid`. */

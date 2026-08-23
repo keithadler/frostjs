@@ -250,7 +250,9 @@ outputs, so it lands as a code-scanning alert on the pull request.
 `--changed-since`, `--baseline` and `// frostjs: ignore[taint]` all apply
 to taint findings, so it adopts on a legacy codebase the same way the
 capability gate does. It is off by default because it is best-effort;
-the capability gate stays deterministic.
+the capability gate stays deterministic. Put `forbid tainted flows` in
+`frostjs.policy` to turn the gate on for everyone without the flag, so the
+committed policy expresses the whole security posture in one place.
 
 ## Policy files
 
@@ -268,6 +270,7 @@ may reach "<host>", ... [in "<glob>", ...] [until YYYY-MM-DD]
 forbid [using] <capability> [in "<glob>", ...]
 forbid reaching "<host>", ... [in "<glob>", ...]
 forbid everything else                             optional, readability only
+forbid tainted flows                               gate on taint (like --taint)
 ```
 
 `<capability>` is a phrase or a code. A family name grants the whole family.

@@ -208,7 +208,7 @@ function runCheck(args: ParsedArgs, io: Io): number {
   // Taint: untrusted input reaching a dangerous sink, opt-in with --taint.
   // Modeled as denials of a synthetic taint.<sink> capability so baseline,
   // changed-lines and every output format apply to them uniformly.
-  if (args.taint) {
+  if (args.taint || policy.taint) {
     const vendored = (f: string): boolean =>
       registry !== null && policy.vendored.some((g) => matchesGlob(g, relToPolicy(policyDir, f)));
     for (const file of files) {
