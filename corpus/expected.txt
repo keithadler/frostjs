@@ -422,6 +422,8 @@ three@0.160.0/examples/jsm/libs/ecsy.module.js:1734:11 dom-escape.html certain i
 three@0.160.0/examples/jsm/libs/ecsy.module.js:1739:28 dom-escape.script certain document.createElement("script")
 three@0.160.0/examples/jsm/libs/ecsy.module.js:1756:15 dom-escape.html certain script.innerHTML = data.script
 three@0.160.0/examples/jsm/libs/ecsy.module.js:1762:27 codegen.eval certain eval(data.script)
+three@0.160.0/examples/jsm/libs/fflate.module.js:19:33 worker.dedicated certain new Worker(u)
+three@0.160.0/examples/jsm/libs/fflate.module.js:27:33 worker.dedicated certain new Worker(u, { type: 'module' })
 three@0.160.0/examples/jsm/libs/lil-gui.module.min.js:8:12408 dom-escape.html certain i.innerHTML=t
 three@0.160.0/examples/jsm/libs/lil-gui.module.min.js:8:12976 dom-escape.html certain this.$display.innerHTML=-1===i?t:this._names[i]
 three@0.160.0/examples/jsm/libs/lil-gui.module.min.js:8:14901 dom-escape.html certain i.innerHTML=t
@@ -431,12 +433,15 @@ three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:13973:31 codegen.eval ce
 three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:14279:52 network.xhr possible XMLHttpRequest
 three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:14279:68 network.fetch possible fetch
 three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:171:56 identity.device certain navigator.userAgent
+three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:431:9 worker.dedicated possible window.Worker
+three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:435:14 worker.dedicated certain new Worker(url)
 three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:4695:5 globals.window possible window.bodymovin = lottie
 three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:8366:102 identity.device certain navigator.userAgent
 three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:8366:144 identity.device certain navigator.userAgent
 three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:8366:23 identity.device certain navigator.userAgent
 three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:8366:62 identity.device certain navigator.userAgent
 three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:935:25 network.xhr possible new XMLHttpRequest()
+three@0.160.0/examples/jsm/libs/meshopt_decoder.module.js:80:12 worker.dedicated certain new Worker(url)
 three@0.160.0/examples/jsm/libs/mikktspace.module.js:120:22 network.fetch certain fetch(wasmDataURI) .then((res) => res.arrayBuffer()) .then((buffer) => WebAssembly.instantiate(buffe
 three@0.160.0/examples/jsm/libs/motion-controllers.module.js:48:26 network.fetch certain fetch(path)
 three@0.160.0/examples/jsm/libs/opentype.module.js:11807:1 globals.prototype possible Event.prototype.subscribe = function (eventHandler) { if (typeof eventHandler === 'function') { retu
@@ -485,9 +490,12 @@ three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.module.js:7318:15 codegen.func
 three@0.160.0/examples/jsm/libs/utif.module.js:1476:13 network.xhr certain new XMLHttpRequest()
 three@0.160.0/examples/jsm/libs/zstddec.module.js:1:162 network.fetch certain fetch
 three@0.160.0/examples/jsm/libs/zstddec.module.js:1:168 network.fetch certain fetch("data:application/wasm;base64,"+C).then(A=>A.arrayBuffer()).then(A=>WebAssembly.instantiate(A,
+three@0.160.0/examples/jsm/loaders/3DMLoader.js:904:20 worker.dedicated certain new Worker( this.workerSourceURL )
+three@0.160.0/examples/jsm/loaders/DRACOLoader.js:321:20 worker.dedicated certain new Worker( this.workerSourceURL )
 three@0.160.0/examples/jsm/loaders/GLTFLoader.js:2535:54 identity.device certain navigator.userAgent
 three@0.160.0/examples/jsm/loaders/GLTFLoader.js:2536:16 identity.device certain navigator.userAgent.indexOf( 'Firefox' )
 three@0.160.0/examples/jsm/loaders/GLTFLoader.js:2537:33 identity.device certain navigator.userAgent.match( /Firefox\/([0-9]+)\./ )[ 1 ]
+three@0.160.0/examples/jsm/loaders/KTX2Loader.js:199:22 worker.dedicated certain new Worker( this.workerSourceURL )
 three@0.160.0/examples/jsm/misc/ProgressiveLightMap.js:36:54 identity.device certain navigator.userAgent
 three@0.160.0/examples/jsm/nodes/code/ScriptableNode.js:408:18 codegen.function certain new Function( ...parametersProps, code )
 three@0.160.0/examples/jsm/physics/RapierPhysics.js:41:18 network.import certain import( RAPIER_PATH )

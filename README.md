@@ -6,11 +6,12 @@ explicitly granted: storage, network, `eval`, DOM injection, identity, and so on
 
 ## Status
 
-Pre-alpha. Phases A and B are in: it discovers `.js`/`.mjs`, recognizes the
-`storage` capability family, reads a `permit.policy` written in frost's policy
-dialect, and fails the build on anything the policy does not grant. Phase C
-(the rest of the capability taxonomy) is next. See
-[REQUIREMENTS.md](REQUIREMENTS.md) for the full plan and the milestone log.
+Pre-alpha. Phases A, B and C are in: it discovers `.js`/`.mjs`, recognizes
+all eight capability families, reads a `permit.policy` written in frost's
+policy dialect, and fails the build on anything the policy does not grant.
+Phase D (noise control: scope analysis, constant folding, suppression,
+baselines) is next. See [REQUIREMENTS.md](REQUIREMENTS.md) for the full plan
+and the milestone log.
 
 ```
 $ cat permit.policy
@@ -64,7 +65,7 @@ forbid everything else                             optional, readability only
 | `identity`, `fingerprinting` | `identity` |
 | `navigation` | `navigation` |
 | `globals` | `globals` |
-| `workers` | `worker` (Phase C) |
+| `workers`, `service workers` | `worker` |
 | `everything` | `*` |
 
 Rules:
@@ -144,6 +145,10 @@ build; `certain` and `probable` uses do.
 | `navigation.postmessage` | `postMessage` to `parent` / `top` / `opener` / `contentWindow`, or with a string origin |
 | `globals.window` | assignment to `window.*` / `globalThis.*`, `Object.defineProperty(window, ...)` |
 | `globals.prototype` | assignment to a built-in or its prototype (`Array.prototype.x = `, `Error.prepareStackTrace = `), or `Object.defineProperty` / `assign` on one |
+| `worker.dedicated` | `new Worker(url)` |
+| `worker.shared` | `new SharedWorker(url)` |
+| `worker.service` | `navigator.serviceWorker.register(url)` |
+| `worker.worklet` | `CSS.paintWorklet.addModule(url)`, `audioWorklet.addModule(url)`... |
 
 Each is recognized bare, via `window` / `globalThis` / `self`, and via a
 string-literal computed member (`window["localStorage"]`). Uses via `self`

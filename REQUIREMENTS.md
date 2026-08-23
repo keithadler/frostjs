@@ -327,7 +327,9 @@ Ported directly from `exact`, because it is already proven.
     and their prototypes directly or via Object.defineProperty/assign.
     Implicit globals wait for Phase D scope analysis. Corpus 258 -> 506, of
     which 180 are `possible` (minified locals named like built-ins).
-16. `worker`, with tests and a corpus check.
+16. `worker`. **DONE 2026-08-23.** Worker, SharedWorker,
+    navigator.serviceWorker.register, worklet addModule, with targets from
+    the script URL. Corpus 506 -> 514. **Phase C complete.**
 
 **Phase D - noise control**
 

@@ -10,6 +10,7 @@ import { domEscape } from "./recognizers/dom-escape.js";
 import { identity } from "./recognizers/identity.js";
 import { navigation } from "./recognizers/navigation.js";
 import { globalsFamily } from "./recognizers/globals-family.js";
+import { worker } from "./recognizers/worker.js";
 
 export type { CapabilityUse } from "./capability.js";
 
@@ -22,6 +23,7 @@ export const RECOGNIZERS: readonly Recognizer[] = [
   identity,
   navigation,
   globalsFamily,
+  worker,
 ];
 
 export interface ExtractOptions {
