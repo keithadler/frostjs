@@ -12,7 +12,9 @@
   "files": [
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "action.yml",
+    "scripts/action.sh"
   ],
   "engines": {
     "node": ">=20"
@@ -25,7 +27,8 @@
     "lint": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.ts\" && tsc -p tsconfig.json --noEmit",
     "prepublishOnly": "npm run build && npm test",
     "corpus": "vite-node scripts/corpus.ts",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.ts\""
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.ts\"",
+    "prepare": "npm run build"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

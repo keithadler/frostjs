@@ -356,7 +356,8 @@ Ported directly from `exact`, because it is already proven.
 22. JSON and SARIF. **DONE 2026-08-23.** `--format json` (schema 1) and
     `--format sarif` (2.1.0).
 23. GitHub annotations. **DONE 2026-08-23.** `--format github`.
-24. GitHub Action, pre-commit hook.
+24. GitHub Action, pre-commit hook. **DONE 2026-08-23.** Composite action
+    with inputs via `env` into `scripts/action.sh`; injection test included.
 25. CSP emission.
 
 **Phase F - dependencies**

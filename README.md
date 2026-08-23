@@ -115,6 +115,32 @@ Exit codes: `0` clean, `1` policy violations, `2` usage or input error
 Uses with `possible` confidence are listed under "unknown" and never fail the
 build; `certain` and `probable` uses do.
 
+## GitHub Action
+
+```yaml
+- uses: keithadler/permit@main
+  with:
+    paths: src
+    args: --baseline .permit-baseline.json --changed-since origin/main
+    fail-on-findings: "true"
+```
+
+Inputs: `paths` (default `.`), `format` (default `github`, which annotates
+the pull request inline), `args` (extra flags), `fail-on-findings` (set
+`"false"` for an informational run). Inputs reach the script through the
+environment only, never spliced into the script body, so a hostile input is
+an argument and not a command.
+
+## pre-commit
+
+```yaml
+repos:
+  - repo: https://github.com/keithadler/permit
+    rev: main
+    hooks:
+      - id: permit
+```
+
 ## Output formats
 
 - `text` (default): one line per denial with the policy line that denied

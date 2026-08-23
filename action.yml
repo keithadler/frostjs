@@ -1,0 +1,46 @@
+name: permit
+description: Deny-by-default capability linter for JavaScript. Fails the build when code reaches for a capability the policy has not granted.
+author: Keith Adler
+branding:
+  icon: shield
+  color: blue
+
+inputs:
+  paths:
+    description: Space-separated paths to analyze.
+    required: false
+    default: "."
+  format:
+    description: Output format - github (inline annotations), text, json, or sarif.
+    required: false
+    default: github
+  args:
+    description: Extra command-line arguments, e.g. "--baseline .permit-baseline.json --changed-since origin/main".
+    required: false
+    default: ""
+  fail-on-findings:
+    description: Fail the job when a capability use is denied. Set to "false" for an informational run.
+    required: false
+    default: "true"
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: "20"
+    - name: Build permit
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: npm ci --no-audit --no-fund --ignore-scripts && npm run build
+    - name: Run permit
+      shell: bash
+      # Inputs reach the script through the environment only. Splicing them
+      # into the script body with ${{ }} would be a shell injection vector.
+      env:
+        PERMIT_PATHS: ${{ inputs.paths }}
+        PERMIT_FORMAT: ${{ inputs.format }}
+        PERMIT_ARGS: ${{ inputs.args }}
+        PERMIT_FAIL_ON_FINDINGS: ${{ inputs.fail-on-findings }}
+        PERMIT_BIN: ${{ github.action_path }}/dist/cli/main.js
+      run: bash "${{ github.action_path }}/scripts/action.sh"

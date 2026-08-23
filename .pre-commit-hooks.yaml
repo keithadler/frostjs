@@ -1,0 +1,7 @@
+- id: permit
+  name: permit
+  description: Deny-by-default capability linter for JavaScript.
+  entry: permit
+  language: node
+  types_or: [javascript]
+  require_serial: true
