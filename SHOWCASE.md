@@ -129,6 +129,12 @@ npm run showcase          # the two files above
 npm run showcase -- --all # all 921 files
 ```
 
+Both files are still on three.js's `dev` branch as of 2026-08-23: the ECSY
+copy is unchanged since it was vendored in May 2021 and is imported by the
+three WebXR hand-input examples; `RapierPhysics.js` now pins Rapier 0.17.3
+on the same CDN. A draft report for the three.js maintainers is in
+[`showcase/three/UPSTREAM-ISSUE.md`](showcase/three/UPSTREAM-ISSUE.md).
+
 The threat model's limits apply here as everywhere. frostjs did not find
 this by understanding what ECSY does; it found it because `eval` is `eval`
 and a policy said no. Obfuscated code would not have been caught. The file
