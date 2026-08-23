@@ -177,24 +177,45 @@ from the gate, because without a lockfile there is nothing to sync against.
 
 ## 9. Policy language
 
-Policy is frost. Deny-by-default, so the file only ever grants.
+Policy is frost's `.policy` dialect. **Revised 2026-08-23** after reading
+frost's actual policy grammar (`frostlang/audit.py`): it is line-oriented with
+no block header, comments are `--` or `#`, keywords are case-insensitive, the
+grant verb is `may` and the refusal verb is `forbid`, and a trailing comment on
+a rule is its *hint*, printed when the rule refuses something. The original
+`allow ... / end policy` sketch was not frost; this is.
 
 ```
-policy for "checkout-widget"
-  allow network to "api.example.com"
-  allow network to "cdn.example.com"
-  allow storage session
-  allow dom-escape in "src/legacy/banner.js"
-  deny everything else
-end policy
+policy "checkout-widget"
+may reach "api.example.com", "cdn.example.com"
+may use session storage
+may use html injection in "src/legacy/banner.js"   -- old banner, rewrite due Q4
+may use local storage in "src/legacy/*" until 2026-12-01
+forbid cookies                                      -- consent banner owns these
 ```
+
+Grammar, one rule per line:
+
+```
+policy "<name>"                                   (optional, once)
+may use <capability> [in "<glob>", ...] [until YYYY-MM-DD]
+forbid [using] <capability> [in "<glob>", ...]
+forbid everything else                            (optional, readability only)
+```
+
+`<capability>` is a phrase (`local storage`, `cookies`, `the network`,
+`html injection`...) or a code (`storage.local`, `dom-escape`). A family name
+grants the whole family. `may reach "<host>"` arrives with the network family
+in Phase C. Deny-by-default, so the file only ever grants; `forbid` exists to
+carve an exception out of a broader grant (`may use storage` + `forbid cookies`)
+and always wins over `may`. The config file is `permit.policy`, matching
+frost's `.policy` extension for policies (`.frost` is for scripts).
 
 Requirements:
 
 1. Grants may be scoped to a path glob (`in "src/legacy/*"`) so exceptions are
    local and visible, not global.
-2. A grant may carry a note and an expiry date; expired grants fail the build with
-   a distinct message. This is how you fight drift.
+2. A grant may carry a hint (its trailing comment) and an expiry date; expired
+   grants fail the build with a distinct message. This is how you fight drift.
 3. The compiler emits three artifacts from one policy: the linter ruleset, a
    `Content-Security-Policy` header string, and a human-readable summary.
 4. Policy compilation errors are fatal and precise - file, line, and what was
@@ -224,7 +245,7 @@ Ported directly from `exact`, because it is already proven.
    bracketed capability list. A bare `// permit: ignore` suppresses all.
 3. **Changed-lines-only mode** for PR checks, using the git diff.
 4. **`--exit-zero`** for informational runs.
-5. **Config discovery** walking up to the nearest `permit.frost`, mirroring
+5. **Config discovery** walking up to the nearest `permit.policy`, mirroring
    `exact`'s `[tool.exact]` discovery.
 
 ## 12. Integrations
@@ -259,9 +280,10 @@ Ported directly from `exact`, because it is already proven.
 
 **Phase B - the policy language**
 
-5. Frost grammar for `policy`, `allow`, `deny`, path scoping.
+5. Frost grammar for `policy`, `may use`, `forbid`, path scoping, `until`.
+   **DONE 2026-08-23.** `src/policy/parse.ts`, `src/policy/vocabulary.ts`.
 6. Policy compiler to internal ruleset.
-7. Config discovery and `permit.frost` resolution.
+7. Config discovery and `permit.policy` resolution.
 8. Precise policy syntax errors.
 
 **Phase C - full taxonomy**
