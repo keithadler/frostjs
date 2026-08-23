@@ -5,7 +5,8 @@
 import { CONFIDENCE_ORDER, type Confidence } from "../policy/index.js";
 
 /** The subcommand, `check` being the bare `frostjs <paths>` form. */
-type Command = "check" | "init" | "audit" | "capabilities" | "csp" | "summary" | "vendor-add" | "registry-sync" | "sri";
+type Command =
+  "check" | "init" | "audit" | "capabilities" | "explain" | "csp" | "summary" | "vendor-add" | "registry-sync" | "sri";
 
 export interface ParsedArgs {
   command: Command;
@@ -66,7 +67,8 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
         arg === "sri" ||
         arg === "init" ||
         arg === "audit" ||
-        arg === "capabilities"
+        arg === "capabilities" ||
+        arg === "explain"
       ) {
         out.command = arg;
         continue;
@@ -172,6 +174,7 @@ export const HELP = `usage: frostjs [options] <paths...>
        frostjs init [paths...]
        frostjs audit [--format text|json] <paths...>
        frostjs capabilities [--format text|json|md]
+       frostjs explain <capability>
        frostjs csp [--policy <file>]
        frostjs summary [--policy <file>]
        frostjs vendor add <files...>
@@ -184,6 +187,8 @@ commands:
   (default)            analyze the given paths against the policy
   frostjs capabilities the full capability taxonomy frostjs recognizes and
                        the policy phrase for each; --format text|json|md
+  frostjs explain <c>  explain one capability, family, code or phrase: what
+                       triggers it and the policy line to allow it
   frostjs audit        what the code does, with no policy: hosts reached,
                        code generation from non-constant input, script
                        injection, service workers, and files where those

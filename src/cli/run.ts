@@ -49,7 +49,7 @@ import { includesFor, sync, usesOf } from "../sync.js";
 import { policyNameFor, starterPolicy } from "../init.js";
 import { audit, auditJson, formatAudit, groupByFile, type FileSource } from "../audit.js";
 import { taint, type TaintFinding } from "../extract/taint.js";
-import { capabilitiesJson, capabilitiesMarkdown, capabilitiesText } from "../capabilities.js";
+import { capabilitiesJson, capabilitiesMarkdown, capabilitiesText, explainCapability } from "../capabilities.js";
 import { suppressions, isSuppressed } from "../extract/suppress.js";
 
 export interface Io {
@@ -85,6 +85,8 @@ export function run(argv: readonly string[], io: Io): number {
       return runAudit(args, io);
     case "capabilities":
       return runCapabilities(args, io);
+    case "explain":
+      return runExplain(args, io);
     case "csp":
     case "summary":
       return runPolicyCommand(args, io);
@@ -360,6 +362,18 @@ function extractAll(
 }
 
 // frostjs capabilities
+
+function runExplain(args: ParsedArgs, io: Io): number {
+  const term = args.paths.join(" ").trim();
+  if (term === "") return fail(io, "frostjs explain needs a capability, e.g. frostjs explain storage.local");
+  const text = explainCapability(term);
+  if (text === null) {
+    io.stderr(`frostjs: '${term}' is not a capability. Run frostjs capabilities to see them all.\n`);
+    return 2;
+  }
+  io.stdout(text);
+  return 0;
+}
 
 function runCapabilities(args: ParsedArgs, io: Io): number {
   if (args.format === "json") io.stdout(capabilitiesJson());

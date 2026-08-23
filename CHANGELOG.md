@@ -7,6 +7,11 @@ change the policy grammar or the JSON schema; the changelog will say so.
 
 ## [Unreleased]
 
+### Added
+
+- `frostjs explain <capability>` explains one code, family or phrase: what
+  triggers it and the policy line to allow it.
+
 ## [0.4.0] - 2026-08-23
 
 Additive: new policy grammar (`extends`) and a new flag (`--unused`); no

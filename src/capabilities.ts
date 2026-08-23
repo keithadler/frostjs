@@ -5,7 +5,7 @@
  * fails if it drifts from the codes the extractor actually emits
  * (MEMBER_CODES) or from the families (FAMILIES).
  */
-import { FAMILIES, MEMBER_CODES, CAPABILITY_PHRASES } from "./policy/vocabulary.js";
+import { FAMILIES, MEMBER_CODES, CAPABILITY_PHRASES, resolveCapability } from "./policy/vocabulary.js";
 
 /** One line per family: what the family is about. */
 export const FAMILY_SUMMARY: Readonly<Record<string, string>> = {
@@ -148,4 +148,36 @@ export function capabilitiesMarkdown(): string {
     lines.push("");
   }
   return lines.join("\n");
+}
+
+/**
+ * Explain a single capability, family, phrase or code for `frostjs explain`.
+ * Returns a short block, or null when the input is not a capability.
+ */
+export function explainCapability(input: string): string | null {
+  const code = resolveCapability(input);
+  if (code === null || code === "*") return null;
+  const lines: string[] = [];
+  if (FAMILIES.includes(code)) {
+    const members = MEMBER_CODES.filter((c) => c.startsWith(`${code}.`));
+    lines.push(code);
+    lines.push(`  ${FAMILY_SUMMARY[code] ?? ""}`);
+    lines.push(`  members: ${members.join(", ")}`);
+    lines.push(`  to allow it: ${grantLine(code)}`);
+  } else {
+    const family = code.split(".")[0]!;
+    lines.push(code);
+    lines.push(`  triggered by: ${CODE_TRIGGER[code] ?? ""}`);
+    lines.push(`  family: ${family} - ${FAMILY_SUMMARY[family] ?? ""}`);
+    lines.push(`  to allow it: ${grantLine(code)}`);
+    const fam = grantLine(family);
+    if (fam !== grantLine(code)) lines.push(`               ${fam}   (the whole ${family} family)`);
+  }
+  return lines.join("\n") + "\n";
+}
+
+/** The shortest `may use ...` line that grants a code or family. */
+function grantLine(code: string): string {
+  const phrases = phrasesFor(code);
+  return `may use ${phrases[0] ?? code}`;
 }
