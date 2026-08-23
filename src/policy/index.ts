@@ -24,9 +24,14 @@ export const DENY_ALL: Policy = compile({ file: "(no policy)", name: "deny-all",
  */
 const FAILING: ReadonlySet<CapabilityUse["confidence"]> = new Set(["certain", "probable"]);
 
-export function decide(uses: readonly CapabilityUse[], policy: Policy): Decision[] {
+export interface DecideOptions {
+  /** Map a use's reported path to the path the policy's globs should see. */
+  scopePath?: (use: CapabilityUse) => string;
+}
+
+export function decide(uses: readonly CapabilityUse[], policy: Policy, opts: DecideOptions = {}): Decision[] {
   return uses.map((use) => {
-    const e = policy.evaluate(use);
+    const e = policy.evaluate(opts.scopePath ? { ...use, file: opts.scopePath(use) } : use);
     if (e.verdict === "allowed") return { use, verdict: "allowed", reason: e.reason, rule: e.rule };
     if (!FAILING.has(use.confidence)) return { use, verdict: "unknown", reason: null, rule: null };
     return { use, verdict: "denied", reason: e.reason, rule: e.rule };

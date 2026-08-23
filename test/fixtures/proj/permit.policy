@@ -1,0 +1,5 @@
+policy "proj"
+may use session storage
+may use local storage in "src/legacy/*"      -- old code, rewrite by Q4
+forbid cookies                               -- consent banner owns these
+may use the cache until 2026-08-30           -- service worker experiment

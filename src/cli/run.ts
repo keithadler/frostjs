@@ -5,7 +5,9 @@ import { discover } from "../discover/index.js";
 import { parseFile, type ParseError } from "../extract/ast.js";
 import { extract } from "../extract/index.js";
 import type { CapabilityUse } from "../extract/capability.js";
-import { DENY_ALL, decide } from "../policy/index.js";
+import fs from "node:fs";
+import { DENY_ALL, decide, compile, parsePolicy, PolicyError, type Policy } from "../policy/index.js";
+import { commonAncestor, findPolicyFile } from "../policy/config.js";
 import { text } from "../report/text.js";
 
 export interface Io {
@@ -57,6 +59,36 @@ export function run(argv: readonly string[], io: Io): number {
   }
 
   const cwd = io.cwd ?? process.cwd();
+  const today = args.today ?? new Date().toISOString().slice(0, 10);
+
+  let policy: Policy;
+  let policyDir: string;
+  const policyFile = args.policy ? path.resolve(args.policy) : findPolicyFile(commonAncestor(args.paths));
+  if (policyFile === null) {
+    io.stderr("permit: no permit.policy found; denying everything\n");
+    policy = DENY_ALL;
+    policyDir = cwd;
+  } else {
+    let source: string;
+    try {
+      source = fs.readFileSync(policyFile, "utf8");
+    } catch {
+      io.stderr(`permit: policy not found: ${args.policy ?? policyFile}\n`);
+      return 2;
+    }
+    const shown = path.relative(cwd, policyFile) || policyFile;
+    try {
+      policy = compile(parsePolicy(source, shown), { today });
+    } catch (e) {
+      if (e instanceof PolicyError) {
+        io.stderr(`permit: ${e.message}\n`);
+        return 2;
+      }
+      throw e;
+    }
+    policyDir = path.dirname(policyFile);
+  }
+
   const syntaxErrors: ParseError[] = [];
   const uses: CapabilityUse[] = [];
   for (const file of files) {
@@ -76,8 +108,11 @@ export function run(argv: readonly string[], io: Io): number {
     return 2;
   }
 
-  const decisions = decide(uses, DENY_ALL);
-  io.stdout(text(decisions, { files: files.length }));
+  // Report paths relative to cwd; scope policy globs relative to the policy file.
+  const decisions = decide(uses, policy, {
+    scopePath: (u) => path.relative(policyDir, path.resolve(cwd, u.file)),
+  });
+  io.stdout(text(decisions, { files: files.length }, { warnings: policy.warnings }));
 
   const denied = decisions.some((d) => d.verdict === "denied");
   return denied && !args.exitZero ? 1 : 0;

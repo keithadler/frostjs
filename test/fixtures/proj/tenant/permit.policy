@@ -1,0 +1,2 @@
+policy "tenant"
+may use storage

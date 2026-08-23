@@ -6,24 +6,80 @@ explicitly granted: storage, network, `eval`, DOM injection, identity, and so on
 
 ## Status
 
-Pre-alpha. Phase A (walking skeleton) is complete: it discovers `.js`/`.mjs`,
-recognizes the `storage` capability family, applies a hardcoded deny-all
-policy, and fails the build. Phase B (the frost policy language) is next. See
+Pre-alpha. Phases A and B are in: it discovers `.js`/`.mjs`, recognizes the
+`storage` capability family, reads a `permit.policy` written in frost's policy
+dialect, and fails the build on anything the policy does not grant. Phase C
+(the rest of the capability taxonomy) is next. See
 [REQUIREMENTS.md](REQUIREMENTS.md) for the full plan and the milestone log.
 
 ```
-$ cat widget.js
-function save() {
-  localStorage.setItem("a", 1);
-}
+$ cat permit.policy
+policy "checkout-widget"
+may use session storage
+may use local storage in "src/legacy/*"      -- old code, rewrite by Q4
+forbid cookies                               -- consent banner owns these
+may use the cache until 2026-08-30           -- service worker experiment
 
-$ permit widget.js
-widget.js:2:3: storage.local denied by "deny everything": localStorage.setItem("a", 1)
+$ permit src
+src/app.js:2:1: storage.local denied by "deny everything": localStorage.setItem("not-here", 1)
+src/legacy/old.js:2:1: storage.cookie denied by "forbid cookies" (line 4): consent banner owns these: document.cookie
 
-1 file, 1 denied, 0 unknown
+warning: permit.policy line 5: "may use the cache until 2026-08-30" expires in 7 days
+
+3 files, 2 denied, 0 unknown
 $ echo $?
 1
 ```
+
+## Policy files
+
+A policy is a `permit.policy` file in frost's policy dialect: one rule per
+line, `--` or `#` comments, case-insensitive keywords. Deny-by-default, so
+the file only ever grants. A trailing comment on a rule is its *hint*, and is
+printed whenever that rule refuses something.
+
+```
+policy "<name>"                                    optional, once
+may use <capability> [in "<glob>", ...] [until YYYY-MM-DD]
+forbid [using] <capability> [in "<glob>", ...]
+forbid everything else                             optional, readability only
+```
+
+`<capability>` is a phrase or a code. A family name grants the whole family.
+
+| phrase | code |
+| --- | --- |
+| `storage` | `storage` (every member below) |
+| `local storage` | `storage.local` |
+| `session storage` | `storage.session` |
+| `cookies` | `storage.cookie` |
+| `indexeddb` | `storage.indexeddb` |
+| `the cache`, `caches` | `storage.cache` |
+| `navigator storage` | `storage.navigator` |
+| `the network` | `network` (Phase C) |
+| `code generation`, `eval` | `codegen` (Phase C) |
+| `html injection` | `dom-escape` (Phase C) |
+| `identity`, `fingerprinting` | `identity` (Phase C) |
+| `navigation` | `navigation` (Phase C) |
+| `globals` | `globals` (Phase C) |
+| `workers` | `worker` (Phase C) |
+| `everything` | `*` |
+
+Rules:
+
+- `forbid` always wins over `may`, so `may use storage` + `forbid cookies`
+  grants everything in storage except cookies.
+- `in` scopes a rule to path globs (`*` within a segment, `**` across
+  segments, a bare name matches at any depth, a plain directory matches
+  everything beneath it). Globs are relative to the policy file's directory.
+- `until` puts an expiry on a grant. Inside the last 14 days the build warns;
+  after the date the grant denies with its own message. This is how drift is
+  fought: an exception has to be renewed on purpose.
+
+`permit.policy` is searched for in the directory shared by all the given
+paths, then upward; the nearest one wins, so a monorepo can keep one per
+tenant directory. `--policy <file>` overrides the search. With no policy at
+all, every capability is denied and a note says so.
 
 ## Usage
 
@@ -31,6 +87,8 @@ $ echo $?
 permit <paths...>        discover and analyze .js/.mjs files under paths
 permit --exclude <name>  skip directories with this name (repeatable)
 permit --exit-zero       report findings but always exit 0
+permit --policy <file>   use this policy instead of searching for permit.policy
+permit --today <date>    treat YYYY-MM-DD as today when checking expiry
 permit --version         print the version and exit
 permit --help            show usage
 ```

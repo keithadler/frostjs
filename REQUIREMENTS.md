@@ -285,7 +285,10 @@ Ported directly from `exact`, because it is already proven.
 6. Policy compiler to internal ruleset. **DONE 2026-08-23.** `forbid` always
    wins over `may`; a family grants its members; expired grants deny with a
    distinct reason; grants within 14 days of expiry warn.
-7. Config discovery and `permit.policy` resolution.
+7. Config discovery and `permit.policy` resolution. **DONE 2026-08-23.**
+   Searched from the common ancestor of the inputs upward, nearest wins;
+   `--policy` overrides; globs resolve relative to the policy file; `--today`
+   pins the date for expiry checks.
 8. Precise policy syntax errors.
 
 **Phase C - full taxonomy**
