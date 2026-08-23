@@ -60,7 +60,7 @@ forbid everything else                             optional, readability only
 | `navigator storage` | `storage.navigator` |
 | `the network` | `network` (any destination) |
 | `code generation`, `eval` | `codegen` |
-| `html injection` | `dom-escape` (Phase C) |
+| `html injection` | `dom-escape` |
 | `identity`, `fingerprinting` | `identity` (Phase C) |
 | `navigation` | `navigation` (Phase C) |
 | `globals` | `globals` (Phase C) |
@@ -129,6 +129,9 @@ build; `certain` and `probable` uses do.
 | `codegen.function` | `Function(...)`, `new Function(...)` |
 | `codegen.timer` | `setTimeout` / `setInterval` with string code |
 | `codegen.write` | `document.write`, `document.writeln` |
+| `dom-escape.html` | assignment to `innerHTML` / `outerHTML` / `srcdoc`, `insertAdjacentHTML`, `createContextualFragment` |
+| `dom-escape.script` | `document.createElement("script")` |
+| `dom-escape.iframe` | `document.createElement("iframe")` |
 
 Each is recognized bare, via `window` / `globalThis` / `self`, and via a
 string-literal computed member (`window["localStorage"]`). Uses via `self`

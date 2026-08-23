@@ -310,9 +310,13 @@ Ported directly from `exact`, because it is already proven.
 11. `codegen`. **DONE 2026-08-23.** eval (direct and indirect), Function as a
     callee only, timers with string code, document.write. Corpus 126 -> 159,
     all verified.
-12-16. One step per remaining capability family from section 7 (dom-escape,
-   identity, navigation, globals, worker), each with tests and a corpus check
-   that the false-positive count does not move.
+12. `dom-escape`. **DONE 2026-08-23.** Writes to innerHTML/outerHTML/srcdoc
+    on any object (reads are not injection), insertAdjacentHTML,
+    createContextualFragment, createElement("script"|"iframe"). Corpus
+    159 -> 220, all verified.
+13-16. One step per remaining capability family from section 7 (identity,
+   navigation, globals, worker), each with tests and a corpus check that the
+   false-positive count does not move.
 
 **Phase D - noise control**
 

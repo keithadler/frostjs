@@ -11,8 +11,38 @@ lodash@4.17.21/lodash.js:3210:25 storage.cache possible caches[othIndex]
 lodash@4.17.21/lodash.js:436:40 codegen.function possible Function('return this')()
 lodash@4.17.21/lodash.min.js:22:568 codegen.function certain Function("return this")()
 lodash@4.17.21/template.js:259:12 codegen.function certain Function(importsKeys, sourceURL + 'return ' + source) .apply(undefined, importsValues)
+react-dom@18.3.1/cjs/react-dom.development.js:2435:7 dom-escape.html certain reusableSVGContainer.innerHTML = '<svg>' + html.valueOf().toString() + '</svg>'
+react-dom@18.3.1/cjs/react-dom.development.js:2450:3 dom-escape.html certain node.innerHTML = html
+react-dom@18.3.1/cjs/react-dom.development.js:9604:5 dom-escape.html certain testElement.innerHTML = html
+react-dom@18.3.1/cjs/react-dom.development.js:9770:7 dom-escape.html certain div.innerHTML = '<script><' + '/script>'
+react-dom@18.3.1/cjs/react-dom.production.min.js:227:459 dom-escape.html certain a.innerHTML="<script>\x3c/script>"
+react-dom@18.3.1/cjs/react-dom.production.min.js:45:250 dom-escape.html certain a.innerHTML=b
+react-dom@18.3.1/cjs/react-dom.production.min.js:45:306 dom-escape.html certain mb.innerHTML="<svg>"+b.valueOf().toString()+"</svg>"
+react-dom@18.3.1/cjs/react-dom.profiling.min.js:245:459 dom-escape.html certain a.innerHTML="<script>\x3c/script>"
+react-dom@18.3.1/cjs/react-dom.profiling.min.js:56:250 dom-escape.html certain a.innerHTML=b
+react-dom@18.3.1/cjs/react-dom.profiling.min.js:56:306 dom-escape.html certain mb.innerHTML="<svg>"+b.valueOf().toString()+"</svg>"
+react-dom@18.3.1/umd/react-dom.development.js:2422:9 dom-escape.html certain reusableSVGContainer.innerHTML = '<svg>' + html.valueOf().toString() + '</svg>'
+react-dom@18.3.1/umd/react-dom.development.js:2437:5 dom-escape.html certain node.innerHTML = html
+react-dom@18.3.1/umd/react-dom.development.js:9614:7 dom-escape.html certain testElement.innerHTML = html
+react-dom@18.3.1/umd/react-dom.development.js:9780:9 dom-escape.html certain div.innerHTML = '<script><' + '/script>'
+react-dom@18.3.1/umd/react-dom.production.min.js:150:88 dom-escape.html certain a.innerHTML="<script>\x3c/script>"
+react-dom@18.3.1/umd/react-dom.production.min.js:220:150 dom-escape.html certain Xd.innerHTML="<svg>"+b.valueOf().toString()+"</svg>"
+react-dom@18.3.1/umd/react-dom.production.min.js:220:94 dom-escape.html certain a.innerHTML=b
+react-dom@18.3.1/umd/react-dom.profiling.min.js:157:88 dom-escape.html certain a.innerHTML="<script>\x3c/script>"
+react-dom@18.3.1/umd/react-dom.profiling.min.js:237:150 dom-escape.html certain pe.innerHTML="<svg>"+b.valueOf().toString()+"</svg>"
+react-dom@18.3.1/umd/react-dom.profiling.min.js:237:94 dom-escape.html certain a.innerHTML=b
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:101566 dom-escape.html certain s.innerHTML=s.innerHTML.replace(/\n/g,"").replace(/<br[ /]*>/g,"\n")
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:102500 dom-escape.html certain s.innerHTML=x.value
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:1169336 dom-escape.html certain (eI=eI||document.createElement("textarea")).innerHTML="&"+s+";"
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:1219286 dom-escape.html certain this.innerHTML=""
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:1219381 dom-escape.html certain this.innerHTML=s.innerHtml||s.innerHTML||""
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:1220601 dom-escape.html certain this.innerHTML=s
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:191093 codegen.function certain Function("return this")()
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:229351 codegen.function certain Function("return this")()
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:333521 dom-escape.html certain s.innerHTML=i
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:333544 dom-escape.html certain (ze=ze||document.createElement("div")).innerHTML="<svg>"+i.valueOf().toString()+"</svg>"
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:406140 dom-escape.html certain (s=P.createElement("div")).innerHTML="<script><\/script>"
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:55140 dom-escape.html certain i.documentElement.innerHTML=ir?ut:w
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:573046 codegen.function certain Function("return this")()
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:594578 codegen.function certain new Function("return this")()
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:631208 storage.local certain localStorage.setItem("authorized",JSON.stringify(u))
@@ -25,14 +55,25 @@ swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:794178 network.fetch certain globa
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:794197 network.fetch certain globalThis.fetch
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:798540 network.fetch certain fetch(s,{headers:{Accept:Fu},loadSpec:!0}).then((s=>s.text())).then((s=>so.load(s)))
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:813121 network.fetch certain fetch
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:94411 dom-escape.html certain w.innerHTML=i.value
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:994692 network.fetch certain fetch(s,i)
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle-core.js:2:102924 codegen.function certain new Function("return this")()
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle-core.js:2:137933 storage.local certain localStorage.setItem("authorized",JSON.stringify(r))
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle-core.js:2:141039 storage.local certain localStorage.getItem("authorized")
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle-core.js:2:141314 storage.cookie certain document.cookie
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle-core.js:2:141753 storage.cookie certain document.cookie
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:101312 dom-escape.html certain s.innerHTML=s.innerHTML.replace(/\n/g,"").replace(/<br[ /]*>/g,"\n")
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:102246 dom-escape.html certain s.innerHTML=x.value
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:1169076 dom-escape.html certain (eI=eI||document.createElement("textarea")).innerHTML="&"+s+";"
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:1219026 dom-escape.html certain this.innerHTML=""
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:1219121 dom-escape.html certain this.innerHTML=s.innerHtml||s.innerHTML||""
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:1220341 dom-escape.html certain this.innerHTML=s
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:190839 codegen.function certain Function("return this")()
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:229097 codegen.function certain Function("return this")()
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:333267 dom-escape.html certain s.innerHTML=i
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:333290 dom-escape.html certain (ze=ze||document.createElement("div")).innerHTML="<svg>"+i.valueOf().toString()+"</svg>"
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:405886 dom-escape.html certain (s=P.createElement("div")).innerHTML="<script><\/script>"
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:54886 dom-escape.html certain i.documentElement.innerHTML=ir?ut:w
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:572792 codegen.function certain Function("return this")()
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:594324 codegen.function certain new Function("return this")()
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:630948 storage.local certain localStorage.setItem("authorized",JSON.stringify(u))
@@ -45,6 +86,7 @@ swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:793918 network.fetch certain gl
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:793937 network.fetch certain globalThis.fetch
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:798280 network.fetch certain fetch(s,{headers:{Accept:Fu},loadSpec:!0}).then((s=>s.text())).then((s=>so.load(s)))
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:812861 network.fetch certain fetch
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:94157 dom-escape.html certain w.innerHTML=i.value
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:994432 network.fetch certain fetch(s,i)
 swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js:2:118344 codegen.function certain Function("return this")()
 swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js:2:153967 codegen.function certain Function("return this")()
@@ -53,6 +95,9 @@ swagger-ui-dist@5.11.0/swagger-ui.js:1:30575 storage.local certain localStorage.
 swagger-ui-dist@5.11.0/swagger-ui.js:1:33581 storage.local certain localStorage.getItem("authorized")
 swagger-ui-dist@5.11.0/swagger-ui.js:1:33856 storage.cookie certain document.cookie
 swagger-ui-dist@5.11.0/swagger-ui.js:1:34295 storage.cookie certain document.cookie
+three@0.160.0/examples/jsm/capabilities/WebGL.js:100:3 dom-escape.html certain element.innerHTML = message
+three@0.160.0/examples/jsm/capabilities/WebGPU.js:45:3 dom-escape.html certain element.innerHTML = message
+three@0.160.0/examples/jsm/effects/AsciiEffect.js:251:4 dom-escape.html certain oAscii.innerHTML = `<tr><td style="display:block;width:${width}px;height:${height}px;overflow:hidden
 three@0.160.0/examples/jsm/libs/ammo.wasm.js:15:160 network.xhr certain new XMLHttpRequest
 three@0.160.0/examples/jsm/libs/ammo.wasm.js:15:60 network.xhr certain new XMLHttpRequest
 three@0.160.0/examples/jsm/libs/ammo.wasm.js:19:260 network.fetch certain fetch
@@ -103,11 +148,21 @@ three@0.160.0/examples/jsm/libs/draco/gltf/draco_wasm_wrapper.js:35:210 network.
 three@0.160.0/examples/jsm/libs/draco/gltf/draco_wasm_wrapper.js:35:69 network.xhr certain new XMLHttpRequest
 three@0.160.0/examples/jsm/libs/draco/gltf/draco_wasm_wrapper.js:39:49 network.fetch certain fetch
 three@0.160.0/examples/jsm/libs/draco/gltf/draco_wasm_wrapper.js:39:60 network.fetch certain fetch(P,{credentials:"same-origin"}).then(function(g){return WebAssembly.instantiateStreaming(g,d).t
+three@0.160.0/examples/jsm/libs/ecsy.module.js:1615:16 dom-escape.script certain document.createElement("script")
+three@0.160.0/examples/jsm/libs/ecsy.module.js:1670:3 dom-escape.html certain infoDiv.innerHTML = `Open ECSY devtools to connect to this page using the code:&nbsp;<b style="color
 three@0.160.0/examples/jsm/libs/ecsy.module.js:1683:5 storage.local certain window.localStorage.clear()
 three@0.160.0/examples/jsm/libs/ecsy.module.js:1685:5 storage.local certain window.localStorage.setItem("ecsyRemoteId", remoteId)
 three@0.160.0/examples/jsm/libs/ecsy.module.js:1689:26 storage.local certain window.localStorage.getItem("ecsyRemoteId")
 three@0.160.0/examples/jsm/libs/ecsy.module.js:1692:5 storage.local certain window.localStorage.setItem("ecsyRemoteId", remoteId)
+three@0.160.0/examples/jsm/libs/ecsy.module.js:1734:11 dom-escape.html certain infoDiv.innerHTML = "Connected"
+three@0.160.0/examples/jsm/libs/ecsy.module.js:1739:28 dom-escape.script certain document.createElement("script")
+three@0.160.0/examples/jsm/libs/ecsy.module.js:1756:15 dom-escape.html certain script.innerHTML = data.script
 three@0.160.0/examples/jsm/libs/ecsy.module.js:1762:27 codegen.eval certain eval(data.script)
+three@0.160.0/examples/jsm/libs/lil-gui.module.min.js:8:12408 dom-escape.html certain i.innerHTML=t
+three@0.160.0/examples/jsm/libs/lil-gui.module.min.js:8:12976 dom-escape.html certain this.$display.innerHTML=-1===i?t:this._names[i]
+three@0.160.0/examples/jsm/libs/lil-gui.module.min.js:8:14901 dom-escape.html certain i.innerHTML=t
+three@0.160.0/examples/jsm/libs/lil-gui.module.min.js:8:28064 dom-escape.html certain this.$title.innerHTML=t
+three@0.160.0/examples/jsm/libs/lil-gui.module.min.js:8:819 dom-escape.html certain this.$name.innerHTML=t
 three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:13973:31 codegen.eval certain eval('[function _expression_function(){' + val + ';scoped_bm_rt=$bm_rt}]')[0]
 three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:14279:52 network.xhr possible XMLHttpRequest
 three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:14279:68 network.fetch possible fetch
@@ -154,6 +209,12 @@ three@0.160.0/examples/jsm/libs/zstddec.module.js:1:162 network.fetch certain fe
 three@0.160.0/examples/jsm/libs/zstddec.module.js:1:168 network.fetch certain fetch("data:application/wasm;base64,"+C).then(A=>A.arrayBuffer()).then(A=>WebAssembly.instantiate(A,
 three@0.160.0/examples/jsm/nodes/code/ScriptableNode.js:408:18 codegen.function certain new Function( ...parametersProps, code )
 three@0.160.0/examples/jsm/physics/RapierPhysics.js:41:18 network.import certain import( RAPIER_PATH )
+three@0.160.0/examples/jsm/webxr/ARButton.js:199:5 dom-escape.html certain message.innerHTML = 'WEBXR NEEDS HTTPS'
+three@0.160.0/examples/jsm/webxr/ARButton.js:204:5 dom-escape.html certain message.innerHTML = 'WEBXR NOT AVAILABLE'
+three@0.160.0/examples/jsm/webxr/VRButton.js:171:5 dom-escape.html certain message.innerHTML = 'WEBXR NEEDS HTTPS'
+three@0.160.0/examples/jsm/webxr/VRButton.js:176:5 dom-escape.html certain message.innerHTML = 'WEBXR NOT AVAILABLE'
+three@0.160.0/examples/jsm/webxr/XRButton.js:191:5 dom-escape.html certain message.innerHTML = 'WEBXR NEEDS HTTPS'
+three@0.160.0/examples/jsm/webxr/XRButton.js:196:5 dom-escape.html certain message.innerHTML = 'WEBXR NOT AVAILABLE'
 three@0.160.0/src/loaders/FileLoader.js:88:3 network.fetch certain fetch( req ) .then( response => { if ( response.status === 200 || response.status === 0 ) { // Some 
 three@0.160.0/src/loaders/ImageBitmapLoader.js:18:15 network.fetch certain fetch
 three@0.160.0/src/loaders/ImageBitmapLoader.js:87:19 network.fetch certain fetch( url, fetchOptions ).then( function ( res ) { return res.blob(); } ).then( function ( blob ) {

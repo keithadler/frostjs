@@ -6,11 +6,12 @@ import type { Recognizer } from "./recognizers/types.js";
 import { storage } from "./recognizers/storage.js";
 import { network } from "./recognizers/network.js";
 import { codegen } from "./recognizers/codegen.js";
+import { domEscape } from "./recognizers/dom-escape.js";
 
 export type { CapabilityUse } from "./capability.js";
 
 /** One recognizer per capability family. Phase C adds the rest. */
-export const RECOGNIZERS: readonly Recognizer[] = [storage, network, codegen];
+export const RECOGNIZERS: readonly Recognizer[] = [storage, network, codegen, domEscape];
 
 export interface ExtractOptions {
   origin?: Origin;
@@ -39,7 +40,7 @@ export function extract(parsed: ParsedFile, opts: ExtractOptions = {}): Capabili
         // Interim shadowing check until Phase D scope analysis: if this file
         // declares the name the match rests on, we cannot tell whether the
         // reference is the global or the local, so it is only `possible`.
-        confidence: declared.has(m.via) ? "possible" : m.confidence,
+        confidence: m.via !== "" && declared.has(m.via) ? "possible" : m.confidence,
         origin,
       });
     }
