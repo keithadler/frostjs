@@ -96,6 +96,17 @@ describe("JSX", () => {
   it(".jsx files parse too", () => {
     expect(extract(parseSource("a.jsx", "const a = <p dangerouslySetInnerHTML={h} />;")).length).toBe(1);
   });
+
+  it("JSX inside a .js file is retried as JSX, as React and Docusaurus projects write it", () => {
+    const p = parseSource(
+      "Highlight.js",
+      "export default ({ children }) => <span dangerouslySetInnerHTML={{ __html: children }} />;",
+    );
+    expect(p.errors).toEqual([]);
+    expect(extract(p).map((u) => u.capability)).toEqual(["dom-escape.html"]);
+    // A genuine syntax error is still a syntax error.
+    expect(parseSource("broken.js", "const = ;").errors.length).toBeGreaterThan(0);
+  });
 });
 
 describe("discovery of TypeScript", () => {

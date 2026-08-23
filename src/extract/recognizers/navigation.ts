@@ -38,8 +38,9 @@ function originTarget(origin: AnyNode): string | null {
  * navigating members (reads and `hash` are not navigation),
  * `location.assign/replace/reload`, `window.open`, the history methods, and
  * `postMessage` when the receiver is another window (parent, top, opener,
- * contentWindow) or a string origin is given. Worker and port postMessage
- * have no origin argument and stay quiet.
+ * contentWindow), a string origin is given, or an options object names
+ * targetOrigin. Worker and port postMessage, including the
+ * `{ transfer: [...] }` options form, stay quiet.
  */
 export const navigation: Recognizer = ({ node, ancestors, binding }) => {
   if (binding) return null;
@@ -84,7 +85,17 @@ export const navigation: Recognizer = ({ node, ancestors, binding }) => {
     const originIsString =
       origin !== undefined &&
       (origin.type === "Literal" ? typeof origin["value"] === "string" : origin.type === "TemplateLiteral");
-    const originIsOptions = origin?.type === "ObjectExpression";
+    // Workers take an options object too ({ transfer }); only a targetOrigin key makes it a window message.
+    const originIsOptions =
+      origin?.type === "ObjectExpression" &&
+      (origin["properties"] as AnyNode[]).some((p) => {
+        const key = p["key"] as AnyNode | undefined;
+        return (
+          p.type === "Property" &&
+          p["computed"] !== true &&
+          (key?.["name"] === "targetOrigin" || key?.["value"] === "targetOrigin")
+        );
+      });
     if ((receiver !== null && WINDOW_RECEIVERS.has(receiver)) || originIsString || originIsOptions) {
       const via = isIdentifier(obj) && WINDOW_RECEIVERS.has(obj.name) ? obj : null;
       return {

@@ -10,6 +10,7 @@ change the policy grammar or the JSON schema; the changelog will say so.
 ### Added
 
 - `frostjs init`: a starter policy granting what the code does today.
+- JSX inside `.js` files parses (React and Docusaurus convention).
 - Eight capability families: `storage`, `network` (with static destination
   resolution), `codegen`, `dom-escape`, `identity`, `navigation`, `globals`,
   `worker`.

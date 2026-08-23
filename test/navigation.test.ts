@@ -65,8 +65,12 @@ describe("navigation: must stay quiet", () => {
     expect(caps("location.hash = '#top'")).toEqual([]);
   });
 
-  it("worker and port postMessage", () => {
+  it("worker and port postMessage, including the options form", () => {
     expect(caps("worker.postMessage(data); port.postMessage(data, [buf]); self.postMessage(r)")).toEqual([]);
+    expect(
+      caps("pool.postMessage(job, { transfer: [buf] }); self.postMessage(buffer, { transfer: [buffer] })"),
+    ).toEqual([]);
+    expect(caps("win.postMessage(d, { targetOrigin: origin, transfer: [buf] })")).toEqual(["navigation.postmessage"]);
   });
 
   it("bare open and other objects", () => {

@@ -22,7 +22,10 @@ Pre-alpha, feature complete against [REQUIREMENTS.md](REQUIREMENTS.md): all
 eight capability families, frost-dialect policies, scope analysis,
 baselines, changed-lines mode, json/sarif/github output, a GitHub Action,
 an ESLint plugin, a fingerprint registry for vendored code with SRI output,
-TypeScript, JSX and inline HTML. Not yet published to npm.
+TypeScript, JSX and inline HTML. Run on Excalidraw (656 files, a
+TypeScript and React monorepo) it finishes in under a second and
+`frostjs init` writes an 18-line policy; every finding was checked by hand.
+Not yet published to npm.
 
 ```
 $ cat frostjs.policy

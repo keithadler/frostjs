@@ -66,14 +66,19 @@ export function positionAt(lines: LineIndex, offset: number): { line: number; co
 /**
  * Parse source text. `.mjs`/`.mts` are modules, `.cjs`/`.cts` are scripts,
  * anything else is detected from the content. The language comes from the
- * extension (oxc handles .ts/.tsx/.jsx natively).
+ * extension (oxc handles .ts/.tsx/.jsx natively). A `.js` file that does
+ * not parse is retried as JSX, since React and Docusaurus projects put JSX
+ * in `.js` files as a matter of course.
  */
 export function parseSource(file: string, source: string): ParsedFile {
-  const ext = path.extname(file);
-  const result = parseSync(file, source, {
-    sourceType:
-      ext === ".mjs" || ext === ".mts" ? "module" : ext === ".cjs" || ext === ".cts" ? "script" : "unambiguous",
-  });
+  const ext = path.extname(file).toLowerCase();
+  const sourceType =
+    ext === ".mjs" || ext === ".mts" ? "module" : ext === ".cjs" || ext === ".cts" ? "script" : "unambiguous";
+  let result = parseSync(file, source, { sourceType });
+  if (result.errors.length > 0 && (ext === ".js" || ext === ".mjs" || ext === ".cjs")) {
+    const asJsx = parseSync(file, source, { sourceType, lang: "jsx" });
+    if (asJsx.errors.length === 0) result = asJsx;
+  }
   const lines = lineIndex(source);
   const errors: ParseError[] = result.errors.map((e) => {
     const offset = e.labels?.[0]?.start ?? 0;
