@@ -59,7 +59,7 @@ forbid everything else                             optional, readability only
 | `the cache`, `caches` | `storage.cache` |
 | `navigator storage` | `storage.navigator` |
 | `the network` | `network` (any destination) |
-| `code generation`, `eval` | `codegen` (Phase C) |
+| `code generation`, `eval` | `codegen` |
 | `html injection` | `dom-escape` (Phase C) |
 | `identity`, `fingerprinting` | `identity` (Phase C) |
 | `navigation` | `navigation` (Phase C) |
@@ -125,6 +125,10 @@ build; `certain` and `probable` uses do.
 | `network.eventsource` | `EventSource` |
 | `network.beacon` | `navigator.sendBeacon` |
 | `network.import` | dynamic `import()` of an absolute URL or an expression |
+| `codegen.eval` | `eval` |
+| `codegen.function` | `Function(...)`, `new Function(...)` |
+| `codegen.timer` | `setTimeout` / `setInterval` with string code |
+| `codegen.write` | `document.write`, `document.writeln` |
 
 Each is recognized bare, via `window` / `globalThis` / `self`, and via a
 string-literal computed member (`window["localStorage"]`). Uses via `self`

@@ -1,31 +1,54 @@
 lodash@4.17.21/_baseIntersection.js:36:5 storage.cache possible caches[othIndex]
 lodash@4.17.21/_baseIntersection.js:43:14 storage.cache possible caches[0]
 lodash@4.17.21/_baseIntersection.js:57:21 storage.cache possible caches[othIndex]
+lodash@4.17.21/_root.js:7:38 codegen.function certain Function('return this')()
+lodash@4.17.21/core.js:71:40 codegen.function certain Function('return this')()
+lodash@4.17.21/core.min.js:18:480 codegen.function certain Function("return this")()
+lodash@4.17.21/lodash.js:14942:16 codegen.function possible Function(importsKeys, sourceURL + 'return ' + source) .apply(undefined, importsValues)
 lodash@4.17.21/lodash.js:3189:9 storage.cache possible caches[othIndex]
 lodash@4.17.21/lodash.js:3196:18 storage.cache possible caches[0]
 lodash@4.17.21/lodash.js:3210:25 storage.cache possible caches[othIndex]
+lodash@4.17.21/lodash.js:436:40 codegen.function possible Function('return this')()
+lodash@4.17.21/lodash.min.js:22:568 codegen.function certain Function("return this")()
+lodash@4.17.21/template.js:259:12 codegen.function certain Function(importsKeys, sourceURL + 'return ' + source) .apply(undefined, importsValues)
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:191093 codegen.function certain Function("return this")()
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:229351 codegen.function certain Function("return this")()
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:573046 codegen.function certain Function("return this")()
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:594578 codegen.function certain new Function("return this")()
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:631208 storage.local certain localStorage.setItem("authorized",JSON.stringify(u))
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:636895 storage.local certain localStorage.getItem("authorized")
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:637170 storage.cookie certain document.cookie
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:637609 storage.cookie certain document.cookie
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:72543 codegen.function certain Function("binder","return function ("+function(s,i){for(var u="",_=0;_<s.length;_+=1)u+=s[_],_+1<s.l
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:74446 codegen.eval certain eval
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:794178 network.fetch certain globalThis.fetch
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:794197 network.fetch certain globalThis.fetch
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:798540 network.fetch certain fetch(s,{headers:{Accept:Fu},loadSpec:!0}).then((s=>s.text())).then((s=>so.load(s)))
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:813121 network.fetch certain fetch
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:994692 network.fetch certain fetch(s,i)
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle-core.js:2:102924 codegen.function certain new Function("return this")()
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle-core.js:2:137933 storage.local certain localStorage.setItem("authorized",JSON.stringify(r))
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle-core.js:2:141039 storage.local certain localStorage.getItem("authorized")
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle-core.js:2:141314 storage.cookie certain document.cookie
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle-core.js:2:141753 storage.cookie certain document.cookie
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:190839 codegen.function certain Function("return this")()
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:229097 codegen.function certain Function("return this")()
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:572792 codegen.function certain Function("return this")()
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:594324 codegen.function certain new Function("return this")()
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:630948 storage.local certain localStorage.setItem("authorized",JSON.stringify(u))
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:636635 storage.local certain localStorage.getItem("authorized")
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:636910 storage.cookie certain document.cookie
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:637349 storage.cookie certain document.cookie
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:72289 codegen.function certain Function("binder","return function ("+function(s,i){for(var u="",_=0;_<s.length;_+=1)u+=s[_],_+1<s.l
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:74192 codegen.eval certain eval
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:793918 network.fetch certain globalThis.fetch
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:793937 network.fetch certain globalThis.fetch
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:798280 network.fetch certain fetch(s,{headers:{Accept:Fu},loadSpec:!0}).then((s=>s.text())).then((s=>so.load(s)))
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:812861 network.fetch certain fetch
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:994432 network.fetch certain fetch(s,i)
+swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js:2:118344 codegen.function certain Function("return this")()
+swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js:2:153967 codegen.function certain Function("return this")()
+swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js:2:161809 codegen.function certain new Function("return this")()
 swagger-ui-dist@5.11.0/swagger-ui.js:1:30575 storage.local certain localStorage.setItem("authorized",JSON.stringify(r))
 swagger-ui-dist@5.11.0/swagger-ui.js:1:33581 storage.local certain localStorage.getItem("authorized")
 swagger-ui-dist@5.11.0/swagger-ui.js:1:33856 storage.cookie certain document.cookie
@@ -40,9 +63,12 @@ three@0.160.0/examples/jsm/libs/basis/basis_transcoder.js:9:11323 network.fetch 
 three@0.160.0/examples/jsm/libs/basis/basis_transcoder.js:9:11378 network.fetch certain fetch(wasmBinaryFile,{credentials:"same-origin"}).then(function(response){if(!response["ok"]){throw"
 three@0.160.0/examples/jsm/libs/basis/basis_transcoder.js:9:12452 network.fetch certain fetch
 three@0.160.0/examples/jsm/libs/basis/basis_transcoder.js:9:12479 network.fetch certain fetch(wasmBinaryFile,{credentials:"same-origin"}).then(function(response){var result=WebAssembly.ins
+three@0.160.0/examples/jsm/libs/basis/basis_transcoder.js:9:14120 codegen.function certain new Function("body","return function "+name+"() {\n"+' "use strict";'+" return body.apply(this, argu
 three@0.160.0/examples/jsm/libs/basis/basis_transcoder.js:9:3007 network.xhr certain new XMLHttpRequest
 three@0.160.0/examples/jsm/libs/basis/basis_transcoder.js:9:3162 network.xhr certain new XMLHttpRequest
 three@0.160.0/examples/jsm/libs/basis/basis_transcoder.js:9:3347 network.xhr certain new XMLHttpRequest
+three@0.160.0/examples/jsm/libs/basis/basis_transcoder.js:9:56234 codegen.function certain new Function("requireRegisteredType","Module","__emval_register",functionBody)(requireRegisteredType
+three@0.160.0/examples/jsm/libs/chevrotain.module.min.js:2:7045 codegen.eval certain eval(toBecomeFast)
 three@0.160.0/examples/jsm/libs/draco/draco_decoder.js:22:5423 network.fetch certain fetch
 three@0.160.0/examples/jsm/libs/draco/draco_decoder.js:22:5477 network.fetch certain fetch(wasmBinaryFile,{credentials:"same-origin"}).then(function(response){if(!response["ok"]){throw"
 three@0.160.0/examples/jsm/libs/draco/draco_decoder.js:22:6770 network.fetch certain fetch
@@ -81,6 +107,8 @@ three@0.160.0/examples/jsm/libs/ecsy.module.js:1683:5 storage.local certain wind
 three@0.160.0/examples/jsm/libs/ecsy.module.js:1685:5 storage.local certain window.localStorage.setItem("ecsyRemoteId", remoteId)
 three@0.160.0/examples/jsm/libs/ecsy.module.js:1689:26 storage.local certain window.localStorage.getItem("ecsyRemoteId")
 three@0.160.0/examples/jsm/libs/ecsy.module.js:1692:5 storage.local certain window.localStorage.setItem("ecsyRemoteId", remoteId)
+three@0.160.0/examples/jsm/libs/ecsy.module.js:1762:27 codegen.eval certain eval(data.script)
+three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:13973:31 codegen.eval certain eval('[function _expression_function(){' + val + ';scoped_bm_rt=$bm_rt}]')[0]
 three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:14279:52 network.xhr possible XMLHttpRequest
 three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:14279:68 network.fetch possible fetch
 three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:935:25 network.xhr possible new XMLHttpRequest()
@@ -102,6 +130,8 @@ three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.js:3557:16 storage.indexeddb c
 three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.js:3565:29 storage.indexeddb possible indexedDB.open(FS.DB_NAME(), FS.DB_VERSION)
 three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.js:3595:29 storage.indexeddb possible indexedDB.open(FS.DB_NAME(), FS.DB_VERSION)
 three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.js:3818:40 network.websocket certain WebSocket
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.js:4867:14 codegen.function certain new Function( "body", "return function " + name + "() {\n" + " \"use strict\";" + " return body.appl
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.js:7307:15 codegen.function certain new Function("requireRegisteredType", "Module", "valueToHandle", "getMemory" , functionBody)
 three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.module.js:1096:16 network.fetch certain fetch
 three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.module.js:1099:14 network.fetch certain fetch(wasmBinaryFile, { credentials: 'same-origin' }).then(function(response) { if (!response['ok'])
 three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.module.js:1202:16 network.fetch certain fetch
@@ -117,9 +147,12 @@ three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.module.js:3568:16 storage.inde
 three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.module.js:3576:29 storage.indexeddb possible indexedDB.open(FS.DB_NAME(), FS.DB_VERSION)
 three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.module.js:3606:29 storage.indexeddb possible indexedDB.open(FS.DB_NAME(), FS.DB_VERSION)
 three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.module.js:3829:40 network.websocket certain WebSocket
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.module.js:4878:14 codegen.function certain new Function( "body", "return function " + name + "() {\n" + " \"use strict\";" + " return body.appl
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.module.js:7318:15 codegen.function certain new Function("requireRegisteredType", "Module", "valueToHandle", "getMemory" , functionBody)
 three@0.160.0/examples/jsm/libs/utif.module.js:1476:13 network.xhr certain new XMLHttpRequest()
 three@0.160.0/examples/jsm/libs/zstddec.module.js:1:162 network.fetch certain fetch
 three@0.160.0/examples/jsm/libs/zstddec.module.js:1:168 network.fetch certain fetch("data:application/wasm;base64,"+C).then(A=>A.arrayBuffer()).then(A=>WebAssembly.instantiate(A,
+three@0.160.0/examples/jsm/nodes/code/ScriptableNode.js:408:18 codegen.function certain new Function( ...parametersProps, code )
 three@0.160.0/examples/jsm/physics/RapierPhysics.js:41:18 network.import certain import( RAPIER_PATH )
 three@0.160.0/src/loaders/FileLoader.js:88:3 network.fetch certain fetch( req ) .then( response => { if ( response.status === 200 || response.status === 0 ) { // Some 
 three@0.160.0/src/loaders/ImageBitmapLoader.js:18:15 network.fetch certain fetch

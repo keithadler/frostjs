@@ -307,9 +307,12 @@ Ported directly from `exact`, because it is already proven.
     resolution under frost's closed-authority rule; `may reach` / `forbid
     reaching` with host globs; unknown destination is never allowed by a host
     list. Corpus: 32 -> 126 findings, all certain ones verified true.
-11-16. One step per remaining capability family from section 7 (codegen,
-   dom-escape, identity, navigation, globals, worker), each with tests and a
-   corpus check that the false-positive count does not move.
+11. `codegen`. **DONE 2026-08-23.** eval (direct and indirect), Function as a
+    callee only, timers with string code, document.write. Corpus 126 -> 159,
+    all verified.
+12-16. One step per remaining capability family from section 7 (dom-escape,
+   identity, navigation, globals, worker), each with tests and a corpus check
+   that the false-positive count does not move.
 
 **Phase D - noise control**
 
