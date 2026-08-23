@@ -1,4 +1,7 @@
+export type Command = "check" | "csp" | "summary";
+
 export interface ParsedArgs {
+  command: Command;
   version: boolean;
   help: boolean;
   exclude: string[];
@@ -20,6 +23,7 @@ export class UsageError extends Error {}
 
 export function parseArgs(argv: readonly string[]): ParsedArgs {
   const out: ParsedArgs = {
+    command: "check",
     version: false,
     help: false,
     exclude: [],
@@ -34,8 +38,16 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
     paths: [],
   };
   let positionalOnly = false;
+  let first = true;
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]!;
+    if (first) {
+      first = false;
+      if (arg === "csp" || arg === "summary") {
+        out.command = arg;
+        continue;
+      }
+    }
     if (positionalOnly) {
       out.paths.push(arg);
       continue;
@@ -110,8 +122,17 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
 }
 
 export const HELP = `usage: permit [options] <paths...>
+       permit csp [--policy <file>]
+       permit summary [--policy <file>]
 
 Deny-by-default capability linter for JavaScript.
+
+commands:
+  (default)            analyze the given paths against the policy
+  permit csp           print the Content-Security-Policy header the policy
+                       implies, and nothing else, for the deploy step
+  permit summary       print a plain-English reading of the policy for a
+                       reviewer who does not write JavaScript
 
 options:
   -h, --help           show this help and exit

@@ -11,6 +11,11 @@ export interface Result {
 }
 
 export function cli(...argv: string[]): Result {
+  return cliIn(ROOT, ...argv);
+}
+
+/** Run with reports (and policy discovery for csp/summary) relative to `cwd`. */
+export function cliIn(cwd: string, ...argv: string[]): Result {
   let stdout = "";
   let stderr = "";
   const code = run(argv, {
@@ -20,7 +25,7 @@ export function cli(...argv: string[]): Result {
     stderr: (s) => {
       stderr += s;
     },
-    cwd: ROOT,
+    cwd,
   });
   return { code, stdout, stderr };
 }

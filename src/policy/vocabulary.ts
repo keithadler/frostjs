@@ -48,9 +48,48 @@ export const FAMILIES: readonly string[] = [
   "worker",
 ];
 
+/** Every member code the extractor can emit. Keep in step with src/extract/recognizers. */
+export const MEMBER_CODES: readonly string[] = [
+  "storage.local",
+  "storage.session",
+  "storage.indexeddb",
+  "storage.cache",
+  "storage.cookie",
+  "storage.navigator",
+  "network.fetch",
+  "network.xhr",
+  "network.websocket",
+  "network.eventsource",
+  "network.beacon",
+  "network.import",
+  "codegen.eval",
+  "codegen.function",
+  "codegen.timer",
+  "codegen.write",
+  "dom-escape.html",
+  "dom-escape.script",
+  "dom-escape.iframe",
+  "identity.device",
+  "identity.geolocation",
+  "identity.media",
+  "identity.clipboard",
+  "identity.credentials",
+  "identity.permissions",
+  "navigation.location",
+  "navigation.open",
+  "navigation.history",
+  "navigation.postmessage",
+  "globals.window",
+  "globals.prototype",
+  "worker.dedicated",
+  "worker.shared",
+  "worker.service",
+  "worker.worklet",
+];
+
 /** Every code a policy may name directly: the families and each member the extractor can emit. */
 export const KNOWN_CODES: ReadonlySet<string> = new Set(
-  [...FAMILIES, ...CAPABILITY_PHRASES.values()].filter((c) => c !== "*"),
+  [...FAMILIES, ...MEMBER_CODES, ...CAPABILITY_PHRASES.values()].filter((c) => c !== "*"),
 );
 
 /** Resolve a phrase or code to a capability code, or null. */

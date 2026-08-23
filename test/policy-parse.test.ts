@@ -78,6 +78,13 @@ describe("policy: capability vocabulary", () => {
   it("accepts a capability code directly", () => {
     expect(rules("may use storage.local")[0]?.capability).toBe("storage.local");
     expect(rules("forbid dom-escape")[0]?.capability).toBe("dom-escape");
+    expect(rules("may use network.import")[0]?.capability).toBe("network.import");
+    expect(rules("forbid worker.service")[0]?.capability).toBe("worker.service");
+  });
+
+  it("every code the extractor emits is a known code", async () => {
+    const { MEMBER_CODES, KNOWN_CODES } = await import("../src/policy/vocabulary.js");
+    for (const c of MEMBER_CODES) expect(KNOWN_CODES.has(c)).toBe(true);
   });
 
   it("forbid and forbid using are the same", () => {

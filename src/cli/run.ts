@@ -12,6 +12,8 @@ import { text } from "../report/text.js";
 import { json } from "../report/json.js";
 import { sarif } from "../report/sarif.js";
 import { github } from "../report/github.js";
+import { summary } from "../report/summary.js";
+import { csp } from "../policy/csp.js";
 import { baselineKey, baselineKeys, readBaseline, writeBaseline } from "../baseline.js";
 import { changedLines, isChanged } from "../changed.js";
 
@@ -62,6 +64,7 @@ export function run(argv: readonly string[], io: Io): number {
     io.stderr("permit: --update-baseline needs --baseline <file>\n");
     return 2;
   }
+  if (args.command !== "check") return runPolicyCommand(args, io);
   if (args.paths.length === 0) {
     io.stderr("permit: no paths given\n");
     io.stderr(HELP);
@@ -198,4 +201,36 @@ export function run(argv: readonly string[], io: Io): number {
 
   const denied = decisions.some((d) => d.verdict === "denied");
   return denied && !args.exitZero && !args.updateBaseline ? 1 : 0;
+}
+
+/** `permit csp` and `permit summary`: read the policy, print the derived artifact. */
+function runPolicyCommand(args: ReturnType<typeof parseArgs>, io: Io): number {
+  const cwd = io.cwd ?? process.cwd();
+  const today = args.today ?? new Date().toISOString().slice(0, 10);
+  const policyFile = args.policy
+    ? path.resolve(cwd, args.policy)
+    : findPolicyFile(args.paths.length ? commonAncestor(args.paths) : cwd);
+  if (policyFile === null) {
+    io.stderr(`permit: no permit.policy found; ${args.command} needs one\n`);
+    return 2;
+  }
+  let source: string;
+  try {
+    source = fs.readFileSync(policyFile, "utf8");
+  } catch {
+    io.stderr(`permit: policy not found: ${args.policy ?? policyFile}\n`);
+    return 2;
+  }
+  let policy: Policy;
+  try {
+    policy = compile(parsePolicy(source, path.relative(cwd, policyFile) || policyFile), { today });
+  } catch (e) {
+    if (e instanceof PolicyError) {
+      io.stderr(`permit: ${e.message}\n`);
+      return 2;
+    }
+    throw e;
+  }
+  io.stdout(args.command === "csp" ? csp(policy, today) + "\n" : summary(policy, today));
+  return 0;
 }

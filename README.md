@@ -93,6 +93,8 @@ all, every capability is denied and a note says so.
 
 ```
 permit <paths...>        discover and analyze .js/.mjs files under paths
+permit csp               print the Content-Security-Policy header the policy implies
+permit summary           print a plain-English reading of the policy
 permit --exclude <name>  skip directories with this name (repeatable)
 permit --exit-zero       report findings but always exit 0
 permit --policy <file>   use this policy instead of searching for permit.policy
@@ -139,6 +141,36 @@ repos:
     rev: main
     hooks:
       - id: permit
+```
+
+## One policy, three artifacts
+
+The same `permit.policy` drives the linter ruleset, a CSP header, and a
+reviewer's summary, so they cannot drift apart.
+
+`permit csp` prints the header and nothing else, for nginx or the CDN
+config. Only directives the policy determines are emitted: `connect-src`
+from `may reach` hosts (`'none'` when nothing is granted, `*` for
+`may use the network`), `script-src 'self'` plus `'unsafe-eval'` when code
+generation is granted and the reach hosts when dynamic import is, and
+`worker-src` when workers are. Expired grants do not widen it; path-scoped
+grants do, because a header covers the whole page.
+
+`permit summary` prints what the code may do, what it may not, and spells
+out the implicit deny:
+
+```
+Policy "proj" (permit.policy)
+
+This code may:
+  - use session storage (line 2)
+  - use local storage, only in src/legacy/* (line 3) - old code, rewrite by Q4
+  - use the cache, until 2026-08-30 (line 5) - service worker experiment
+
+It may not, even where a broader grant would allow it:
+  - use cookies (line 4) - consent banner owns these
+
+Everything else is denied. In particular this code may not use: the network, code generation, html injection, identity, navigation, globals, workers.
 ```
 
 ## Output formats

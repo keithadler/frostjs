@@ -358,7 +358,8 @@ Ported directly from `exact`, because it is already proven.
 23. GitHub annotations. **DONE 2026-08-23.** `--format github`.
 24. GitHub Action, pre-commit hook. **DONE 2026-08-23.** Composite action
     with inputs via `env` into `scripts/action.sh`; injection test included.
-25. CSP emission.
+25. CSP emission. **DONE 2026-08-23.** `permit csp` and `permit summary`
+    (sections 9.3, 10.5, 10.6). **Phase E complete.**
 
 **Phase F - dependencies**
 
