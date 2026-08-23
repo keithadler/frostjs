@@ -9,6 +9,10 @@ change the policy grammar or the JSON schema; the changelog will say so.
 
 ### Added
 
+- Policies can `extends "<base.frostjs.policy>"`: a shared org or monorepo
+  base is merged in first, its path globs rebased to the extending policy's
+  directory, `forbid` and `forbid tainted flows` inherited. Cycles and
+  missing targets are precise errors.
 - SARIF results carry a stable `partialFingerprints["frostjs/v1"]` keyed on
   (file, capability, expression), so GitHub code scanning tracks a finding
   across commits instead of re-alerting when it moves lines.

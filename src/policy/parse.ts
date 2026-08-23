@@ -45,6 +45,8 @@ export interface ParsedPolicy {
   vendored: string[];
   /** True when the policy asks frostjs check to gate on taint flows (`forbid tainted flows`). */
   taint: boolean;
+  /** Base policies to merge in, as written (relative to this file's directory), with their line for errors. */
+  extends: { path: string; line: number }[];
   /** Globs, relative to the policy directory, of files not analyzed at all (generated bundles, fixtures). */
   ignore: string[];
 }
@@ -110,6 +112,7 @@ export function parsePolicy(text: string, file: string): ParsedPolicy {
   const rules: Rule[] = [];
   const vendored: string[] = [];
   const ignore: string[] = [];
+  const extendsList: { path: string; line: number }[] = [];
   let taint = false;
   let name: string | null = null;
   const lines = text.split(/\r?\n/);
@@ -130,6 +133,15 @@ export function parsePolicy(text: string, file: string): ParsedPolicy {
         fail(nameTok?.at ?? c.end, "'policy' needs a quoted name", `policy "${nameTok?.raw ?? "name"}"`);
       }
       name = nameTok.value;
+      continue;
+    }
+    // `extends "base.frostjs.policy"`: merge a base policy in first.
+    if (c.word() === "extends") {
+      c.pos = 1;
+      const example = 'extends "base.frostjs.policy"';
+      if (c.tok()?.kind !== "string") fail(c.at(), "'extends' needs a quoted policy path", example);
+      for (const p of quotedList(c, "path", example, checkPath(example))) extendsList.push({ path: p, line: n });
+      if (!c.done()) fail(c.at(), `unexpected '${c.tok()!.raw}' after the path`);
       continue;
     }
     // `forbid tainted flows`: turn on the taint gate from the policy itself.
@@ -153,7 +165,7 @@ export function parsePolicy(text: string, file: string): ParsedPolicy {
     }
     rules.push(parseRule(c, trimmed, hint, n));
   }
-  return { file, name: name ?? file, rules, vendored, ignore, taint };
+  return { file, name: name ?? file, rules, vendored, ignore, taint, extends: extendsList };
 }
 
 /** The verb forms a rule may start with, longest first so `forbid using` beats `forbid`. */

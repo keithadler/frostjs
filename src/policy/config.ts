@@ -2,7 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { compile, type Policy } from "./compile.js";
-import { parsePolicy } from "./parse.js";
+import { parsePolicy, type ParsedPolicy, type Rule } from "./parse.js";
 
 export const POLICY_FILENAME = "frostjs.policy";
 
@@ -57,11 +57,55 @@ export function isoToday(): string {
  * `shownAs` is the name used in messages, typically relative to the cwd.
  */
 export function compilePolicyFile(policyFile: string, today: string, shownAs: string = policyFile): Policy {
+  return compile(loadMerged(path.resolve(policyFile), shownAs, new Set()), { today });
+}
+
+/** A glob interpreted relative to `from`, expressed relative to `to`, forward slashes. */
+function rebase(from: string, to: string, glob: string): string {
+  return path.relative(to, path.resolve(from, glob)).split(path.sep).join("/") || ".";
+}
+
+/**
+ * Read and parse a policy, then merge in every policy it `extends`. Base
+ * rules come first; base path globs, `vendored` and `ignore` are rebased
+ * from the base's directory to this policy's, so a base can live anywhere
+ * and its scoping still means what it says. `taint` is the union; the name
+ * is this policy's. Cycles and missing targets are errors.
+ */
+function loadMerged(policyFile: string, shownAs: string, seen: Set<string>): ParsedPolicy {
+  if (seen.has(policyFile)) throw new Error(`${shownAs}: policy extends itself (cycle)`);
+  seen.add(policyFile);
   let source: string;
   try {
     source = fs.readFileSync(policyFile, "utf8");
   } catch (e) {
     throw new Error(`cannot read policy ${shownAs}: ${(e as NodeJS.ErrnoException).code ?? (e as Error).message}`);
   }
-  return compile(parsePolicy(source, shownAs), { today });
+  const parsed = parsePolicy(source, shownAs);
+  if (parsed.extends.length === 0) return parsed;
+
+  const dir = path.dirname(policyFile);
+  const baseRules: Rule[] = [];
+  const baseVendored: string[] = [];
+  const baseIgnore: string[] = [];
+  let baseTaint = false;
+  for (const ext of parsed.extends) {
+    const baseFile = path.resolve(dir, ext.path);
+    if (!fs.existsSync(baseFile)) throw new Error(`${shownAs} line ${ext.line}: extends target not found: ${ext.path}`);
+    const base = loadMerged(baseFile, ext.path, new Set(seen));
+    const baseDir = path.dirname(baseFile);
+    for (const r of base.rules) baseRules.push({ ...r, paths: r.paths.map((g) => rebase(baseDir, dir, g)) });
+    for (const g of base.vendored) baseVendored.push(rebase(baseDir, dir, g));
+    for (const g of base.ignore) baseIgnore.push(rebase(baseDir, dir, g));
+    baseTaint = baseTaint || base.taint;
+  }
+  return {
+    file: parsed.file,
+    name: parsed.name,
+    rules: [...baseRules, ...parsed.rules],
+    vendored: [...baseVendored, ...parsed.vendored],
+    ignore: [...baseIgnore, ...parsed.ignore],
+    taint: baseTaint || parsed.taint,
+    extends: [],
+  };
 }

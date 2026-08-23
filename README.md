@@ -271,6 +271,7 @@ printed whenever that rule refuses something.
 
 ```
 policy "<name>"                                    optional, once
+extends "<base.frostjs.policy>"                    merge a base policy first
 ignore "<glob>", ...                               files not analyzed at all
 vendored "<glob>", ...                             third-party files, checked by fingerprint
 may use <capability> [in "<glob>", ...] [until YYYY-MM-DD]
@@ -513,6 +514,22 @@ debt is paid down. Paths inside it are relative to the file's directory.
 For pull-request checks, `frostjs --changed-since origin/main src` fails only
 on uses that sit in lines the branch added or modified; the rest are counted
 as "unchanged". Untracked files count as entirely changed.
+
+## Shared base policies
+
+An organization or monorepo can keep one base policy and extend it:
+
+```
+# packages/widget/frostjs.policy
+extends "../../frostjs.base.policy"
+may use local storage
+```
+
+The base is merged in first, so its grants apply and its `forbid` lines
+(and `forbid tainted flows`) cannot be loosened by a child. Path globs in
+the base are interpreted relative to the base file and rebased when merged,
+so `may use cookies in "legacy/*"` keeps meaning the base's `legacy/`. A
+cycle or a missing base is a precise error naming the line.
 
 ## Suppressing a single use
 

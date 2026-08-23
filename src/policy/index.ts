@@ -32,7 +32,7 @@ export interface Decision {
 
 /** The policy used when no frostjs.policy exists: nothing is granted. */
 export const DENY_ALL: Policy = compile(
-  { file: "(no policy)", name: "deny-all", rules: [], vendored: [], ignore: [], taint: false },
+  { file: "(no policy)", name: "deny-all", rules: [], vendored: [], ignore: [], taint: false, extends: [] },
   { today: "1970-01-01" },
 );
 
