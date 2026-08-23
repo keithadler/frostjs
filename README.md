@@ -97,6 +97,7 @@ permit <paths...>        discover and analyze .js/.mjs files under paths
 permit csp               print the Content-Security-Policy header the policy implies
 permit summary           print a plain-English reading of the policy
 permit vendor add <files>  fingerprint third-party files and record their capabilities
+permit registry sync     re-admit bumped dependencies whose capabilities did not change
 permit --exclude <name>  skip directories with this name (repeatable)
 permit --exit-zero       report findings but always exit 0
 permit --policy <file>   use this policy instead of searching for permit.policy
@@ -165,7 +166,16 @@ vendor/widget.min.js:1:1: vendored file is not in the registry; review it with: 
 
 `permit vendor add` analyzes the file once, prints what it found so a
 person can look at it, and records the entry. A patch release changes the
-hash, so the review happens again; that is the point.
+hash, so the review happens again; that is the point. To keep that from
+being a chore, `permit registry sync` walks the vendored paths after a
+dependency bump: a new version that uses exactly the capabilities the old
+one did is re-admitted automatically and noted; one that gained a
+capability or a new destination is refused with the difference printed,
+which is the "dependency bump silently introduces a new network
+destination" case from the threat model. Entries whose file is gone are
+pruned, and the lockfile's hash is recorded so the next run can say
+whether anything moved. A vendored glob may reach into `node_modules`;
+the walk follows it there.
 
 ## One policy, three artifacts
 

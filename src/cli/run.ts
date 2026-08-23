@@ -28,6 +28,7 @@ import {
   type Registry,
   type RegistryUse,
 } from "../registry.js";
+import { includesFor, sync } from "../sync.js";
 
 export interface Io {
   stdout: (s: string) => void;
@@ -80,6 +81,8 @@ export function run(argv: readonly string[], io: Io): number {
       return runPolicyCommand(args, io);
     case "vendor-add":
       return runVendorAdd(args, io);
+    case "registry-sync":
+      return runRegistrySync(args, io);
     default:
       return runCheck(args, io);
   }
@@ -149,7 +152,7 @@ function runCheck(args: ParsedArgs, io: Io): number {
 
   let files: string[];
   try {
-    files = discover(inputs, { exclude: args.exclude });
+    files = discover(inputs, { exclude: args.exclude, include: includesFor(policy.vendored) });
   } catch (e) {
     io.stderr(`permit: ${(e as Error).message}\n`);
     return 2;
@@ -300,7 +303,7 @@ function runVendorAdd(args: ParsedArgs, io: Io): number {
 
   let files: string[];
   try {
-    files = discover(inputs, { exclude: args.exclude });
+    files = discover(inputs, { exclude: args.exclude, include: includesFor(policy.vendored) });
   } catch (e) {
     io.stderr(`permit: ${(e as Error).message}\n`);
     return 2;
@@ -351,6 +354,33 @@ function runVendorAdd(args: ParsedArgs, io: Io): number {
     `added to ${path.relative(cwd, regFile) || regFile}; review the capabilities above and grant them in the policy if they are acceptable\n`,
   );
   return 0;
+}
+
+/** `permit registry sync`: reconcile the registry with the tree after a dependency bump. */
+function runRegistrySync(args: ParsedArgs, io: Io): number {
+  const cwd = io.cwd ?? process.cwd();
+  const loaded = loadPolicy(args, io, [], true);
+  if (typeof loaded === "number") return loaded;
+  const { policy, policyDir } = loaded;
+  if (policy.vendored.length === 0) {
+    io.stderr("permit: the policy has no 'vendored' line, so there is nothing to sync\n");
+    return 2;
+  }
+  const regFile = registryPath(policyDir);
+  let registry: Registry;
+  try {
+    registry = readRegistry(regFile);
+  } catch (e) {
+    io.stderr(`permit: ${(e as Error).message}\n`);
+    return 2;
+  }
+  const result = sync(registry, policyDir, policy.vendored, args.today ?? isoToday());
+  writeRegistry(regFile, result.registry);
+  for (const line of result.lines) io.stdout(line + "\n");
+  io.stdout(
+    `${path.relative(cwd, regFile) || regFile}: ${result.registry.entries.length} ${result.registry.entries.length === 1 ? "entry" : "entries"}\n`,
+  );
+  return result.needsReview ? 1 : 0;
 }
 
 /** `permit csp` and `permit summary`: read the policy, print the derived artifact. */

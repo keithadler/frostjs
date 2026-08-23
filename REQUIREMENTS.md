@@ -174,8 +174,8 @@ The hard part, handled by not solving the general case.
 
 Version churn is the known pain point: every patch release is a new hash. Mitigate
 with a `permit registry sync` command that re-fingerprints on lockfile change.
-A repo with no lockfile gets a warning from `registry sync` and a hard failure
-from the gate, because without a lockfile there is nothing to sync against.
+A repo with no lockfile gets a warning from `registry sync`; the gate itself
+does not care, since a vendored file is checked by its own hash.
 
 ## 9. Policy language
 
@@ -366,7 +366,12 @@ Ported directly from `exact`, because it is already proven.
 26. Fingerprint registry format and `vendor add`. **DONE 2026-08-23.**
     `vendored "<glob>"` policy line; `.permit/registry.json` beside the
     policy keyed on `sha384-` integrity; `permit vendor add`.
-27. `registry sync` against the lockfile.
+27. `registry sync` against the lockfile. **DONE 2026-08-23.** Same
+    capability set re-admits; a gained capability refuses with a diff; gone
+    files prune; lockfile hash recorded; no lockfile warns. The earlier note
+    that the gate hard-fails without a lockfile is withdrawn: a project that
+    vendors one minified file into `static/` has no lockfile and no reason
+    to fail.
 28. SRI attribute emission.
 
 **Phase G - reach**

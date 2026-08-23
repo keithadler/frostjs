@@ -10,6 +10,8 @@ export const DEFAULT_EXCLUDES: readonly string[] = ["node_modules", "dist", "bui
 export interface DiscoverOptions {
   /** Extra directory names to skip, added to DEFAULT_EXCLUDES. */
   exclude?: readonly string[];
+  /** Directory names to walk even though DEFAULT_EXCLUDES would skip them (vendored globs into node_modules). */
+  include?: readonly string[];
 }
 
 /**
@@ -19,6 +21,7 @@ export interface DiscoverOptions {
  */
 export function discover(inputs: readonly string[], opts: DiscoverOptions = {}): string[] {
   const excluded = new Set([...DEFAULT_EXCLUDES, ...(opts.exclude ?? [])]);
+  for (const name of opts.include ?? []) excluded.delete(name);
   const found = new Set<string>();
 
   for (const input of inputs) {

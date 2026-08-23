@@ -1,4 +1,4 @@
-export type Command = "check" | "csp" | "summary" | "vendor-add";
+export type Command = "check" | "csp" | "summary" | "vendor-add" | "registry-sync";
 
 export interface ParsedArgs {
   command: Command;
@@ -45,6 +45,14 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
       first = false;
       if (arg === "csp" || arg === "summary") {
         out.command = arg;
+        continue;
+      }
+      if (arg === "registry") {
+        const sub = argv[i + 1];
+        if (sub !== "sync")
+          throw new UsageError(`permit registry needs a subcommand: sync${sub ? ` (got '${sub}')` : ""}`);
+        out.command = "registry-sync";
+        i++;
         continue;
       }
       if (arg === "vendor") {
@@ -132,6 +140,7 @@ export const HELP = `usage: permit [options] <paths...>
        permit csp [--policy <file>]
        permit summary [--policy <file>]
        permit vendor add <files...>
+       permit registry sync
 
 Deny-by-default capability linter for JavaScript.
 
@@ -144,6 +153,10 @@ commands:
   permit vendor add    analyze third-party files once, print the capability
                        set found, and record it with the file's SHA-384 in
                        .permit/registry.json beside the policy
+  permit registry sync after a dependency bump: re-admit vendored files
+                       whose capability set did not change, refuse and show
+                       the difference for those that gained one, prune
+                       entries whose file is gone, record the lockfile hash
 
 options:
   -h, --help           show this help and exit
