@@ -146,14 +146,15 @@ flags are in [SHOWCASE.md](SHOWCASE.md).
 ## Status
 
 Published as [`@keithadler/frostjs`](https://www.npmjs.com/package/@keithadler/frostjs).
-Nine capability families across JavaScript, TypeScript, JSX and HTML
-markup, frost-dialect policies, scope analysis, taint analysis (source ->
-sink, one hop across functions), baselines, changed-lines mode,
-json/sarif/github output, a GitHub Action, an ESLint plugin, a fingerprint
-registry for vendored code with SRI output, TypeScript, JSX and HTML (inline scripts and attribute surfaces: `on*`
-handlers, `javascript:` URLs, remote `<script src>`). Run on Excalidraw (656 files, a TypeScript and React monorepo) it
-finishes in under a second and `frostjs init` writes an 18-line policy;
-every finding was checked by hand.
+Nine capability families across JavaScript, TypeScript, JSX and HTML (inline
+scripts and attribute surfaces: `on*` handlers, `javascript:` URLs, remote
+`<script src>`). Frost-dialect policies with shared bases (`extends`), scope
+analysis, taint analysis (source -> sink, one hop across functions),
+baselines, changed-lines mode, unused-grant reporting, json/sarif/github
+output, a GitHub Action, an ESLint plugin, and a fingerprint registry for
+vendored code with SRI output. Run on Excalidraw (656 files, a TypeScript
+and React monorepo) it finishes in under a second and `frostjs init` writes
+an 18-line policy; every finding was checked by hand.
 
 ```
 $ cat frostjs.policy
