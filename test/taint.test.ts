@@ -283,3 +283,27 @@ describe("taint: encoding neutralizes, numeric props carry no text (FP fixes)", 
     expect(flows("el.innerHTML = JSON.parse(location.hash).cmd")).toEqual(["location.hash->innerHTML"]);
   });
 });
+
+describe("taint: destructuring a tainted event or source object", () => {
+  it("destructuring a message event's data", () => {
+    expect(flows('window.addEventListener("message", ({ data }) => { eval(data); });')).toEqual([
+      "postMessage data->eval",
+    ]);
+    expect(flows("window.onmessage = (e) => { const { data } = e; eval(data); };")).toEqual(["postMessage data->eval"]);
+  });
+  it("destructuring the location or document object", () => {
+    expect(flows("const { hash } = location; el.innerHTML = hash;")).toEqual(["location.hash->innerHTML"]);
+    expect(flows("const { cookie } = document; el.innerHTML = cookie;")).toEqual(["document.cookie->innerHTML"]);
+    expect(flows("const { hash: h } = location; el.innerHTML = h;")).toEqual(["location.hash->innerHTML"]);
+  });
+  it("array destructuring of a tainted value", () => {
+    expect(flows("const [first] = location.hash.split('/'); el.innerHTML = first;")).toEqual([
+      "location.hash->innerHTML",
+    ]);
+  });
+  it("stays quiet for a numeric member or an untainted object", () => {
+    expect(flows("const { length } = location.search; el.innerHTML = length;")).toEqual([]);
+    expect(flows("const { x } = config; el.innerHTML = x;")).toEqual([]);
+    expect(flows("const { host } = location; el.innerHTML = host;")).toEqual([]); // host not an attacker part
+  });
+});

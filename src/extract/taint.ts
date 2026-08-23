@@ -38,6 +38,7 @@ export interface TaintFinding {
 
 /** The global objects a source can hang off. */
 const GLOBALS: ReadonlySet<string> = new Set(["window", "globalThis", "self"]);
+const DOCUMENT_GLOBAL: ReadonlySet<string> = new Set(["document"]);
 /**
  * location members that carry attacker-influenced text. Narrowed to the
  * parts an attacker actually controls (the query, fragment, full URL and
@@ -293,19 +294,44 @@ function checkSinks(n: AnyNode, scope: Scope, add: (source: string, sink: string
 /** Statements introduced by declarations/assignments that may add taint in this scope. */
 function propagate(node: AnyNode, scope: Scope): boolean {
   let changed = false;
-  const bind = (name: string, init: AnyNode | null | undefined): void => {
-    if (!init) return;
-    const s = taintSource(init, scope);
-    if (s && !scope.tainted.has(name)) {
+  const bindName = (name: string, source: string | null): void => {
+    if (source && !scope.tainted.has(name)) {
       scope.tainted.add(name);
-      scope.sources.set(name, s);
+      scope.sources.set(name, source);
       changed = true;
     }
   };
-  if (node.type === "VariableDeclarator" && (node["id"] as AnyNode).type === "Identifier") {
-    bind((node["id"] as AnyNode)["name"] as string, node["init"] as AnyNode | null);
+  // `const { data } = e` / `const { hash } = location` / `const [a] = arr`: a
+  // destructured binding is tainted if its member is (a source, or a member
+  // of a tainted object).
+  const bindPattern = (pat: AnyNode, init: AnyNode): void => {
+    if (pat.type === "Identifier") return bindName(pat["name"] as string, taintSource(init, scope));
+    if (pat.type === "ObjectPattern") {
+      for (const prop of pat["properties"] as AnyNode[]) {
+        if (prop.type === "RestElement") bindPattern(prop["argument"] as AnyNode, init);
+        else if (prop["computed"] !== true) {
+          const k = prop["key"] as AnyNode;
+          const key =
+            k.type === "Identifier" ? (k["name"] as string) : k.type === "Literal" ? String(k["value"]) : null;
+          const target =
+            (prop["value"] as AnyNode).type === "AssignmentPattern"
+              ? (prop["value"] as AnyNode)["left"]
+              : prop["value"];
+          if (key !== null && (target as AnyNode).type === "Identifier")
+            bindName((target as AnyNode)["name"] as string, sourceOfMember(init, key, scope));
+        }
+      }
+    } else if (pat.type === "ArrayPattern") {
+      // Elements of a tainted array/iterable are tainted.
+      const s = taintSource(init, scope);
+      for (const el of pat["elements"] as (AnyNode | null)[])
+        if (el?.type === "Identifier") bindName(el["name"] as string, s);
+    }
+  };
+  if (node.type === "VariableDeclarator" && node["init"]) {
+    bindPattern(node["id"] as AnyNode, node["init"] as AnyNode);
   } else if (node.type === "AssignmentExpression" && (node["left"] as AnyNode).type === "Identifier") {
-    bind((node["left"] as AnyNode)["name"] as string, node["right"] as AnyNode);
+    bindName((node["left"] as AnyNode)["name"] as string, taintSource(node["right"] as AnyNode, scope));
   }
   return changed;
 }
@@ -339,14 +365,11 @@ function analyzeScope(
   inherited: Scope,
   findings: TaintFinding[],
   parsed: ParsedFile,
-  seedParam: { name: string; source: string } | null,
+  seedParam: { param: AnyNode; source: string } | null,
   sinkFns: SinkFns = NO_SINK_FNS,
 ): void {
   const scope: Scope = { tainted: new Set(inherited.tainted), sources: new Map(inherited.sources) };
-  if (seedParam) {
-    scope.tainted.add(seedParam.name);
-    scope.sources.set(seedParam.name, seedParam.source);
-  }
+  if (seedParam) seedPattern(seedParam.param, seedParam.source, scope);
   const nodes = ownNodes(body);
 
   // Fixpoint: keep binding tainted variables until nothing changes.
@@ -432,7 +455,7 @@ function summarize(functions: ReadonlyMap<string, AnyNode>, parsed: ParsedFile):
       if (p.type !== "Identifier") continue;
       const probe: TaintFinding[] = [];
       const scope: Scope = { tainted: new Set(), sources: new Map() };
-      analyzeScope(fn["body"] as AnyNode, scope, probe, parsed, { name: p["name"] as string, source: "@param" });
+      analyzeScope(fn["body"] as AnyNode, scope, probe, parsed, { param: p, source: "@param" });
       const hit = probe.find((f) => f.source === "@param");
       if (hit) sinkParams.set(i, hit.sink);
     }
@@ -468,13 +491,43 @@ function nestedFunctions(root: AnyNode): AnyNode[] {
  * EventSource this file constructs both carry remote, untrusted data. Not
  * `self` (a worker's messages come from its own creator; see message.ts).
  */
-function messageSeed(fn: AnyNode): { name: string; source: string } | null {
-  const p = (fn["params"] as AnyNode[])[0];
-  const name = p?.type === "Identifier" ? (p["name"] as string) : null;
-  if (name === null) return null;
-  if (fn["$frostjsMessageHandler"] === true) return { name, source: "postMessage data" };
-  if (fn["$frostjsRemoteHandler"] === true) return { name, source: "server message" };
+function messageSeed(fn: AnyNode): { param: AnyNode; source: string } | null {
+  const param = (fn["params"] as AnyNode[])[0];
+  if (!param) return null;
+  if (fn["$frostjsMessageHandler"] === true) return { param, source: "postMessage data" };
+  if (fn["$frostjsRemoteHandler"] === true) return { param, source: "server message" };
   return null;
+}
+
+/** Mark every identifier bound by a pattern (destructuring included) as tainted with `source`. */
+function seedPattern(pat: AnyNode, source: string, scope: Scope): void {
+  switch (pat.type) {
+    case "Identifier":
+      scope.tainted.add(pat["name"] as string);
+      scope.sources.set(pat["name"] as string, source);
+      return;
+    case "ObjectPattern":
+      for (const prop of pat["properties"] as AnyNode[])
+        seedPattern((prop.type === "RestElement" ? prop["argument"] : prop["value"]) as AnyNode, source, scope);
+      return;
+    case "ArrayPattern":
+      for (const el of pat["elements"] as (AnyNode | null)[]) if (el) seedPattern(el, source, scope);
+      return;
+    case "AssignmentPattern":
+    case "RestElement":
+      seedPattern((pat["left"] ?? pat["argument"]) as AnyNode, source, scope);
+      return;
+  }
+}
+
+/** The source label for `obj.key`, whether a direct source or a member of a tainted object. */
+function sourceOfMember(obj: AnyNode, key: string, scope: Scope): string | null {
+  obj = unwrap(obj);
+  if (NUMERIC_PROPS.has(key)) return null;
+  if (LOCATION_PROPS.has(key) && isLocation(obj)) return `location.${key}`;
+  if (DOCUMENT_PROPS.has(key) && freeGlobal(obj, DOCUMENT_GLOBAL)) return `document.${key}`;
+  if (key === "name" && freeGlobal(obj, GLOBALS)) return "window.name";
+  return taintSource(obj, scope);
 }
 
 /** Names bound to `new WebSocket(...)` or `new EventSource(...)` anywhere in the file. */

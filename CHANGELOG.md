@@ -7,6 +7,11 @@ change the policy grammar or the JSON schema; the changelog will say so.
 
 ## [Unreleased]
 
+### Added
+
+- Taint follows destructuring: `({ data }) => eval(data)` on a message
+  handler, `const { hash } = location`, `const [first] = x.split(...)`.
+
 ### Fixed
 
 - Taint no longer flags `el.innerHTML = encodeURIComponent(x)` (and
