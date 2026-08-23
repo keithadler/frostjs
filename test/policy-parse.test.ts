@@ -178,3 +178,95 @@ describe("policy: errors are precise", () => {
     expect(e.line).toBe(2);
   });
 });
+
+describe("policy: error precision (step 8)", () => {
+  const err = (text: string): PolicyError => {
+    try {
+      parse(text);
+    } catch (e) {
+      if (e instanceof PolicyError) return e;
+      throw e;
+    }
+    throw new Error("expected a PolicyError");
+  };
+
+  it("shows the source line with a caret at the column", () => {
+    const e = err("may use storage\nmay use storage in src/*");
+    expect(e.line).toBe(2);
+    expect(e.column).toBe(20);
+    expect(e.message).toBe(
+      "permit.policy line 2: 'in' needs one or more quoted paths\n" +
+        "  may use storage in src/*\n" +
+        "                     ^\n" +
+        '  try: may use storage in "src/*"',
+    );
+  });
+
+  it("points at the unknown verb, keeping the line as written", () => {
+    const e = err("  allow cookies");
+    expect(e.column).toBe(3);
+    expect(e.message).toContain("\n    allow cookies\n    ^\n");
+  });
+
+  it("rejects a code that names a family but not a real member", () => {
+    expect(err("may use storage.locl").message).toContain("unknown capability 'storage.locl'");
+    expect(err("may use network.teleport").message).toContain("unknown capability");
+  });
+
+  it("points at the unknown capability", () => {
+    const e = err("may use teleportation");
+    expect(e.column).toBe(9);
+  });
+
+  it("points at the bad date", () => {
+    expect(err("may use storage until soon").column).toBe(23);
+  });
+
+  it("points at the trailing junk", () => {
+    expect(err('may use storage in "src/*" please').column).toBe(28);
+  });
+
+  it("points at the unterminated string", () => {
+    expect(err('may use storage in "src').column).toBe(20);
+  });
+
+  it("suggests a near miss for a capability", () => {
+    expect(err("may use cookie").message).toContain("did you mean 'cookies'?");
+    expect(err("may use localstorage").message).toContain("did you mean 'local storage'?");
+    expect(err("may use sesion storage").message).toContain("did you mean 'session storage'?");
+    expect(err("may use storage.locl").message).toContain("did you mean 'storage.local'?");
+  });
+
+  it("does not suggest when nothing is close", () => {
+    expect(err("may use teleportation").message).not.toContain("did you mean");
+  });
+
+  it("until on a forbid is an error", () => {
+    const e = err("forbid cookies until 2026-12-01");
+    expect(e.message).toContain("'until' only applies to 'may' rules; a forbid does not expire");
+    expect(e.column).toBe(16);
+  });
+
+  it("absolute paths are an error", () => {
+    const e = err('may use storage in "/srv/app/src/*"');
+    expect(e.message).toContain("paths are relative to the policy file, not absolute");
+    expect(e.column).toBe(20);
+  });
+
+  it("a second until or in is an error", () => {
+    expect(err("may use storage until 2026-01-01 until 2026-02-01").message).toContain("'until' given twice");
+    expect(err('may use storage in "a" in "b"').message).toContain("'in' given twice");
+  });
+
+  it("an empty path is an error", () => {
+    expect(err('may use storage in ""').message).toContain("empty path");
+  });
+
+  it("in with a trailing comma", () => {
+    expect(err('may use storage in "a",').message).toContain("expected another quoted path after the comma");
+  });
+
+  it("does not crash on a comment-only policy", () => {
+    expect(parse("-- nothing here").rules).toEqual([]);
+  });
+});

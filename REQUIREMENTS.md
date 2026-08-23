@@ -289,7 +289,10 @@ Ported directly from `exact`, because it is already proven.
    Searched from the common ancestor of the inputs upward, nearest wins;
    `--policy` overrides; globs resolve relative to the policy file; `--today`
    pins the date for expiry checks.
-8. Precise policy syntax errors.
+8. Precise policy syntax errors. **DONE 2026-08-23.** File, line, column,
+   the line as written with a caret, a `try:` suggestion, "did you mean" for
+   near-miss capability phrases, and rejection of rules that parse but cannot
+   mean anything (`until` on a `forbid`, absolute paths, unknown member codes).
 
 **Phase C - full taxonomy**
 

@@ -48,13 +48,14 @@ export const FAMILIES: readonly string[] = [
   "worker",
 ];
 
-const CODE = /^[a-z][a-z-]*(\.[a-z][a-z-]*)*$/;
+/** Every code a policy may name directly: the families and each member the extractor can emit. */
+export const KNOWN_CODES: ReadonlySet<string> = new Set([...FAMILIES, ...CAPABILITY_PHRASES.values()].filter((c) => c !== "*"));
 
 /** Resolve a phrase or code to a capability code, or null. */
 export function resolveCapability(words: string): string | null {
   const key = words.trim().toLowerCase().replace(/\s+/g, " ");
   const phrase = CAPABILITY_PHRASES.get(key);
   if (phrase !== undefined) return phrase;
-  if (CODE.test(key) && FAMILIES.includes(key.split(".")[0]!)) return key;
+  if (KNOWN_CODES.has(key)) return key;
   return null;
 }

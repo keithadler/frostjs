@@ -9,7 +9,7 @@
  *   may use local storage in "src/legacy/*" until 2026-12-01  -- migrating
  *   forbid cookies                                             -- consent banner owns these
  */
-import { resolveCapability, FAMILIES } from "./vocabulary.js";
+import { resolveCapability, FAMILIES, CAPABILITY_PHRASES } from "./vocabulary.js";
 
 export type Verb = "may" | "forbid";
 
@@ -34,22 +34,34 @@ export interface ParsedPolicy {
   rules: Rule[];
 }
 
+/**
+ * A policy that cannot be read. The message carries file, line, the source
+ * line with a caret under the column, and what to try instead.
+ */
 export class PolicyError extends Error {
   constructor(
     public readonly file: string,
     public readonly line: number,
-    detail: string,
-    tryInstead?: string,
+    /** 1-based. */
+    public readonly column: number,
+    public readonly detail: string,
+    public readonly source: string,
+    public readonly tryInstead?: string,
   ) {
-    super(`${file} line ${line}: ${detail}` + (tryInstead ? `\n  try: ${tryInstead}` : ""));
+    super(
+      `${file} line ${line}: ${detail}\n  ${source}\n  ${" ".repeat(Math.max(0, column - 1))}^` +
+        (tryInstead ? `\n  try: ${tryInstead}` : ""),
+    );
     this.name = "PolicyError";
   }
 }
 
 type Token =
-  | { kind: "word"; value: string; raw: string }
-  | { kind: "string"; value: string; raw: string }
-  | { kind: "comma"; raw: string };
+  | { kind: "word"; value: string; raw: string; at: number }
+  | { kind: "string"; value: string; raw: string; at: number }
+  | { kind: "comma"; raw: string; at: number };
+
+type Fail = (at: number, detail: string, tryInstead?: string) => never;
 
 export function parsePolicy(text: string, file: string): ParsedPolicy {
   const rules: Rule[] = [];
@@ -57,38 +69,43 @@ export function parsePolicy(text: string, file: string): ParsedPolicy {
   const lines = text.split(/\r?\n/);
   for (let i = 0; i < lines.length; i++) {
     const n = i + 1;
-    const [code, hint] = splitComment(lines[i]!);
+    const raw = lines[i]!;
+    const [code, hint] = splitComment(raw);
     const trimmed = code.trim();
     if (trimmed === "") continue;
-    const fail = (detail: string, tryInstead?: string): never => {
-      throw new PolicyError(file, n, detail, tryInstead);
+    const fail: Fail = (at, detail, tryInstead) => {
+      throw new PolicyError(file, n, at + 1, detail, code.trimEnd(), tryInstead);
     };
-    const tokens = tokenize(trimmed, fail);
-    const first = tokens[0];
-    if (first?.kind === "word" && first.value === "policy") {
-      if (name !== null) fail("only one policy line is allowed");
+    const tokens = tokenize(code, fail);
+    const end = code.trimEnd().length;
+    const first = tokens[0]!;
+    if (first.kind === "word" && first.value === "policy") {
+      if (name !== null) fail(first.at, "only one policy line is allowed");
       const nameTok = tokens[1];
-      if (tokens.length !== 2 || nameTok?.kind !== "string") {
-        const guess = tokens[1]?.raw ?? "name";
-        fail("'policy' needs a quoted name", `policy "${guess}"`);
+      if (nameTok?.kind !== "string" || tokens.length !== 2) {
+        const guess = nameTok?.raw ?? "name";
+        fail(nameTok?.at ?? end, "'policy' needs a quoted name", `policy "${guess}"`);
       }
-      name = (nameTok as Extract<Token, { kind: "string" }>).value;
+      name = nameTok.value;
       continue;
     }
-    rules.push(parseRule(tokens, trimmed, hint, n, fail));
+    rules.push(parseRule(tokens, trimmed, hint, n, end, fail));
   }
   return { file, name: name ?? file, rules };
 }
 
-function parseRule(tokens: Token[], text: string, hint: string, line: number, fail: (d: string, t?: string) => never): Rule {
+function parseRule(tokens: Token[], text: string, hint: string, line: number, end: number, fail: Fail): Rule {
   let pos = 0;
+  const tok = (): Token | undefined => tokens[pos];
   const word = (): string | null => {
     const t = tokens[pos];
     return t?.kind === "word" ? t.value : null;
   };
+  const at = (): number => tokens[pos]?.at ?? end;
 
   let verb: Verb;
-  if (word() === "may" && tokens[pos + 1]?.kind === "word" && (tokens[pos + 1] as { value: string }).value === "use") {
+  const second = tokens[1];
+  if (word() === "may" && second?.kind === "word" && second.value === "use") {
     verb = "may";
     pos += 2;
   } else if (word() === "forbid") {
@@ -98,10 +115,12 @@ function parseRule(tokens: Token[], text: string, hint: string, line: number, fa
   } else {
     const rest = tokens.slice(1).map((t) => t.raw).join(" ");
     const guess = resolveCapability(rest) ? `may use ${rest}` : "may use storage";
-    return fail(`cannot read '${text}'`, guess);
+    return fail(tokens[0]!.at, `cannot read '${text}'`, guess);
   }
+  const verbText = verb === "may" ? "may use" : "forbid";
 
   // Capability phrase: words up to `in`, `until`, or end.
+  const phraseAt = at();
   const phraseWords: string[] = [];
   while (pos < tokens.length) {
     const w = word();
@@ -109,57 +128,102 @@ function parseRule(tokens: Token[], text: string, hint: string, line: number, fa
     phraseWords.push(w);
     pos++;
   }
-  if (phraseWords.length === 0) fail("name a capability after the verb", `${verb === "may" ? "may use" : "forbid"} storage`);
+  if (phraseWords.length === 0) fail(phraseAt, "name a capability after the verb", `${verbText} storage`);
+  const phrase = phraseWords.join(" ");
 
   let capability: string;
-  if (verb === "forbid" && phraseWords.join(" ") === "everything else") {
+  if (verb === "forbid" && phrase === "everything else") {
     capability = "*";
   } else {
-    const phrase = phraseWords.join(" ");
     const resolved = resolveCapability(phrase);
     if (resolved === null) {
+      const near = nearest(phrase);
       fail(
-        `unknown capability '${phrase}'`,
-        `one of ${FAMILIES.join(", ")}, or a phrase such as "local storage" or "cookies"`,
+        phraseAt,
+        `unknown capability '${phrase}'` + (near ? `; did you mean '${near}'?` : ""),
+        near ? `${verbText} ${near}` : `one of ${FAMILIES.join(", ")}, or a phrase such as "local storage" or "cookies"`,
       );
     }
-    capability = resolved as string;
+    capability = resolved;
   }
 
   const paths: string[] = [];
+  let sawIn = false;
   let until: string | null = null;
   while (pos < tokens.length) {
     const w = word();
     if (w === "in") {
+      if (sawIn) fail(at(), "'in' given twice; list every path after one 'in', separated by commas", `${verbText} ${phrase} in "a/*", "b/*"`);
+      sawIn = true;
       pos++;
-      const before = paths.length;
-      while (tokens[pos]?.kind === "string") {
-        paths.push((tokens[pos] as Extract<Token, { kind: "string" }>).value);
+      if (tok()?.kind !== "string") fail(at(), "'in' needs one or more quoted paths", `${verbText} ${phrase} in "src/*"`);
+      for (;;) {
+        const t = tok();
+        if (t?.kind !== "string") fail(at(), "expected another quoted path after the comma", `${verbText} ${phrase} in "src/*"`);
+        if (t.value === "") fail(t.at, "empty path; name a file or a glob", `${verbText} ${phrase} in "src/*"`);
+        if (t.value.startsWith("/") || /^[a-zA-Z]:[\\/]/.test(t.value)) {
+          fail(t.at, "paths are relative to the policy file, not absolute", `${verbText} ${phrase} in "src/*"`);
+        }
+        paths.push(t.value);
         pos++;
-        if (tokens[pos]?.kind === "comma") pos++;
+        if (tok()?.kind === "comma") pos++;
         else break;
       }
-      if (paths.length === before) fail("'in' needs one or more quoted paths", `${phraseOf(verb, phraseWords)} in "src/*"`);
     } else if (w === "until") {
+      if (verb === "forbid") fail(at(), "'until' only applies to 'may' rules; a forbid does not expire", `forbid ${phrase}`);
+      if (until !== null) fail(at(), "'until' given twice", `${verbText} ${phrase} until 2026-12-01`);
       pos++;
-      const t = tokens[pos];
+      const t = tok();
       if (t?.kind !== "word" || !/^\d{4}-\d{2}-\d{2}$/.test(t.value)) {
-        fail("'until' needs a date like 2026-12-01", `${phraseOf(verb, phraseWords)} until 2026-12-01`);
+        fail(at(), "'until' needs a date like 2026-12-01", `${verbText} ${phrase} until 2026-12-01`);
       }
-      const date = (t as { value: string }).value;
-      if (!isRealDate(date)) fail(`${date} is not a real date`);
-      until = date;
+      if (!isRealDate(t.value)) fail(t.at, `${t.value} is not a real date`);
+      until = t.value;
       pos++;
     } else {
-      fail(`unexpected '${tokens[pos]?.raw}' after the rule`);
+      fail(at(), `unexpected '${tok()?.raw}' after the rule`);
     }
   }
 
   return { verb, capability, paths, until, hint, line, text };
 }
 
-function phraseOf(verb: Verb, words: string[]): string {
-  return `${verb === "may" ? "may use" : "forbid"} ${words.join(" ")}`;
+/** The closest known phrase or code, or null if nothing is within editing distance. */
+function nearest(phrase: string): string | null {
+  let best: string | null = null;
+  let bestDist = Infinity;
+  for (const candidate of CAPABILITY_PHRASES.keys()) {
+    const d = levenshtein(phrase, candidate);
+    if (d < bestDist) {
+      bestDist = d;
+      best = candidate;
+    }
+  }
+  for (const candidate of new Set(CAPABILITY_PHRASES.values())) {
+    if (candidate === "*") continue;
+    const d = levenshtein(phrase, candidate);
+    if (d < bestDist) {
+      bestDist = d;
+      best = candidate;
+    }
+  }
+  // Allow roughly a third of the phrase to be wrong, never more than three edits.
+  const limit = Math.min(3, Math.max(1, Math.floor(phrase.length / 3)));
+  return bestDist <= limit ? best : null;
+}
+
+function levenshtein(a: string, b: string): number {
+  const prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    let diag = prev[0]!;
+    prev[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const tmp = prev[j]!;
+      prev[j] = Math.min(prev[j]! + 1, prev[j - 1]! + 1, diag + (a[i - 1] === b[j - 1] ? 0 : 1));
+      diag = tmp;
+    }
+  }
+  return prev[b.length]!;
 }
 
 function isRealDate(s: string): boolean {
@@ -188,7 +252,7 @@ export function splitComment(raw: string): [string, string] {
 
 const ESCAPES: Readonly<Record<string, string>> = { n: "\n", t: "\t", '"': '"', "\\": "\\" };
 
-function tokenize(line: string, fail: (d: string, t?: string) => never): Token[] {
+function tokenize(line: string, fail: Fail): Token[] {
   const out: Token[] = [];
   let i = 0;
   while (i < line.length) {
@@ -196,7 +260,7 @@ function tokenize(line: string, fail: (d: string, t?: string) => never): Token[]
     if (/\s/.test(ch)) {
       i++;
     } else if (ch === ",") {
-      out.push({ kind: "comma", raw: "," });
+      out.push({ kind: "comma", raw: ",", at: i });
       i++;
     } else if (ch === '"') {
       let j = i + 1;
@@ -219,14 +283,14 @@ function tokenize(line: string, fail: (d: string, t?: string) => never): Token[]
         value += c;
         j++;
       }
-      if (!closed) fail("unterminated string", `${line}"`);
-      out.push({ kind: "string", value, raw: line.slice(i, j + 1) });
+      if (!closed) fail(i, "unterminated string", `${line.trim()}"`);
+      out.push({ kind: "string", value, raw: line.slice(i, j + 1), at: i });
       i = j + 1;
     } else {
       let j = i;
       while (j < line.length && !/[\s,"]/.test(line[j]!)) j++;
       const raw = line.slice(i, j);
-      out.push({ kind: "word", value: raw.toLowerCase(), raw });
+      out.push({ kind: "word", value: raw.toLowerCase(), raw, at: i });
       i = j;
     }
   }
