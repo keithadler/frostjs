@@ -52,7 +52,7 @@ describe("permit --baseline", () => {
     const r = cli("--today", "2026-08-23", "--baseline", file, "--update-baseline", path.join(dir, "src"));
     expect(r.code).toBe(0);
     expect(r.stdout).toContain("2 denied");
-    expect(r.stdout).toContain("wrote 2 entries to");
+    expect(r.stderr).toContain("wrote 2 entries to");
     const b = readBaseline(file);
     expect(b.entries.map((e) => [e.file, e.capability])).toEqual([
       ["src/app.js", "storage.local"],

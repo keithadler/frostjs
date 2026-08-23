@@ -101,6 +101,7 @@ permit --min-confidence <c>  lowest confidence that fails: certain, probable (de
 permit --baseline <file>     denials recorded in this file do not fail the build
 permit --update-baseline     write every current denial into the baseline and exit 0
 permit --changed-since <ref> fail only on uses in lines changed since the git ref
+permit --format <f>      text (default), json, or sarif
 permit --version         print the version and exit
 permit --help            show usage
 ```
@@ -113,6 +114,16 @@ Exit codes: `0` clean, `1` policy violations, `2` usage or input error
 
 Uses with `possible` confidence are listed under "unknown" and never fail the
 build; `certain` and `probable` uses do.
+
+## Output formats
+
+- `text` (default): one line per denial with the policy line that denied
+  it, unknowns in their own section, warnings, then a summary.
+- `json`: a versioned document (`schema: 1`) with every decision, the
+  policy used, a summary by verdict, and expiry warnings.
+- `sarif`: SARIF 2.1.0 for code scanning. One rule per capability code;
+  denied uses are errors, unknown uses warnings, baselined uses carry
+  `baselineState: "unchanged"`.
 
 ## Adopting permit on an existing codebase
 

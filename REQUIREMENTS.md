@@ -353,7 +353,8 @@ Ported directly from `exact`, because it is already proven.
 
 **Phase E - outputs and CI**
 
-22. JSON and SARIF.
+22. JSON and SARIF. **DONE 2026-08-23.** `--format json` (schema 1) and
+    `--format sarif` (2.1.0).
 23. GitHub annotations.
 24. GitHub Action, pre-commit hook.
 25. CSP emission.

@@ -9,6 +9,8 @@ import fs from "node:fs";
 import { DENY_ALL, decide, compile, parsePolicy, PolicyError, type Policy } from "../policy/index.js";
 import { commonAncestor, findPolicyFile } from "../policy/config.js";
 import { text } from "../report/text.js";
+import { json } from "../report/json.js";
+import { sarif } from "../report/sarif.js";
 import { baselineKey, baselineKeys, readBaseline, writeBaseline } from "../baseline.js";
 import { changedLines, isChanged } from "../changed.js";
 
@@ -178,8 +180,17 @@ export function run(argv: readonly string[], io: Io): number {
     );
   }
 
-  io.stdout(text(decisions, { files: files.length }, { warnings: policy.warnings }));
-  if (baselineNote) io.stdout(baselineNote);
+  switch (args.format) {
+    case "json":
+      io.stdout(json(decisions, files.length, policy));
+      break;
+    case "sarif":
+      io.stdout(sarif(decisions));
+      break;
+    default:
+      io.stdout(text(decisions, { files: files.length }, { warnings: policy.warnings }));
+  }
+  if (baselineNote) io.stderr(baselineNote);
 
   const denied = decisions.some((d) => d.verdict === "denied");
   return denied && !args.exitZero && !args.updateBaseline ? 1 : 0;

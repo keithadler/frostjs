@@ -9,8 +9,12 @@ export interface ParsedArgs {
   baseline: string | null;
   updateBaseline: boolean;
   changedSince: string | null;
+  format: Format;
   paths: string[];
 }
+
+export const FORMATS = ["text", "json", "sarif"] as const;
+export type Format = (typeof FORMATS)[number];
 
 export class UsageError extends Error {}
 
@@ -26,6 +30,7 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
     baseline: null,
     updateBaseline: false,
     changedSince: null,
+    format: "text",
     paths: [],
   };
   let positionalOnly = false;
@@ -81,6 +86,13 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
       case "--changed-since":
         out.changedSince = takeValue();
         break;
+      case "--format": {
+        const v = takeValue();
+        if (!(FORMATS as readonly string[]).includes(v))
+          throw new UsageError(`--format must be one of ${FORMATS.join(", ")}`);
+        out.format = v as Format;
+        break;
+      }
       case "--today": {
         const v = takeValue();
         if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) throw new UsageError("--today needs a date like 2026-12-01");
@@ -118,6 +130,8 @@ options:
                        and exit 0; use once to adopt permit on a codebase
   --changed-since <ref>  fail only on uses in lines changed since the git
                        ref (e.g. origin/main); untracked files count whole
+  --format <f>         text (default), json (versioned schema), or sarif
+                       (2.1.0, one rule per capability)
 
 policy:
   permit.policy is searched for in the directory shared by all the given
