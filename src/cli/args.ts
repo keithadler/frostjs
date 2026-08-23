@@ -13,7 +13,7 @@ export interface ParsedArgs {
   paths: string[];
 }
 
-export const FORMATS = ["text", "json", "sarif"] as const;
+export const FORMATS = ["text", "json", "sarif", "github"] as const;
 export type Format = (typeof FORMATS)[number];
 
 export class UsageError extends Error {}
@@ -130,8 +130,9 @@ options:
                        and exit 0; use once to adopt permit on a codebase
   --changed-since <ref>  fail only on uses in lines changed since the git
                        ref (e.g. origin/main); untracked files count whole
-  --format <f>         text (default), json (versioned schema), or sarif
-                       (2.1.0, one rule per capability)
+  --format <f>         text (default), json (versioned schema), sarif
+                       (2.1.0, one rule per capability), or github
+                       (inline PR annotations followed by the text report)
 
 policy:
   permit.policy is searched for in the directory shared by all the given

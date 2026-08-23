@@ -84,10 +84,40 @@ describe("--format sarif", () => {
   });
 });
 
+describe("--format github", () => {
+  it("emits workflow commands, then the text report", () => {
+    const r = run("github");
+    expect(r.code).toBe(1);
+    const lines = r.stdout.split("\n");
+    expect(lines[0]).toBe(
+      '::error file=test/fixtures/proj/src/app.js,line=2,col=1,title=permit%3A storage.local denied::storage.local denied by "deny everything": localStorage.setItem("not-here", 1)',
+    );
+    expect(lines[1]).toContain(
+      "::error file=test/fixtures/proj/src/legacy/old.js,line=2,col=1,title=permit%3A storage.cookie denied::",
+    );
+    expect(lines[1]).toContain("consent banner owns these");
+    expect(lines[2]).toContain("::warning title=permit%3A grant expiring::");
+    expect(r.stdout).toContain("\n3 files, 2 denied, 0 unknown\n");
+  });
+
+  it("escapes newlines and percent signs in messages", () => {
+    const fs = require("node:fs") as typeof import("node:fs");
+    const os = require("node:os") as typeof import("node:os");
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "permit-gh-"));
+    fs.writeFileSync(path.join(dir, "permit.policy"), "");
+    fs.writeFileSync(path.join(dir, "a.js"), 'fetch(\n  "https://x.example/100%"\n);\n');
+    const r = cli("--format", "github", path.join(dir, "a.js"));
+    const first = r.stdout.split("\n")[0]!;
+    expect(first).toContain("%0A");
+    expect(first).toContain("100%25");
+    expect(first).not.toMatch(/[^%]%[^0-9A-F]/);
+  });
+});
+
 describe("--format", () => {
   it("rejects unknown formats", () => {
     const r = cli("--format", "xml", path.join(proj, "src"));
     expect(r.code).toBe(2);
-    expect(r.stderr).toContain("--format must be one of text, json, sarif");
+    expect(r.stderr).toContain("--format must be one of text, json, sarif, github");
   });
 });

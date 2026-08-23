@@ -101,7 +101,7 @@ permit --min-confidence <c>  lowest confidence that fails: certain, probable (de
 permit --baseline <file>     denials recorded in this file do not fail the build
 permit --update-baseline     write every current denial into the baseline and exit 0
 permit --changed-since <ref> fail only on uses in lines changed since the git ref
-permit --format <f>      text (default), json, or sarif
+permit --format <f>      text (default), json, sarif, or github
 permit --version         print the version and exit
 permit --help            show usage
 ```
@@ -124,6 +124,8 @@ build; `certain` and `probable` uses do.
 - `sarif`: SARIF 2.1.0 for code scanning. One rule per capability code;
   denied uses are errors, unknown uses warnings, baselined uses carry
   `baselineState: "unchanged"`.
+- `github`: GitHub Actions workflow commands (`::error file=...`) so each
+  denial shows up inline on the pull request, followed by the text report.
 
 ## Adopting permit on an existing codebase
 

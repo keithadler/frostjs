@@ -11,6 +11,7 @@ import { commonAncestor, findPolicyFile } from "../policy/config.js";
 import { text } from "../report/text.js";
 import { json } from "../report/json.js";
 import { sarif } from "../report/sarif.js";
+import { github } from "../report/github.js";
 import { baselineKey, baselineKeys, readBaseline, writeBaseline } from "../baseline.js";
 import { changedLines, isChanged } from "../changed.js";
 
@@ -186,6 +187,9 @@ export function run(argv: readonly string[], io: Io): number {
       break;
     case "sarif":
       io.stdout(sarif(decisions));
+      break;
+    case "github":
+      io.stdout(github(decisions, { files: files.length }, { warnings: policy.warnings }));
       break;
     default:
       io.stdout(text(decisions, { files: files.length }, { warnings: policy.warnings }));
