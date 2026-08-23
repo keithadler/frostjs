@@ -195,14 +195,53 @@ pay down than grant, use `--baseline` instead (below).
 npx frostjs audit node_modules/some-widget
 ```
 
-No policy involved. It prints, alarming things first: files where code
+No policy involved. It prints, alarming things first: **untrusted input
+reaching a dangerous sink** (a URL parameter, `document.cookie`, or a
+`postMessage` payload flowing into `eval`, `innerHTML`, `importScripts`, a
+redirect - real taint analysis, see below); files where code
 generation or script injection meets a network reach (a *remote code
-path*, the shape that found three.js's bundled remote eval), code
+path*, the shape that found three.js's bundled remote eval); code
 generation from non-constant input, every host reached, hosts merely
 named in strings (a lead, not a finding), service workers, `postMessage`
 to any origin, and the capability counts. `--format json` for tooling.
 Run it on a pull request's new dependency, or on the one you already have
 and never read.
+
+## Taint: does untrusted input reach a dangerous sink?
+
+`frostjs audit` includes a bounded taint analysis. It answers the question
+capability detection cannot: not "can this code `eval`?" but "does a value
+from the URL, a cookie, or a `postMessage` actually flow into `eval`?".
+That is the difference between a capability and a vulnerability.
+
+```js
+const route = location.hash.slice(1);
+document.getElementById("app").innerHTML = "<div>" + route + "</div>";
+//  audit: t.js:2 location.hash -> innerHTML
+```
+
+The rule that keeps it honest: **taint survives only through operations
+that provably preserve it** - string methods, URL decoding, `JSON.parse`,
+template concatenation, member access. Any other function call breaks the
+chain, so `innerHTML = DOMPurify.sanitize(x)` is not flagged while
+`innerHTML = x` is.
+
+- **Sources**: `location.search` / `.hash` / `.href` / `.pathname`,
+  `document.URL` / `.cookie` / `.referrer` / `.baseURI`, `window.name`,
+  `URLSearchParams` reads, and a `window` `message` handler's `event.data`.
+- **Sinks**: `eval`, `Function`, `innerHTML` / `outerHTML` / `srcdoc`,
+  `insertAdjacentHTML`, `document.write`, `importScripts`, `import()`,
+  `setAttribute("on*"/"srcdoc", ...)`, and `location` / `window.open`
+  redirects.
+- **Limit, stated plainly**: it is intraprocedural, with closure
+  inheritance and message-handler seeding; a flow that crosses a function
+  boundary through an argument or return value is not tracked, and DOM
+  input values (`el.value`) are not modeled as sources. It finds real
+  flows; it does not claim to find all of them.
+
+Run over 21 MB of popular packages it reports zero (mature libraries
+sanitize); on real application code it lights up the flows a reviewer
+would flag by hand.
 
 ## Policy files
 

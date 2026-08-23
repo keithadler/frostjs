@@ -98,6 +98,9 @@ reading of a policy.
 - `src/init.ts`: the starter policy `frostjs init` writes.
 - `src/audit.ts`: `frostjs audit`, which `scripts/sweep.ts` runs over
   popular packages.
+- `src/extract/taint.ts`: bounded intraprocedural taint analysis (source
+  -> sink), surfaced in `frostjs audit`. Taint propagates only through an
+  allowlist of preserving operations; any other call breaks the chain.
 - `src/baseline.ts`, `src/changed.ts`: adoption helpers (baseline
   snapshots keyed on file, capability and expression text; changed lines
   from `git diff -U0`).

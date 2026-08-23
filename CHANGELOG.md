@@ -10,8 +10,12 @@ change the policy grammar or the JSON schema; the changelog will say so.
 ### Added
 
 - `frostjs init`: a starter policy granting what the code does today.
-- `frostjs audit`: what code does with no policy; ranks remote code paths
-  first. `npm run sweep` audits popular packages.
+- `frostjs audit`: what code does with no policy; taint flows and remote
+  code paths first. `npm run sweep` audits popular packages.
+- Bounded taint analysis: untrusted input (URL, cookie, postMessage)
+  reaching a dangerous sink (eval, innerHTML, importScripts, redirect),
+  in `frostjs audit`. Taint survives only provably-preserving operations,
+  so sanitizers break the chain.
 - `network.resource`: `el.src = "https://..."` naming another host.
 - `network.importscripts`: `importScripts(url)` in a worker.
 - `device` family: File System Access pickers, WebUSB/Bluetooth/Serial/HID/MIDI,

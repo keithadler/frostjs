@@ -10,6 +10,7 @@
  * network reach, in the same file. It is reported as a "remote code path".
  */
 import type { CapabilityUse } from "./extract/capability.js";
+import type { TaintFinding } from "./extract/taint.js";
 import { SAME_ORIGIN } from "./extract/target.js";
 
 export interface FileAudit {
@@ -43,6 +44,8 @@ export interface Audit {
   wildcardPostMessage: CapabilityUse[];
   /** Files where code generation or script injection meets a network reach. */
   remoteCodePaths: FileAudit[];
+  /** Untrusted input (URL, cookie, postMessage) reaching a dangerous sink. The most serious thing here. */
+  taintFlows: TaintFinding[];
 }
 
 /** A codegen use whose input is not a constant: `eval(data.script)`, not `Function("return this")`. */
@@ -90,6 +93,7 @@ export interface FileSource {
 export function audit(
   byFile: ReadonlyMap<string, readonly CapabilityUse[]>,
   sources: ReadonlyMap<string, FileSource>,
+  taintFlows: readonly TaintFinding[] = [],
 ): Audit {
   const capabilities = new Map<string, number>();
   const hosts = new Map<string, number>();
@@ -140,6 +144,7 @@ export function audit(
     serviceWorkers,
     wildcardPostMessage,
     remoteCodePaths,
+    taintFlows: [...taintFlows],
   };
 }
 
@@ -150,6 +155,11 @@ export function formatAudit(a: Audit): string {
   const lines: string[] = [];
   const plural = (n: number, w: string): string => `${n} ${w}${n === 1 ? "" : "s"}`;
   lines.push(`${plural(a.files, "file")}, ${plural(a.uses, "capability use")}`);
+  lines.push("");
+
+  lines.push("untrusted input reaching a dangerous sink:");
+  if (a.taintFlows.length === 0) lines.push("  none");
+  for (const t of a.taintFlows) lines.push(`  ${t.file}:${t.line}: ${t.source} -> ${t.sink}: ${t.expression}`);
   lines.push("");
 
   lines.push("remote code paths (code generation or script injection meets a network reach in one file):");
@@ -217,6 +227,7 @@ export function auditJson(a: Audit): string {
         files: a.files,
         uses: a.uses,
         capabilities: Object.fromEntries(a.capabilities),
+        taintFlows: a.taintFlows,
         hosts: Object.fromEntries(a.hosts),
         literalHosts: a.literalHosts,
         dynamicCodegen: uses(a.dynamicCodegen),

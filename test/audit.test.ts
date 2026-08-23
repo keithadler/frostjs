@@ -90,7 +90,8 @@ describe("audit", () => {
     const text = formatAudit(audit(groupByFile(uses), sourcesOf("lib/ecsy.js", ecsyLike)));
     const lines = text.split("\n");
     expect(lines[0]).toBe("1 file, 2 capability uses"); // createElement("script") and eval; s.src = src is unresolvable
-    expect(lines[2]).toContain("remote code paths");
+    expect(lines[2]).toContain("untrusted input reaching a dangerous sink");
+    expect(text).toContain("remote code paths");
     expect(text).toContain("lib/ecsy.js   [reads the page URL]");
     expect(text).toContain("reaches: cdn.jsdelivr.net (named in a string)");
     expect(text).toContain("only in the remote code paths above");

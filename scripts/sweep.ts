@@ -17,6 +17,7 @@ import { fileURLToPath } from "node:url";
 import { discover, isHtml } from "../src/discover/index.js";
 import { parseFile, type ParsedFile } from "../src/extract/ast.js";
 import { extract, stringLiterals } from "../src/extract/index.js";
+import { taint, type TaintFinding } from "../src/extract/taint.js";
 import { parseHtml } from "../src/extract/html.js";
 import type { CapabilityUse } from "../src/extract/capability.js";
 import { audit, type Audit, type FileSource } from "../src/audit.js";
@@ -119,6 +120,7 @@ function analyze(spec: string): Entry {
   const { dir, integrity, spec: resolved } = ensure(spec);
   const byFile = new Map<string, CapabilityUse[]>();
   const sources = new Map<string, FileSource>();
+  const taintFlows: TaintFinding[] = [];
   let parseErrors = 0;
   for (const file of discover([dir], { include: ["dist", "build"] })) {
     const rel = path.relative(dir, file);
@@ -131,15 +133,17 @@ function analyze(spec: string): Entry {
       else {
         uses.push(...extract(unit).map((u) => ({ ...u, file: rel })));
         strings.push(...stringLiterals(unit));
+        taintFlows.push(...taint(unit).map((t) => ({ ...t, file: rel })));
       }
     }
     byFile.set(rel, uses);
     sources.set(rel, { text, strings });
   }
-  return { spec: resolved, integrity, audit: audit(byFile, sources), parseErrors };
+  return { spec: resolved, integrity, audit: audit(byFile, sources, taintFlows), parseErrors };
 }
 
 const score = (a: Audit): number =>
+  a.taintFlows.length * 1000 +
   a.remoteCodePaths.filter((f) => !f.emscripten).length * 100 +
   a.remoteCodePaths.filter((f) => f.emscripten).length * 20 +
   a.dynamicCodegen.length * 10 +
@@ -171,7 +175,10 @@ for (const { spec, integrity, audit: a, parseErrors } of entries) {
   process.stdout.write(
     `\n## ${spec}  (${a.files} files${parseErrors ? `, ${parseErrors} unparsed` : ""})  ${integrity.slice(0, 20)}...\n`,
   );
+  if (a.taintFlows.length) flags.unshift(`TAINT x${a.taintFlows.length}`);
   process.stdout.write(flags.length ? flags.map((f) => `- ${f}`).join("\n") + "\n" : "- nothing notable\n");
+  for (const t of a.taintFlows.slice(0, 6))
+    process.stdout.write(`  taint: ${t.file}:${t.line} ${t.source} -> ${t.sink}\n`);
   for (const f of a.remoteCodePaths) {
     const tags = [f.readsUrl ? "reads the page URL" : "", f.emscripten ? "Emscripten glue" : ""].filter(Boolean);
     process.stdout.write(`  ${f.file}${tags.length ? `  [${tags.join(", ")}]` : ""}\n`);

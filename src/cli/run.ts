@@ -48,6 +48,7 @@ import {
 import { includesFor, sync, usesOf } from "../sync.js";
 import { policyNameFor, starterPolicy } from "../init.js";
 import { audit, auditJson, formatAudit, groupByFile, type FileSource } from "../audit.js";
+import { taint, type TaintFinding } from "../extract/taint.js";
 
 export interface Io {
   stdout: (s: string) => void;
@@ -313,14 +314,17 @@ function runAudit(args: ParsedArgs, io: Io): number {
   const uses = extractAll(files, cwd, io);
   if (typeof uses === "number") return uses;
   const sources = new Map<string, FileSource>();
+  const taintFlows: TaintFinding[] = [];
   for (const f of files) {
+    const name = shown(cwd, f);
     const text = fs.readFileSync(f, "utf8");
     const units = isHtml(f) ? parseHtml(f, text) : [parseFile(f)];
-    sources.set(shown(cwd, f), { text, strings: units.flatMap((u) => (u.errors.length ? [] : stringLiterals(u))) });
+    sources.set(name, { text, strings: units.flatMap((u) => (u.errors.length ? [] : stringLiterals(u))) });
+    for (const u of units) if (!u.errors.length) taintFlows.push(...taint(u).map((t) => ({ ...t, file: name })));
   }
   const byFile = groupByFile(uses);
   for (const f of files) if (!byFile.has(shown(cwd, f))) byFile.set(shown(cwd, f), []);
-  const a = audit(byFile, sources);
+  const a = audit(byFile, sources, taintFlows);
   io.stdout(args.format === "json" ? auditJson(a) : formatAudit(a));
   return 0;
 }
