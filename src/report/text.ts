@@ -34,6 +34,7 @@ export function text(decisions: readonly Decision[], totals: Totals, opts: TextO
   const unknown = decisions.filter((d) => d.verdict === "unknown");
   const suppressed = decisions.filter((d) => d.verdict === "suppressed").length;
   const baselined = decisions.filter((d) => d.verdict === "baselined").length;
+  const unchanged = decisions.filter((d) => d.verdict === "unchanged").length;
   const lines: string[] = [];
 
   for (const d of denied) {
@@ -55,7 +56,8 @@ export function text(decisions: readonly Decision[], totals: Totals, opts: TextO
   lines.push(
     `${plural(totals.files, "file")}, ${denied.length} denied, ${unknown.length} unknown` +
       (suppressed > 0 ? `, ${suppressed} suppressed` : "") +
-      (baselined > 0 ? `, ${baselined} baselined` : ""),
+      (baselined > 0 ? `, ${baselined} baselined` : "") +
+      (unchanged > 0 ? `, ${unchanged} unchanged` : ""),
   );
   return lines.join("\n") + "\n";
 }

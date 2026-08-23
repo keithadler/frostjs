@@ -5,7 +5,7 @@ import type { Rule } from "./parse.js";
 export { compile, type Policy, type Evaluation, type Reason } from "./compile.js";
 export { parsePolicy, PolicyError, type ParsedPolicy, type Rule } from "./parse.js";
 
-export type Verdict = "allowed" | "denied" | "unknown" | "suppressed" | "baselined";
+export type Verdict = "allowed" | "denied" | "unknown" | "suppressed" | "baselined" | "unchanged";
 
 export interface Decision {
   use: CapabilityUse;

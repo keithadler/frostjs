@@ -347,7 +347,9 @@ Ported directly from `exact`, because it is already proven.
 20. Baseline snapshots. **DONE 2026-08-23.** `--baseline <file>` and
     `--update-baseline`; keyed on (file, capability, expression), paths
     relative to the baseline file.
-21. Changed-lines-only mode.
+21. Changed-lines-only mode. **DONE 2026-08-23.** `--changed-since <ref>`
+    from `git diff -U0` hunks; untracked files count whole. **Phase D
+    complete.**
 
 **Phase E - outputs and CI**
 

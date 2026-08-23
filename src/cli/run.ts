@@ -10,6 +10,16 @@ import { DENY_ALL, decide, compile, parsePolicy, PolicyError, type Policy } from
 import { commonAncestor, findPolicyFile } from "../policy/config.js";
 import { text } from "../report/text.js";
 import { baselineKey, baselineKeys, readBaseline, writeBaseline } from "../baseline.js";
+import { changedLines, isChanged } from "../changed.js";
+
+/** git reports paths under the repository's real location; temp dirs on macOS are symlinked. */
+function realpath(p: string): string {
+  try {
+    return fs.realpathSync(p);
+  } catch {
+    return p;
+  }
+}
 
 export interface Io {
   stdout: (s: string) => void;
@@ -150,6 +160,22 @@ export function run(argv: readonly string[], io: Io): number {
           : d,
       );
     }
+  }
+
+  // Changed lines only: denials outside the diff are reported as unchanged.
+  if (args.changedSince !== null) {
+    let changed;
+    try {
+      changed = changedLines(args.changedSince, commonAncestor(args.paths));
+    } catch (e) {
+      io.stderr(`permit: ${(e as Error).message}\n`);
+      return 2;
+    }
+    decisions = decisions.map((d) =>
+      d.verdict === "denied" && !isChanged(changed, realpath(path.resolve(cwd, d.use.file)), d.use.line)
+        ? { ...d, verdict: "unchanged" }
+        : d,
+    );
   }
 
   io.stdout(text(decisions, { files: files.length }, { warnings: policy.warnings }));

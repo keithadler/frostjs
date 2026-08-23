@@ -100,6 +100,7 @@ permit --today <date>    treat YYYY-MM-DD as today when checking expiry
 permit --min-confidence <c>  lowest confidence that fails: certain, probable (default), possible
 permit --baseline <file>     denials recorded in this file do not fail the build
 permit --update-baseline     write every current denial into the baseline and exit 0
+permit --changed-since <ref> fail only on uses in lines changed since the git ref
 permit --version         print the version and exit
 permit --help            show usage
 ```
@@ -124,6 +125,10 @@ text (never line numbers), and exits 0. From then on
 `permit --baseline .permit-baseline.json src` fails only on *new* uses;
 existing ones are counted as "baselined". Commit the file; shrink it as the
 debt is paid down. Paths inside it are relative to the file's directory.
+
+For pull-request checks, `permit --changed-since origin/main src` fails only
+on uses that sit in lines the branch added or modified; the rest are counted
+as "unchanged". Untracked files count as entirely changed.
 
 ## Suppressing a single use
 
