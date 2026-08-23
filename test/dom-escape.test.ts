@@ -76,3 +76,22 @@ describe("dom-escape: must stay quiet", () => {
     expect(caps("const { innerHTML } = el;")).toEqual([]);
   });
 });
+
+describe("dom-escape: setAttribute sinks", () => {
+  it("setAttribute srcdoc is html injection", () => {
+    expect(caps('frame.setAttribute("srcdoc", html)')).toEqual(["dom-escape.html"]);
+  });
+
+  it("setAttribute of an event handler installs code from a string", () => {
+    expect(uses('el.setAttribute("onclick", "doIt()")')[0]).toMatchObject({ capability: "dom-escape.handler" });
+    expect(caps('el.setAttribute("onerror", code)')).toEqual(["dom-escape.handler"]);
+    expect(caps('el.setAttribute("onmouseover", h)')).toEqual(["dom-escape.handler"]);
+  });
+
+  it("ordinary attributes stay quiet", () => {
+    expect(caps('el.setAttribute("class", c); el.setAttribute("data-on", x); el.setAttribute("aria-onx", y)')).toEqual(
+      [],
+    );
+    expect(caps("el.setAttribute(name, value)")).toEqual([]);
+  });
+});

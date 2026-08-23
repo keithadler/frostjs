@@ -494,6 +494,7 @@ to a reviewer; suppression is for the one-off.
 | `dom-escape.html` | assignment to `innerHTML` / `outerHTML` / `srcdoc`, `insertAdjacentHTML`, `createContextualFragment`, JSX `dangerouslySetInnerHTML` / `srcdoc` |
 | `dom-escape.script` | `document.createElement("script")`, JSX `<script>` |
 | `dom-escape.iframe` | `document.createElement("iframe")`, JSX `<iframe>` |
+| `dom-escape.handler` | `setAttribute("onclick" / "onerror" / ..., code)` (installs a handler from a string) |
 | `identity.device` | `navigator.userAgent`, `platform`, `vendor`, `plugins`, `hardwareConcurrency`, `deviceMemory`... |
 | `identity.geolocation` | `navigator.geolocation` |
 | `identity.media` | `navigator.mediaDevices`, `getUserMedia` |

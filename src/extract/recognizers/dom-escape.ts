@@ -8,6 +8,9 @@ const HTML_SINKS: ReadonlySet<string> = new Set(["innerHTML", "outerHTML", "srcd
 /** Methods whose call parses HTML. */
 const HTML_METHODS: ReadonlySet<string> = new Set(["insertAdjacentHTML", "createContextualFragment"]);
 
+/** Attribute names whose value is HTML or code: setAttribute("srcdoc"/"onclick", ...) is a sink. */
+const isCodeAttribute = (name: string): boolean => name === "srcdoc" || /^on[a-z]+$/.test(name);
+
 /** Intrinsic JSX elements, and createElement tag names, that run code. */
 const CODE_ELEMENTS: ReadonlyMap<string, string> = new Map([
   ["script", "dom-escape.script"],
@@ -51,6 +54,13 @@ export const domEscape: Recognizer = ({ node, ancestors, binding }) => {
   const args = callArgs(node, parent);
   if (!args) return null;
   if (HTML_METHODS.has(prop)) return plain("dom-escape.html", node);
+  // setAttribute("srcdoc", html) parses HTML; setAttribute("onclick", code) installs a handler from a string.
+  if (prop === "setAttribute") {
+    const attr = stringValue(args[0])?.toLowerCase();
+    if (attr === "srcdoc") return plain("dom-escape.html", node);
+    if (attr !== undefined && isCodeAttribute(attr)) return plain("dom-escape.handler", node);
+    return null;
+  }
   if (prop === "createElement") {
     const r = asNamedGlobal(n["object"] as AnyNode, "document");
     const cap = r ? CODE_ELEMENTS.get(stringValue(args[0])?.toLowerCase() ?? "") : undefined;

@@ -79,6 +79,7 @@ export const MEMBER_CODES: readonly string[] = [
   "dom-escape.html",
   "dom-escape.script",
   "dom-escape.iframe",
+  "dom-escape.handler",
   "identity.device",
   "identity.geolocation",
   "identity.media",

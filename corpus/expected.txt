@@ -30,6 +30,8 @@ react-dom@18.3.1/cjs/react-dom.production.min.js:27:73 globals.prototype certain
 react-dom@18.3.1/cjs/react-dom.production.min.js:28:344 globals.prototype certain Error.prepareStackTrace=c
 react-dom@18.3.1/cjs/react-dom.production.min.js:45:250 dom-escape.html certain a.innerHTML=b
 react-dom@18.3.1/cjs/react-dom.production.min.js:45:306 dom-escape.html certain mb.innerHTML="<svg>"+b.valueOf().toString()+"</svg>"
+react-dom@18.3.1/cjs/react-dom.production.min.js:91:147 dom-escape.handler certain ze.setAttribute("oninput","return;")
+react-dom@18.3.1/cjs/react-dom.profiling.min.js:106:147 dom-escape.handler certain Ne.setAttribute("oninput","return;")
 react-dom@18.3.1/cjs/react-dom.profiling.min.js:245:459 dom-escape.html certain a.innerHTML="<script>\x3c/script>"
 react-dom@18.3.1/cjs/react-dom.profiling.min.js:38:73 globals.prototype certain Error.prepareStackTrace=void 0
 react-dom@18.3.1/cjs/react-dom.profiling.min.js:39:344 globals.prototype certain Error.prepareStackTrace=c
@@ -78,6 +80,7 @@ swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:33127 identity.clipboard certain d
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:333521 dom-escape.html certain s.innerHTML=i
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:333544 dom-escape.html certain (ze=ze||document.createElement("div")).innerHTML="<svg>"+i.valueOf().toString()+"</svg>"
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:33575 identity.device certain navigator.userAgent
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:350957 dom-escape.handler certain Fr.setAttribute("oninput","return;")
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:406140 dom-escape.html certain (s=P.createElement("div")).innerHTML="<script><\/script>"
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:536218 globals.window probable self.stampit=_
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:55140 dom-escape.html certain i.documentElement.innerHTML=ir?ut:w
@@ -130,6 +133,7 @@ swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:32873 identity.clipboard certai
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:33321 identity.device certain navigator.userAgent
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:333267 dom-escape.html certain s.innerHTML=i
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:333290 dom-escape.html certain (ze=ze||document.createElement("div")).innerHTML="<svg>"+i.valueOf().toString()+"</svg>"
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:350703 dom-escape.handler certain Fr.setAttribute("oninput","return;")
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:405886 dom-escape.html certain (s=P.createElement("div")).innerHTML="<script><\/script>"
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:535964 globals.window probable self.stampit=_
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:54886 dom-escape.html certain i.documentElement.innerHTML=ir?ut:w
