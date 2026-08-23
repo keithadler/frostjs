@@ -153,6 +153,23 @@ the pull request inline), `args` (extra flags), `fail-on-findings` (set
 environment only, never spliced into the script body, so a hostile input is
 an argument and not a command.
 
+## ESLint plugin
+
+The same engine as an ESLint rule, so denials show up in the editor and on
+`eslint` runs, with the same policy discovery (nearest `permit.policy`
+above the file) and the same `permit: ignore` comments. `eslint-disable`
+works too.
+
+```js
+// eslint.config.js
+import permit from "permit/eslint";
+export default [permit.configs.recommended];
+// or: [{ plugins: { permit }, rules: { "permit/capability": ["error", { reportUnknown: true }] } }]
+```
+
+Options: `policy` (explicit file), `minConfidence`, `reportUnknown`
+(also report uses the CLI would list as unknown), `today`.
+
 ## pre-commit
 
 ```yaml

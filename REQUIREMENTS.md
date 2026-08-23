@@ -384,7 +384,9 @@ Ported directly from `exact`, because it is already proven.
 30. Inline `<script>` in HTML. **DONE 2026-08-23.** Blocks parsed with the
     rest of the file masked to whitespace so positions are exact; origin
     `inline-html`.
-31. ESLint plugin.
+31. ESLint plugin. **DONE 2026-08-23.** `permit/eslint` exports a plugin
+    with one rule, `permit/capability`, and a recommended config. **Phase G
+    complete.**
 
 **Phase H - the showpiece**
 
