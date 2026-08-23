@@ -23,7 +23,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "tsc -p tsconfig.json --noEmit",
-    "prepublishOnly": "npm run build && npm test"
+    "prepublishOnly": "npm run build && npm test",
+    "corpus": "vite-node scripts/corpus.ts"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

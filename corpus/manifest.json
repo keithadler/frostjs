@@ -1,0 +1,11 @@
+{
+  "comment": "Real, popular JavaScript used to keep the false-positive count honest (REQUIREMENTS 4.1, 14.1). Tarballs are fetched from the npm registry and verified against these integrity hashes before scanning. Expected findings live in corpus/expected.txt; `npm run corpus` fails if the scan differs.",
+  "packages": [
+    { "name": "lodash", "version": "4.17.21", "integrity": "sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==" },
+    { "name": "react-dom", "version": "18.3.1", "integrity": "sha512-5m4nQKp+rZRb09LNH59GM4BxTh9251/ylbKIbpe7TpGxfJ+9kv6BLkLBXIjjspbgbnIBNqlI23tRnTWT0snUIw==" },
+    { "name": "three", "version": "0.160.0", "integrity": "sha512-DLU8lc0zNIPkM7rH5/e1Ks1Z8tWCGRq6g8mPowdDJpw1CFBJMU7UoJjC6PefXW7z//SSl0b2+GCw14LB+uDhng==" },
+    { "name": "chart.js", "version": "4.4.1", "integrity": "sha512-C74QN1bxwV1v2PEujhmKjOZ7iUM4w6BWs23Md/6aOZZSlwMzeCIDGuZay++rBgChYru7/+QFeoQW0fQoP534Dg==" },
+    { "name": "marked", "version": "12.0.0", "integrity": "sha512-Vkwtq9rLqXryZnWaQc86+FHLC6tr/fycMfYAhiOIXkrNmeGAyhSxjqu0Rs1i0bBqw5u0S7+lV9fdH2ZSVaoa0w==" },
+    { "name": "swagger-ui-dist", "version": "5.11.0", "integrity": "sha512-j0PIATqQSEFGOLmiJOJZj1X1Jt6bFIur3JpY7+ghliUnfZs0fpWDdHEkn9q7QUlBtKbkn6TepvSxTqnE8l3s0A==" }
+  ]
+}

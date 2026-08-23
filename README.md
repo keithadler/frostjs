@@ -142,7 +142,14 @@ not a ceiling.
 npm install
 npm test
 npm run build
+npm run corpus        scan the pinned corpus; fails if findings changed
 ```
+
+Zero false positives is the product. `npm run corpus` runs the extractor over
+six pinned, hash-verified npm packages (about 21 MB of real JavaScript) and
+diffs the findings against `corpus/expected.txt`. Any change to `src/extract/`
+must leave that diff empty, or update the file deliberately with
+`npm run corpus -- --update` and explain why in the commit.
 
 ## Licence
 

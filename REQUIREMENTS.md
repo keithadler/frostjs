@@ -69,9 +69,11 @@ State this honestly in the README. The value is a high floor, not a ceiling.
    cleanup sprint required first.
 4. Runs on a mid-size repo in under ten seconds.
 
-**Corpus (for 4.1 and ground rule 14.1).** Pinned by content hash in
-`corpus/manifest.json` so "the count must not move" is reproducible:
-lodash, react-dom, three.js, chart.js, marked, plus one large application bundle.
+**Corpus (for 4.1 and ground rule 14.1).** Pinned by npm integrity hash in
+`corpus/manifest.json` so "the count must not move" is reproducible: lodash
+4.17.21, react-dom 18.3.1, three 0.160.0, chart.js 4.4.1, marked 12.0.0, and
+swagger-ui-dist 5.11.0 as the application bundle (it genuinely persists auth
+in localStorage and cookies, so it supplies true positives as well as noise).
 
 ---
 
@@ -296,8 +298,13 @@ Ported directly from `exact`, because it is already proven.
 
 **Phase C - full taxonomy**
 
-9-13. One step per capability family from section 7, each with tests and a corpus
-check that the false-positive count does not move.
+9. Corpus harness. **DONE 2026-08-23.** `corpus/manifest.json` pins six
+   packages by npm integrity hash; `npm run corpus` fetches once, verifies,
+   scans, and diffs against `corpus/expected.txt`. Baseline: 2013 files,
+   21.1 MB, 3.3s, 32 findings, every `certain` one a verified true positive.
+10-16. One step per remaining capability family from section 7 (network,
+   codegen, dom-escape, identity, navigation, globals, worker), each with tests
+   and a corpus check that the false-positive count does not move.
 
 **Phase D - noise control**
 

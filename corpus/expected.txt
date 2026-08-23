@@ -1,0 +1,32 @@
+lodash@4.17.21/_baseIntersection.js:36:5 storage.cache possible caches[othIndex]
+lodash@4.17.21/_baseIntersection.js:43:14 storage.cache possible caches[0]
+lodash@4.17.21/_baseIntersection.js:57:21 storage.cache possible caches[othIndex]
+lodash@4.17.21/lodash.js:3189:9 storage.cache possible caches[othIndex]
+lodash@4.17.21/lodash.js:3196:18 storage.cache possible caches[0]
+lodash@4.17.21/lodash.js:3210:25 storage.cache possible caches[othIndex]
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:631208 storage.local certain localStorage.setItem("authorized",JSON.stringify(u))
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:636895 storage.local certain localStorage.getItem("authorized")
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:637170 storage.cookie certain document.cookie
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:637609 storage.cookie certain document.cookie
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle-core.js:2:137933 storage.local certain localStorage.setItem("authorized",JSON.stringify(r))
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle-core.js:2:141039 storage.local certain localStorage.getItem("authorized")
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle-core.js:2:141314 storage.cookie certain document.cookie
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle-core.js:2:141753 storage.cookie certain document.cookie
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:630948 storage.local certain localStorage.setItem("authorized",JSON.stringify(u))
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:636635 storage.local certain localStorage.getItem("authorized")
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:636910 storage.cookie certain document.cookie
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:637349 storage.cookie certain document.cookie
+swagger-ui-dist@5.11.0/swagger-ui.js:1:30575 storage.local certain localStorage.setItem("authorized",JSON.stringify(r))
+swagger-ui-dist@5.11.0/swagger-ui.js:1:33581 storage.local certain localStorage.getItem("authorized")
+swagger-ui-dist@5.11.0/swagger-ui.js:1:33856 storage.cookie certain document.cookie
+swagger-ui-dist@5.11.0/swagger-ui.js:1:34295 storage.cookie certain document.cookie
+three@0.160.0/examples/jsm/libs/ecsy.module.js:1683:5 storage.local certain window.localStorage.clear()
+three@0.160.0/examples/jsm/libs/ecsy.module.js:1685:5 storage.local certain window.localStorage.setItem("ecsyRemoteId", remoteId)
+three@0.160.0/examples/jsm/libs/ecsy.module.js:1689:26 storage.local certain window.localStorage.getItem("ecsyRemoteId")
+three@0.160.0/examples/jsm/libs/ecsy.module.js:1692:5 storage.local certain window.localStorage.setItem("ecsyRemoteId", remoteId)
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.js:3557:16 storage.indexeddb certain window.indexedDB
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.js:3565:29 storage.indexeddb possible indexedDB.open(FS.DB_NAME(), FS.DB_VERSION)
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.js:3595:29 storage.indexeddb possible indexedDB.open(FS.DB_NAME(), FS.DB_VERSION)
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.module.js:3568:16 storage.indexeddb certain window.indexedDB
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.module.js:3576:29 storage.indexeddb possible indexedDB.open(FS.DB_NAME(), FS.DB_VERSION)
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.module.js:3606:29 storage.indexeddb possible indexedDB.open(FS.DB_NAME(), FS.DB_VERSION)
