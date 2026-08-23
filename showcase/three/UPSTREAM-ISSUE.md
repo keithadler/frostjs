@@ -1,11 +1,11 @@
-# Draft issue for mrdoob/three.js
+# Report filed with mrdoob/three.js
 
-Not filed. This is a draft for the maintainer of frostjs to review and
-submit under their own name, if they choose to. It is written for the
-three.js issue tracker, not for a security contact, because the behavior
-is documented upstream ECSY behavior shipped in example code, not a
-vulnerability in three.js itself. Verified against the `dev` branch on
-2026-08-23.
+Filed 2026-08-23 as https://github.com/mrdoob/three.js/issues/34357. It
+went to the public issue tracker rather than a security contact because
+the behavior is documented upstream ECSY behavior shipped in example
+code, not a vulnerability in three.js itself. Verified against the `dev`
+branch, byte-identical to the r160 copy in the corpus, before filing. The
+text below is what was submitted.
 
 ---
 
