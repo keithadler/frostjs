@@ -34,6 +34,13 @@ export const CAPABILITY_PHRASES: ReadonlyMap<string, string> = new Map([
   // worker
   ["workers", "worker"],
   ["service workers", "worker"],
+  // device
+  ["device access", "device"],
+  ["file access", "device.filesystem"],
+  ["the file system", "device.filesystem"],
+  ["usb", "device.usb"],
+  ["bluetooth", "device.bluetooth"],
+  ["notifications", "device.notification"],
 ]);
 
 /** Every capability family code, for validating a bare code and for hints. */
