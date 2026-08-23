@@ -7,10 +7,20 @@ change the policy grammar or the JSON schema; the changelog will say so.
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-08-23
+
+Additive: taint now follows destructuring, two validated false-positive
+classes are gone, and a second, fully-public showcase is added. No breaking
+changes to policies or the JSON/SARIF schema.
+
 ### Added
 
 - Taint follows destructuring: `({ data }) => eval(data)` on a message
   handler, `const { hash } = location`, `const [first] = x.split(...)`.
+- Second showcase (`showcase/lottie/`): frostjs flags the default-on
+  expression `eval` in `lottie-web` (`lottie.js:14422`), the public,
+  exploited-in-the-wild sink that runs JavaScript embedded in an animation
+  JSON. Pinned by `test/showcase-lottie.test.ts`.
 
 ### Fixed
 

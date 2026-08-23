@@ -144,3 +144,13 @@ this by understanding what ECSY does; it found it because `eval` is `eval`
 and a policy said no. Obfuscated code would not have been caught. The file
 was not obfuscated, because nobody was hiding anything, and that is the
 common case.
+
+## A second finding, fully public
+
+The three.js case is a quiet path in a file nobody opens. For the opposite
+shape — a well-known, exploited-in-the-wild, still-default-on `eval` sink in a
+~5M-downloads dependency that runs the JSON you hand it — see
+[`showcase/lottie/README.md`](showcase/lottie/README.md): `lottie-web`
+evaluates the expression strings embedded in an animation file, on by default,
+and frostjs names the sink at `lottie.js:14422`. Nothing there is secret; the
+point is that frostjs flags it in your dependency graph before it ships.

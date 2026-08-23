@@ -1,0 +1,6 @@
+policy "lottie-app"
+may reach "same-origin"     -- animation JSON and assets from our own origin
+may use network.xhr         -- XHR-loads animations referenced by URL
+may use workers             -- optional web-worker rendering
+may use identity.device     -- navigator.userAgent feature detection
+may use globals.window      -- exposes window.lottie / window.bodymovin
