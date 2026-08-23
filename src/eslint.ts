@@ -5,7 +5,7 @@
  * Reports are ESLint problems at the use's position, so they show in
  * editors and `eslint-disable` comments work alongside `frostjs: ignore`.
  *
- *   import frostjs from "frostjs/eslint";
+ *   import frostjs from "@keithadler/frostjs/eslint";
  *   export default [{ plugins: { frostjs }, rules: { "frostjs/capability": "error" } }];
  */
 import fs from "node:fs";

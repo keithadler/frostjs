@@ -29,7 +29,7 @@ change the policy grammar or the JSON schema; the changelog will say so.
 - Fingerprint registry for vendored code: `vendored "<glob>"`,
   `frostjs vendor add`, `frostjs registry sync`, `frostjs sri`.
 - TypeScript, JSX and inline `<script>` in HTML.
-- ESLint plugin, `frostjs/eslint`, rule `frostjs/capability`.
+- ESLint plugin, `@keithadler/frostjs/eslint`, rule `frostjs/capability`.
 - Pinned, hash-verified corpus (`npm run corpus`) guarding the
   false-positive count.
 - `SHOWCASE.md`: three.js 0.160.0's bundled ECSY devtools and Rapier

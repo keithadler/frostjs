@@ -13,6 +13,8 @@
 
 ## Commands
 
+After `npm install -D @keithadler/frostjs` (the npm name is scoped; the command is `frostjs`):
+
 - `npx frostjs init src`: write a starter policy from what the code does today.
 - `npx frostjs src`: check; exit 1 on a denial.
 - `npx frostjs summary`: the policy in plain English.

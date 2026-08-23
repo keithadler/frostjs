@@ -47,7 +47,7 @@ frostjs gives you:
   named `fetch` is not a network call. Every engine change runs against 21
   MB of real, pinned, hash-verified JavaScript and the finding count must
   not move.
-- **Adoption in one command.** `npx frostjs init src` writes a policy that
+- **Adoption in one command.** `frostjs init src` writes a policy that
   grants exactly what the code does today, with a note on each line saying
   where. The first run passes. Then you delete what should not be allowed.
 - **Dependencies by fingerprint.** Vendored files are admitted by hash with
@@ -62,10 +62,14 @@ dependency. MIT.
 ## Two minutes to a gated pipeline
 
 ```bash
+npm install -D @keithadler/frostjs
 npx frostjs init src        # writes frostjs.policy from what the code does today
 git add frostjs.policy      # commit it; it is the contract
 npx frostjs src             # passes, because init granted what exists
 ```
+
+The package is scoped (`@keithadler/frostjs`) because npm's typosquat
+rules reserve the bare name; the command it installs is `frostjs`.
 
 Then add the check to CI:
 
@@ -98,7 +102,8 @@ tool reads:
 ```markdown
 ## frostjs
 
-This project is gated by frostjs (https://github.com/keithadler/frostjs).
+This project is gated by frostjs (https://github.com/keithadler/frostjs,
+npm package @keithadler/frostjs, installed as a dev dependency).
 `frostjs.policy` at the repository root says which browser capabilities
 the code may use: storage, network destinations, code generation, HTML
 injection, identity, navigation, globals, workers. Everything else is
@@ -167,6 +172,7 @@ $ echo $?
 ## Starting out
 
 ```bash
+npm install -D @keithadler/frostjs
 npx frostjs init src
 ```
 
@@ -314,7 +320,7 @@ works too.
 
 ```js
 // eslint.config.js
-import frostjs from "frostjs/eslint";
+import frostjs from "@keithadler/frostjs/eslint";
 export default [frostjs.configs.recommended];
 // or: [{ plugins: { frostjs }, rules: { "frostjs/capability": ["error", { reportUnknown: true }] } }]
 ```
