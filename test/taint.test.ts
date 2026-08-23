@@ -222,3 +222,23 @@ describe("taint: React dangerouslySetInnerHTML", () => {
     expect(flows("const o = { __html: location.search };")).toEqual(["location.search->dangerouslySetInnerHTML"]);
   });
 });
+
+describe("taint: WebSocket / EventSource message data", () => {
+  it("a message handler of a socket this file constructs is a source", () => {
+    expect(flows("const ws = new WebSocket(u); ws.onmessage = (e) => { eval(e.data); };")).toEqual([
+      "server message->eval",
+    ]);
+    expect(
+      flows('const s = new WebSocket(u); s.addEventListener("message", (e) => { el.innerHTML = e.data; });'),
+    ).toEqual(["server message->innerHTML"]);
+    expect(flows('const es = new EventSource("/x"); es.onmessage = (m) => eval(m.data);')).toEqual([
+      "server message->eval",
+    ]);
+  });
+
+  it("quiet for a non-socket receiver, a socket that only reads harmlessly, and worker self", () => {
+    expect(flows("thing.onmessage = (e) => { eval(e.data); };")).toEqual([]);
+    expect(flows("const ws = new WebSocket(u); ws.onmessage = (e) => { log(e.data); };")).toEqual([]);
+    expect(flows("self.onmessage = (e) => { eval(e.data); };")).toEqual([]);
+  });
+});

@@ -13,6 +13,9 @@ change the policy grammar or the JSON schema; the changelog will say so.
   triggers it and the policy line to allow it.
 - Taint sink: React `dangerouslySetInnerHTML={{ __html: tainted }}`. The
   `__html` key is React-specific, so a tainted value there is unambiguous.
+- Taint source: the `event.data` of a message handler on a WebSocket or
+  EventSource the file constructs (`new WebSocket(...).onmessage`), so
+  eval-of-server-message is caught.
 
 ## [0.4.0] - 2026-08-23
 

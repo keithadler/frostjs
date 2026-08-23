@@ -442,41 +442,71 @@ function nestedFunctions(root: AnyNode): AnyNode[] {
 }
 
 /**
- * If a function is the handler of a `window` message listener, its first
- * parameter is a source ("postMessage data"). Only window, not self: a
- * worker's messages come from its own creator (see message.ts).
+ * If a function is a marked message handler, its first parameter is a
+ * source. `window` postMessage handlers and the handlers of a WebSocket or
+ * EventSource this file constructs both carry remote, untrusted data. Not
+ * `self` (a worker's messages come from its own creator; see message.ts).
  */
 function messageSeed(fn: AnyNode): { name: string; source: string } | null {
   const p = (fn["params"] as AnyNode[])[0];
   const name = p?.type === "Identifier" ? (p["name"] as string) : null;
   if (name === null) return null;
-  const listener = fn["$frostjsMessageHandler"];
-  return listener === true ? { name, source: "postMessage data" } : null;
+  if (fn["$frostjsMessageHandler"] === true) return { name, source: "postMessage data" };
+  if (fn["$frostjsRemoteHandler"] === true) return { name, source: "server message" };
+  return null;
 }
 
-/** Mark window message handlers so messageSeed can find them. */
+/** Names bound to `new WebSocket(...)` or `new EventSource(...)` anywhere in the file. */
+function socketVars(program: Node): Set<string> {
+  const names = new Set<string>();
+  const walk = (n: AnyNode): void => {
+    if (n.type === "VariableDeclarator" && (n["id"] as AnyNode).type === "Identifier") {
+      const init = n["init"] as AnyNode | null;
+      if (
+        init?.type === "NewExpression" &&
+        (isIdentifier(init["callee"], "WebSocket") || isIdentifier(init["callee"], "EventSource"))
+      ) {
+        names.add((n["id"] as AnyNode)["name"] as string);
+      }
+    }
+    for (const key of Object.keys(n)) {
+      if (key === "type" || key === "start" || key === "end") continue;
+      const v = n[key];
+      if (Array.isArray(v)) {
+        for (const it of v) if (isNode(it)) walk(it);
+      } else if (isNode(v)) walk(v);
+    }
+  };
+  walk(program as AnyNode);
+  return names;
+}
+
+/** Mark window postMessage handlers and WebSocket/EventSource message handlers so messageSeed can find them. */
 function markMessageHandlers(program: Node): void {
+  const sockets = socketVars(program);
+  const receiverIsRemote = (obj: AnyNode): "window" | "socket" | null => {
+    if (freeGlobal(obj, new Set(["window"]))) return "window";
+    if (isIdentifier(obj) && sockets.has(obj.name)) return "socket";
+    return null;
+  };
+  const mark = (handler: AnyNode, kind: "window" | "socket"): void => {
+    (handler as AnyNode)[kind === "window" ? "$frostjsMessageHandler" : "$frostjsRemoteHandler"] = true;
+  };
   const walk = (n: AnyNode): void => {
     if (n.type === "CallExpression") {
       const callee = n["callee"] as AnyNode;
-      if (
-        callee.type === "MemberExpression" &&
-        memberName(callee) === "addEventListener" &&
-        freeGlobal(callee["object"] as AnyNode, new Set(["window"]))
-      ) {
+      if (callee.type === "MemberExpression" && memberName(callee) === "addEventListener") {
+        const kind = receiverIsRemote(callee["object"] as AnyNode);
         const args = n["arguments"] as AnyNode[];
-        if (args[0]?.type === "Literal" && args[0]["value"] === "message" && args[1])
-          (args[1] as AnyNode)["$frostjsMessageHandler"] = true;
+        if (kind && args[0]?.type === "Literal" && args[0]["value"] === "message" && args[1])
+          mark(args[1] as AnyNode, kind);
       }
     }
     if (n.type === "AssignmentExpression") {
       const left = n["left"] as AnyNode;
-      if (
-        left.type === "MemberExpression" &&
-        memberName(left) === "onmessage" &&
-        freeGlobal(left["object"] as AnyNode, new Set(["window"]))
-      ) {
-        (n["right"] as AnyNode)["$frostjsMessageHandler"] = true;
+      if (left.type === "MemberExpression" && memberName(left) === "onmessage") {
+        const kind = receiverIsRemote(left["object"] as AnyNode);
+        if (kind) mark(n["right"] as AnyNode, kind);
       }
     }
     for (const key of Object.keys(n)) {

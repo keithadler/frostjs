@@ -233,7 +233,8 @@ chain, so `innerHTML = DOMPurify.sanitize(x)` is not flagged while
 
 - **Sources**: `location.search` / `.hash` / `.href` / `.pathname`,
   `document.URL` / `.cookie` / `.referrer` / `.baseURI`, `window.name`,
-  `URLSearchParams` reads, and a `window` `message` handler's `event.data`.
+  `URLSearchParams` reads, a `window` `message` handler's `event.data`, and
+  the `event.data` of a WebSocket/EventSource this file constructs.
 - **Sinks**: `eval`, `Function`, `innerHTML` / `outerHTML` / `srcdoc`,
   `insertAdjacentHTML`, `document.write`, `importScripts`, `import()`,
   `setAttribute("on*"/"srcdoc", ...)`, React `dangerouslySetInnerHTML`, and
