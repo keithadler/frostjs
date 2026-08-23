@@ -7,6 +7,11 @@ change the policy grammar or the JSON schema; the changelog will say so.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-08-23
+
+Additive: new command (`frostjs explain`) and broader taint coverage; no
+breaking changes to policies or the JSON/SARIF schema.
+
 ### Added
 
 - `frostjs explain <capability>` explains one code, family or phrase: what

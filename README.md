@@ -149,7 +149,7 @@ Published as [`@keithadler/frostjs`](https://www.npmjs.com/package/@keithadler/f
 Nine capability families across JavaScript, TypeScript, JSX and HTML (inline
 scripts and attribute surfaces: `on*` handlers, `javascript:` URLs, remote
 `<script src>`). Frost-dialect policies with shared bases (`extends`), scope
-analysis, taint analysis (source -> sink, one hop across functions),
+analysis, taint analysis (source -> sink, one hop across functions; sockets, React and worker registration included),
 baselines, changed-lines mode, unused-grant reporting, json/sarif/github
 output, a GitHub Action, an ESLint plugin, and a fingerprint registry for
 vendored code with SRI output. Run on Excalidraw (656 files, a TypeScript
