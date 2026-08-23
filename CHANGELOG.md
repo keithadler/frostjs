@@ -7,6 +7,12 @@ change the policy grammar or the JSON schema; the changelog will say so.
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-08-23
+
+Additive plus one validated behavior change (open redirect dropped as a
+taint sink). Coverage now includes Vue/Svelte/Angular templates. No breaking
+changes to policies or the JSON/SARIF schema.
+
 ### Changed
 
 - `frostjs audit` and `init` skip files that do not parse instead of
@@ -18,6 +24,12 @@ change the policy grammar or the JSON schema; the changelog will say so.
   redirects); it cannot be told from a real open redirect statically, so it
   is dropped to keep the zero-false-positive guarantee. Location URL parts
   remain sources into the real sinks (eval, innerHTML, ...).
+
+### Fixed
+
+- The `<script>` tag scan handles a `>` inside a quoted attribute value
+  (Svelte's `generics="T extends Record<string, unknown>"`), which
+  previously caused a spurious parse error and aborted the run.
 
 ### Added
 
