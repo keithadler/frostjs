@@ -60,11 +60,11 @@ describe("globals: must stay quiet", () => {
     expect(caps("Object.defineProperty(obj, 'x', d); Object.assign(target, src)")).toEqual([]);
   });
 
-  it("local window alias is not certain", () => {
-    expect(uses("const window = {}; window.x = 1")[0]?.confidence).toBe("possible");
+  it("local window alias is not a use", () => {
+    expect(uses("const window = {}; window.x = 1")).toEqual([]);
   });
 
   it("prototype of a local shadowing a builtin", () => {
-    expect(uses("function Array() {}; Array.prototype.x = 1")[0]?.confidence).toBe("possible");
+    expect(uses("function Array() {}; Array.prototype.x = 1")).toEqual([]);
   });
 });

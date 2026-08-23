@@ -117,18 +117,14 @@ describe("storage: prototype names and shadowing", () => {
     expect(caps("x.constructor; toString(1); hasOwnProperty.call(o, k); window.constructor")).toEqual([]);
   });
 
-  it("downgrades to possible when the file declares the global's name", () => {
-    const u = uses("function f() { const caches = {}; return caches.a; }");
-    expect(u.map((x) => [x.capability, x.confidence])).toEqual([["storage.cache", "possible"]]);
+  it("a local shadowing the global is not a use", () => {
+    expect(uses("function f() { const caches = {}; return caches.a; }")).toEqual([]);
   });
 
-  it("downgrades when the global object itself is declared", () => {
-    const u = uses("var self = this; self.localStorage;");
-    expect(u.map((x) => x.confidence)).toEqual(["possible"]);
-    const w = uses("const window = {}; window.localStorage;");
-    expect(w.map((x) => x.confidence)).toEqual(["possible"]);
-    const d = uses("import document from './doc.js'; document.cookie;");
-    expect(d.map((x) => x.confidence)).toEqual(["possible"]);
+  it("a local shadowing the global object is not a use", () => {
+    expect(uses("var self = this; self.localStorage;")).toEqual([]);
+    expect(uses("const window = {}; window.localStorage;")).toEqual([]);
+    expect(uses("import document from './doc.js'; document.cookie;")).toEqual([]);
   });
 
   it("stays certain when an unrelated name is declared", () => {

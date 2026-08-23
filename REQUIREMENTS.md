@@ -331,36 +331,43 @@ Ported directly from `exact`, because it is already proven.
     navigator.serviceWorker.register, worklet addModule, with targets from
     the script URL. Corpus 506 -> 514. **Phase C complete.**
 
-**Phase D - noise control**
+**Phase D - noise control** (renumbered after the corpus harness was inserted as step 9)
 
-14. Triage: scope analysis, shadowed identifiers, constant folding.
-15. Confidence tiers, `--min-confidence`.
-16. Inline suppression.
-17. Baseline snapshots.
-18. Changed-lines-only mode.
+17. Triage: scope analysis, shadowed identifiers, constant folding.
+    **DONE 2026-08-23.** `src/extract/scope.ts` builds lexical scopes with
+    hoisting; a recognizer's anchor identifier must be a free reference or
+    the match is dropped (a local named `caches` is not the global at all).
+    `with` bodies are ambiguous and stay `possible`. `const k = "..."` folds
+    into `window[k]` at `probable`. Corpus 514 -> 324: 200 hedged findings
+    were locals, 10 were promoted to certain. The interim file-level
+    declared-name check from step 3 is gone.
+18. Confidence tiers, `--min-confidence`.
+19. Inline suppression.
+20. Baseline snapshots.
+21. Changed-lines-only mode.
 
 **Phase E - outputs and CI**
 
-19. JSON and SARIF.
-20. GitHub annotations.
-21. GitHub Action, pre-commit hook.
-22. CSP emission.
+22. JSON and SARIF.
+23. GitHub annotations.
+24. GitHub Action, pre-commit hook.
+25. CSP emission.
 
 **Phase F - dependencies**
 
-23. Fingerprint registry format and `vendor add`.
-24. `registry sync` against the lockfile.
-25. SRI attribute emission.
+26. Fingerprint registry format and `vendor add`.
+27. `registry sync` against the lockfile.
+28. SRI attribute emission.
 
 **Phase G - reach**
 
-26. TypeScript and JSX.
-27. Inline `<script>` in HTML.
-28. ESLint plugin.
+29. TypeScript and JSX.
+30. Inline `<script>` in HTML.
+31. ESLint plugin.
 
 **Phase H - the showpiece**
 
-29. Run against a well-known open-source web app, publish the findings and the
+32. Run against a well-known open-source web app, publish the findings and the
     policy file that would have prevented them. This is the README hook, the same
     role the sympy finding plays for `exact`.
 

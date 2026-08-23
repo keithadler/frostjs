@@ -1,4 +1,3 @@
-function f() {
-  const caches = {};
-  return caches.x;
+with (obj) {
+  caches.x;
 }

@@ -24,7 +24,7 @@ export const network: Recognizer = ({ node, ancestors, binding }) => {
   if (n.type === "ImportExpression") {
     const target = resolveTargetOf(n["source"] as AnyNode, "specifier");
     if (target === "same-origin" || target === "bare") return null;
-    return { capability: "network.import", target, confidence: "certain", via: "import", node };
+    return { capability: "network.import", target, confidence: "certain", via: null, node };
   }
 
   // fetch, XMLHttpRequest, WebSocket, EventSource: bare or via the global object.
@@ -32,7 +32,7 @@ export const network: Recognizer = ({ node, ancestors, binding }) => {
   let resolved: Resolved | null = null;
   if (isIdentifier(n)) {
     name = n.name;
-    resolved = { confidence: "certain", via: n.name };
+    resolved = { confidence: "certain", via: n };
   } else if (n.type === "MemberExpression") {
     const prop = memberName(n);
     const obj = n["object"] as AnyNode;

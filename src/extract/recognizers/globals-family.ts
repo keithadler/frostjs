@@ -67,10 +67,10 @@ const MUTATORS: ReadonlySet<string> = new Set(["defineProperty", "defineProperti
 
 /** `<Builtin>` or `<Builtin>.prototype`, as a resolved reference. */
 function asBuiltinSurface(n: AnyNode): Resolved | null {
-  if (isIdentifier(n) && BUILTINS.has(n.name)) return { confidence: "certain", via: n.name };
+  if (isIdentifier(n) && BUILTINS.has(n.name)) return { confidence: "certain", via: n };
   if (n.type === "MemberExpression" && memberName(n) === "prototype") {
     const obj = n["object"] as AnyNode;
-    if (isIdentifier(obj) && BUILTINS.has(obj.name)) return { confidence: "certain", via: obj.name };
+    if (isIdentifier(obj) && BUILTINS.has(obj.name)) return { confidence: "certain", via: obj };
   }
   return null;
 }

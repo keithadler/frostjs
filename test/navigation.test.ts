@@ -78,7 +78,7 @@ describe("navigation: must stay quiet", () => {
     expect(caps("const o = { location: 1, history: [] }; let location; 'location'")).toEqual([]);
   });
 
-  it("shadowed location", () => {
-    expect(uses("const location = useLocation(); location.href = x")[0]?.confidence).toBe("possible");
+  it("shadowed location is not a use", () => {
+    expect(uses("const location = useLocation(); location.href = x")).toEqual([]);
   });
 });

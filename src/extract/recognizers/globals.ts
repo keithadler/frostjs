@@ -5,13 +5,14 @@
  */
 import type { Node } from "../ast.js";
 import type { Confidence } from "../capability.js";
+import { leadingLiteral } from "../target.js";
 
 type AnyNode = Node & Record<string, unknown>;
 
-/** A resolved reference to a global, and the name it depends on. */
+/** A resolved reference to a global: the confidence, and the identifier node the resolution rests on. */
 export interface Resolved {
   confidence: Confidence;
-  via: string;
+  via: Node | null;
 }
 
 export const GLOBAL_OBJECTS: ReadonlySet<string> = new Set(["window", "globalThis", "self"]);
@@ -26,13 +27,32 @@ export function isIdentifier(n: unknown, name?: string): n is AnyNode & { name: 
   return name === undefined || (n as AnyNode)["name"] === name;
 }
 
-/** The static property name of a member expression, or null if it is dynamic. */
+/**
+ * The static property name of a member expression, or null if it is dynamic.
+ * A computed name is resolved from a string literal, an expression-free
+ * template, a concatenation of literals, or an identifier the scope
+ * analysis folded from `const k = "..."` (see FOLDED).
+ */
 export function memberName(n: AnyNode): string | null {
   if (n.type !== "MemberExpression") return null;
   const prop = n["property"] as AnyNode;
   if (n["computed"] !== true) return isIdentifier(prop) ? prop.name : null;
-  if (prop.type === "Literal" && typeof prop["value"] === "string") return prop["value"];
-  return null;
+  if (prop.type === "Literal") return typeof prop["value"] === "string" ? prop["value"] : null;
+  if (isIdentifier(prop)) return (prop[FOLDED] as string | undefined) ?? null;
+  const lit = leadingLiteral(prop);
+  return lit !== null && lit.complete ? lit.text : null;
+}
+
+/** Annotation keys written onto identifier nodes by the scope analysis. */
+export const FOLDED = "$permitFolded";
+export const FREE = "$permitFree";
+export const AMBIGUOUS = "$permitAmbiguous";
+
+/** True when the member name came from anything other than a plain literal or identifier. */
+export function isFoldedMember(n: AnyNode): boolean {
+  const m = (n.type === "AssignmentExpression" ? n["left"] : n) as AnyNode;
+  if (m.type !== "MemberExpression" || m["computed"] !== true) return false;
+  return (m["property"] as AnyNode).type !== "Literal";
 }
 
 /**
@@ -41,7 +61,7 @@ export function memberName(n: AnyNode): string | null {
  */
 export function asGlobalObject(n: AnyNode): Resolved | null {
   if (isIdentifier(n) && GLOBAL_OBJECTS.has(n.name)) {
-    return { confidence: globalConfidence(n.name), via: n.name };
+    return { confidence: globalConfidence(n.name), via: n };
   }
   return null;
 }
@@ -51,7 +71,7 @@ export function asGlobalObject(n: AnyNode): Resolved | null {
  * bare identifier or as `window.<name>`, return the confidence; else null.
  */
 export function asNamedGlobal(n: AnyNode, name: string): Resolved | null {
-  if (isIdentifier(n, name)) return { confidence: "certain", via: name };
+  if (isIdentifier(n, name)) return { confidence: "certain", via: n };
   if (n.type === "MemberExpression" && memberName(n) === name) {
     return asGlobalObject(n["object"] as AnyNode);
   }

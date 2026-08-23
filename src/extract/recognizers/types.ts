@@ -8,8 +8,8 @@ export interface Match {
   confidence: Confidence;
   /** The node the match is anchored on; the reported expression grows outward from here. */
   node: Node;
-  /** The global name the match rests on (e.g. "localStorage", "window"). If the file declares it, confidence drops. */
-  via: string;
+  /** The identifier the match rests on (`localStorage`, `window`...), or null if none. A local binding of it means no match. */
+  via: Node | null;
 }
 
 export type Recognizer = (v: Visit) => Match | null;

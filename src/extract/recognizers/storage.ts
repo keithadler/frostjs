@@ -19,7 +19,7 @@ export const storage: Recognizer = ({ node, binding }) => {
   // Bare reference: localStorage, sessionStorage, indexedDB, caches.
   if (isIdentifier(n)) {
     const cap = STORAGE_GLOBALS.get(n.name);
-    return cap ? match(cap, { confidence: "certain", via: n.name }, node) : null;
+    return cap ? match(cap, { confidence: "certain", via: n }, node) : null;
   }
 
   if (n.type !== "MemberExpression") return null;

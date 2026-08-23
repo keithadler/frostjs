@@ -120,8 +120,7 @@ describe("network: must stay quiet", () => {
     expect(caps("class WebSocket {}")).toEqual([]);
   });
 
-  it("shadowed is possible, not certain", () => {
-    const u = uses("const fetch = require('node-fetch'); fetch(u);");
-    expect(u.map((x) => x.confidence)).toEqual(["possible"]);
+  it("shadowed is not a use", () => {
+    expect(uses("const fetch = require('node-fetch'); fetch(u);")).toEqual([]);
   });
 });

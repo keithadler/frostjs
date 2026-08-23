@@ -96,7 +96,7 @@ describe("permit <paths> (step 4: deny-all gate)", () => {
     const r = cli(path.join(fx, "shadowed.js"));
     expect(r.code).toBe(0);
     expect(r.stdout).toContain("unknown (not failing the build):");
-    expect(r.stdout).toContain("storage.cache possible: caches.x");
+    expect(r.stdout).toContain("test/fixtures/deny/shadowed.js:2:3: storage.cache possible: caches.x");
   });
 
   it("--exit-zero reports but never fails", () => {

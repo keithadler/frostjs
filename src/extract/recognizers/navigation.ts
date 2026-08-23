@@ -22,7 +22,7 @@ const WINDOW_RECEIVERS: ReadonlySet<string> = new Set(["parent", "top", "opener"
 
 /** `location`, `window.location`, `document.location`. */
 function asLocation(n: AnyNode): Resolved | null {
-  if (isIdentifier(n, "location")) return { confidence: "certain", via: "location" };
+  if (isIdentifier(n, "location")) return { confidence: "certain", via: n };
   if (n.type === "MemberExpression" && memberName(n) === "location") {
     const obj = n["object"] as AnyNode;
     return asGlobalObject(obj) ?? asNamedGlobal(obj, "document");
@@ -82,7 +82,7 @@ export const navigation: Recognizer = ({ node, ancestors, binding }) => {
     const originIsOptions = origin?.type === "ObjectExpression";
     if ((receiver !== null && WINDOW_RECEIVERS.has(receiver)) || originIsString || originIsOptions) {
       const target = originIsString ? originTarget(origin) : null;
-      const via = isIdentifier(obj) && WINDOW_RECEIVERS.has(obj.name) ? obj.name : "";
+      const via = isIdentifier(obj) && WINDOW_RECEIVERS.has(obj.name) ? obj : null;
       return { capability: "navigation.postmessage", target, confidence: "certain", via, node };
     }
   }

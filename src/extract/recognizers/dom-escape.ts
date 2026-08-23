@@ -28,7 +28,7 @@ export const domEscape: Recognizer = ({ node, ancestors, binding }) => {
   if (HTML_SINKS.has(prop)) {
     const assigned = parent.type === "AssignmentExpression" && parent["left"] === node;
     return assigned
-      ? { capability: "dom-escape.html", target: null, confidence: "certain", via: "", node: parent }
+      ? { capability: "dom-escape.html", target: null, confidence: "certain", via: null, node: parent }
       : null;
   }
 
@@ -36,7 +36,7 @@ export const domEscape: Recognizer = ({ node, ancestors, binding }) => {
   if (!isCallee) return null;
 
   if (HTML_METHODS.has(prop)) {
-    return { capability: "dom-escape.html", target: null, confidence: "certain", via: "", node };
+    return { capability: "dom-escape.html", target: null, confidence: "certain", via: null, node };
   }
 
   if (prop === "createElement") {

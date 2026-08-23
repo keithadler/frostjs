@@ -21,7 +21,7 @@ export const codegen: Recognizer = ({ node, ancestors, binding }) => {
   let r: Resolved | null = null;
   if (isIdentifier(n)) {
     name = n.name;
-    r = { confidence: "certain", via: n.name };
+    r = { confidence: "certain", via: n };
   } else if (n.type === "MemberExpression") {
     const prop = memberName(n);
     const obj = n["object"] as AnyNode;

@@ -2,6 +2,8 @@ import type { Node, ParsedFile } from "./ast.js";
 import { positionAt } from "./ast.js";
 import type { CapabilityUse, Origin } from "./capability.js";
 import { walk } from "./walk.js";
+import { analyzeScopes } from "./scope.js";
+import { AMBIGUOUS, FOLDED, FREE, isFoldedMember } from "./recognizers/globals.js";
 import type { Recognizer } from "./recognizers/types.js";
 import { storage } from "./recognizers/storage.js";
 import { network } from "./recognizers/network.js";
@@ -35,12 +37,22 @@ type AnyNode = Node & Record<string, unknown>;
 /** Run every recognizer over every node and return the flat list of uses. */
 export function extract(parsed: ParsedFile, opts: ExtractOptions = {}): CapabilityUse[] {
   const origin = opts.origin ?? "first-party";
-  const declared = declaredNames(parsed.program);
+  annotate(parsed.program);
   const out: CapabilityUse[] = [];
   walk(parsed.program, (visit) => {
     for (const recognize of RECOGNIZERS) {
       const m = recognize(visit);
       if (!m) continue;
+      // The identifier the match rests on must be a free reference, i.e. the
+      // global. A local of the same name is not a use of the capability at
+      // all. Inside `with` nothing resolves, so the use is only possible.
+      let confidence = m.confidence;
+      if (m.via !== null) {
+        const via = m.via as AnyNode;
+        if (via[AMBIGUOUS]) confidence = "possible";
+        else if (!via[FREE]) continue;
+      }
+      if (isFoldedMember(m.node as AnyNode) && confidence === "certain") confidence = "probable";
       const expr = enclosingExpression(m.node, visit.ancestors);
       const pos = positionAt(parsed.lines, expr.start);
       out.push({
@@ -50,10 +62,7 @@ export function extract(parsed: ParsedFile, opts: ExtractOptions = {}): Capabili
         line: pos.line,
         column: pos.column,
         expression: parsed.source.slice(expr.start, expr.end),
-        // Interim shadowing check until Phase D scope analysis: if this file
-        // declares the name the match rests on, we cannot tell whether the
-        // reference is the global or the local, so it is only `possible`.
-        confidence: m.via !== "" && declared.has(m.via) ? "possible" : m.confidence,
+        confidence,
         origin,
       });
     }
@@ -61,15 +70,12 @@ export function extract(parsed: ParsedFile, opts: ExtractOptions = {}): Capabili
   return out;
 }
 
-/** Every name bound anywhere in the file: declarations, params, patterns, imports. */
-function declaredNames(program: Node): Set<string> {
-  const names = new Set<string>();
-  walk(program, ({ node, binding }) => {
-    if (binding && (node as AnyNode).type === "Identifier") {
-      names.add((node as AnyNode)["name"] as string);
-    }
-  });
-  return names;
+/** Run the scope analysis and write its answers onto the identifier nodes for the recognizers to read. */
+function annotate(program: Node): void {
+  const info = analyzeScopes(program);
+  for (const n of info.free) (n as AnyNode)[FREE] = true;
+  for (const n of info.ambiguous) (n as AnyNode)[AMBIGUOUS] = true;
+  for (const [n, v] of info.constants) (n as AnyNode)[FOLDED] = v;
 }
 
 /**

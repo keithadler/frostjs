@@ -151,10 +151,16 @@ build; `certain` and `probable` uses do.
 | `worker.worklet` | `CSS.paintWorklet.addModule(url)`, `audioWorklet.addModule(url)`... |
 
 Each is recognized bare, via `window` / `globalThis` / `self`, and via a
-string-literal computed member (`window["localStorage"]`). Uses via `self`
-are `probable` rather than `certain`, since `self` is often a local alias for
-`this`. If a file declares a variable with the same name as the global, the
-use is downgraded to `possible` until proper scope analysis lands.
+computed member whose name is a string literal (`window["localStorage"]`),
+a concatenation of literals, or a `const` the scope analysis can fold
+(`const k = "localStorage"; window[k]`, reported as `probable`).
+
+Scope analysis is real, with hoisting: a local named `fetch` or `window` is
+not the global, so a use through it is not reported at all, while the same
+name declared in a sibling function does not hide anything. Only inside a
+`with` block, where nothing can be resolved, is a use reported as `possible`.
+Uses via `self` are `probable` rather than `certain`, since `self` is often
+a local alias for `this` in older code.
 
 Canvas and audio fingerprinting are deliberately **not** recognized: every
 charting and 3D library draws to canvases, and no static signature separates

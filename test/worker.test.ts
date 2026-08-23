@@ -55,7 +55,7 @@ describe("worker: must stay quiet", () => {
     expect(caps("class Worker {}; const o = { Worker: 1 }")).toEqual([]);
   });
 
-  it("shadowed Worker is possible", () => {
-    expect(uses("import Worker from './w?worker'; new Worker()")[0]?.confidence).toBe("possible");
+  it("shadowed Worker is not a use", () => {
+    expect(uses("import Worker from './w?worker'; new Worker()")).toEqual([]);
   });
 });

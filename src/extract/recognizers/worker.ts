@@ -32,7 +32,7 @@ export const worker: Recognizer = ({ node, ancestors, binding }) => {
   let r: Resolved | null = null;
   if (isIdentifier(n)) {
     name = n.name;
-    r = { confidence: "certain", via: n.name };
+    r = { confidence: "certain", via: n };
   } else if (n.type === "MemberExpression") {
     const prop = memberName(n);
     const obj = n["object"] as AnyNode;
@@ -50,7 +50,7 @@ export const worker: Recognizer = ({ node, ancestors, binding }) => {
     } else if (prop === "addModule" && calledHere && obj.type === "MemberExpression") {
       const worklet = memberName(obj);
       if (worklet !== null && WORKLETS.has(worklet)) {
-        return hit("worker.worklet", { confidence: "certain", via: "" }, node, resolveTargetOf(args[0]));
+        return hit("worker.worklet", { confidence: "certain", via: null }, node, resolveTargetOf(args[0]));
       }
     }
   }

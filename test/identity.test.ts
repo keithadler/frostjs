@@ -76,7 +76,7 @@ describe("identity: destructuring", () => {
     expect(caps("const { onLine } = navigator")).toEqual([]);
   });
 
-  it("shadowed navigator", () => {
-    expect(uses("const navigator = fake(); navigator.userAgent")[0]?.confidence).toBe("possible");
+  it("shadowed navigator is not a use", () => {
+    expect(uses("const navigator = fake(); navigator.userAgent")).toEqual([]);
   });
 });
