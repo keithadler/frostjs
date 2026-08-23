@@ -1,5 +1,9 @@
 # frostjs
 
+[![ci](https://github.com/keithadler/frostjs/actions/workflows/ci.yml/badge.svg)](https://github.com/keithadler/frostjs/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/%40keithadler%2Ffrostjs)](https://www.npmjs.com/package/@keithadler/frostjs)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 **The model wrote it. Did anyone decide it could do that?**
 
 frostjs is a deny-by-default capability gate for JavaScript. You write a

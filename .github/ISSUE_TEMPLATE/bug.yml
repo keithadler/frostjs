@@ -1,0 +1,23 @@
+name: Bug
+description: A crash, a wrong exit code, a policy that does not parse when it should, a wrong CSP.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce it
+      description: Commands, the policy file, and the smallest code involved.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: frostjs version, Node version, OS
+    validations:
+      required: true

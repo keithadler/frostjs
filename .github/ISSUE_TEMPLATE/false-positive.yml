@@ -1,0 +1,34 @@
+name: False positive
+description: frostjs reported a capability use that is not one. This is the highest-priority bug the project has.
+labels: [false-positive]
+body:
+  - type: markdown
+    attributes:
+      value: Zero false positives is the product. Thank you for reporting one.
+  - type: textarea
+    id: code
+    attributes:
+      label: The smallest code that reproduces it
+      description: A file, or a few lines, that frostjs flags and should not.
+      render: js
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: What frostjs printed
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: frostjs version
+      placeholder: output of `npx frostjs --version`
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it is not a use of that capability
+      description: Optional, but it speeds things up.

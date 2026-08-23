@@ -96,6 +96,11 @@ output. A false positive is a bug with the highest priority this project
 has. If you can, add the case to the relevant `must stay quiet` test block
 in the same pull request as the fix.
 
+## Conduct
+
+See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). Short version: be
+straightforward and be kind.
+
 ## Security
 
 See [SECURITY.md](SECURITY.md). Please do not report security issues in

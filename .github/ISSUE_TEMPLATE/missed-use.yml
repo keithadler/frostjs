@@ -1,0 +1,29 @@
+name: Missed capability use
+description: Code that plainly uses a capability, unobfuscated, and frostjs did not report it.
+labels: [missed-use]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing, check SECURITY.md: obfuscated or runtime-constructed access is the documented floor, not a bug.
+        If this could be used to sneak a capability past a policy, please email keith.adler@icloud.com instead of filing publicly.
+  - type: textarea
+    id: code
+    attributes:
+      label: The code
+      render: js
+    validations:
+      required: true
+  - type: input
+    id: capability
+    attributes:
+      label: The capability it uses
+      placeholder: e.g. storage.local, network.fetch to api.example.com
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: frostjs version
+    validations:
+      required: true
