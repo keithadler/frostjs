@@ -484,6 +484,7 @@ to a reviewer; suppression is for the one-off.
 | `network.eventsource` | `EventSource` |
 | `network.beacon` | `navigator.sendBeacon` |
 | `network.import` | dynamic `import()` of an absolute URL or an expression |
+| `network.importscripts` | `importScripts(url)` in a worker (loads and runs a script) |
 | `network.resource` | `el.src = "https://..."` or `setAttribute("src", ...)` naming another host (literal or folded const only) |
 | `codegen.eval` | `eval` |
 | `codegen.function` | `Function(...)`, `new Function(...)` |

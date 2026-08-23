@@ -165,3 +165,26 @@ describe("network.resource: loading a resource from another host", () => {
     expect(caps('el.setAttribute("href", "https://x.example/"); el.setAttribute(name, v)')).toEqual([]);
   });
 });
+
+describe("network.importscripts: a worker loading a script", () => {
+  it("bare and via the global object, with a target", () => {
+    expect(one('importScripts("https://cdn.example.com/w.js")')).toMatchObject({
+      capability: "network.importscripts",
+      target: "cdn.example.com",
+    });
+    expect(one('self.importScripts("/local-chunk.js")')).toMatchObject({
+      capability: "network.importscripts",
+      target: "same-origin",
+    });
+    expect(caps("importScripts(a, b)")).toEqual(["network.importscripts"]);
+  });
+
+  it("only as a call, and not on another object", () => {
+    expect(caps("const f = importScripts;")).toEqual([]);
+    expect(caps("worker.importScripts(u); lib.importScripts(u)")).toEqual([]);
+  });
+
+  it("a local named importScripts is not the global", () => {
+    expect(caps("function importScripts(x) {} importScripts(u);")).toEqual([]);
+  });
+});
