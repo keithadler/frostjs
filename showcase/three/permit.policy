@@ -1,0 +1,6 @@
+policy "three-app"
+may reach "same-origin"             -- models, textures and workers from our own origin
+may use workers                     -- DRACO, KTX2 and meshopt decoders
+may use identity.device             -- renderer feature detection reads navigator.userAgent
+may use html injection in "examples/jsm/libs/lil-gui.module.min.js"
+may use html injection in "examples/jsm/webxr/*"   -- "WEBXR NEEDS HTTPS" messages

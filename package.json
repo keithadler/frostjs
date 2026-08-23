@@ -28,7 +28,8 @@
     "prepublishOnly": "npm run build && npm test",
     "corpus": "vite-node scripts/corpus.ts",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.ts\"",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "showcase": "npm run build && vite-node scripts/showcase.ts"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

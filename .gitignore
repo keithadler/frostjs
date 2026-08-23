@@ -5,3 +5,4 @@ dist/
 coverage/
 .DS_Store
 corpus/.cache/
+showcase/three/.work/

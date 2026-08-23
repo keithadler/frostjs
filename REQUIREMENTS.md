@@ -392,7 +392,11 @@ Ported directly from `exact`, because it is already proven.
 
 32. Run against a well-known open-source web app, publish the findings and the
     policy file that would have prevented them. This is the README hook, the same
-    role the sympy finding plays for `exact`.
+    role the sympy finding plays for `exact`. **DONE 2026-08-23.** three.js
+    0.160.0's bundled `ecsy.module.js` evals scripts from a remote relay behind
+    a URL parameter; `RapierPhysics.js` imports from `cdn.skypack.dev` at
+    runtime. See `SHOWCASE.md`, reproducible with `npm run showcase`.
+    **All phases complete.**
 
 ---
 

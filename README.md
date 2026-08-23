@@ -4,14 +4,25 @@ A policy-driven, deny-by-default static analyzer for JavaScript. It runs in CI
 and refuses to let code ship if it reaches for a capability the project has not
 explicitly granted: storage, network, `eval`, DOM injection, identity, and so on.
 
+## What it found
+
+three.js 0.160.0 ships `examples/jsm/libs/ecsy.module.js`, which, if a page
+that imports it is opened with `?enable-remote-devtools` in the URL, loads a
+script from a third-party CDN, connects to a third-party relay, and `eval`s
+whatever the relay sends. permit reports it as
+`codegen.eval denied by "deny everything": eval(data.script)` under any policy
+an application would plausibly write. The same run names a runtime
+`import()` of physics engine code from `cdn.skypack.dev`. The full story, the
+policy, the CSP it emits and the honest count of what else the policy
+flags are in [SHOWCASE.md](SHOWCASE.md).
+
 ## Status
 
-Pre-alpha. Phases A, B and C are in: it discovers `.js`/`.mjs`, recognizes
-all eight capability families, reads a `permit.policy` written in frost's
-policy dialect, and fails the build on anything the policy does not grant.
-Phase D (noise control: scope analysis, constant folding, suppression,
-baselines) is next. See [REQUIREMENTS.md](REQUIREMENTS.md) for the full plan
-and the milestone log.
+Pre-alpha, feature complete against [REQUIREMENTS.md](REQUIREMENTS.md): all
+eight capability families, frost-dialect policies, scope analysis,
+baselines, changed-lines mode, json/sarif/github output, a GitHub Action,
+an ESLint plugin, a fingerprint registry for vendored code with SRI output,
+TypeScript, JSX and inline HTML. Not yet published to npm.
 
 ```
 $ cat permit.policy
