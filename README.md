@@ -62,7 +62,7 @@ forbid everything else                             optional, readability only
 | `code generation`, `eval` | `codegen` |
 | `html injection` | `dom-escape` |
 | `identity`, `fingerprinting` | `identity` |
-| `navigation` | `navigation` (Phase C) |
+| `navigation` | `navigation` |
 | `globals` | `globals` (Phase C) |
 | `workers` | `worker` (Phase C) |
 | `everything` | `*` |
@@ -138,6 +138,10 @@ build; `certain` and `probable` uses do.
 | `identity.clipboard` | `navigator.clipboard`, `document.execCommand("copy" / "paste")` |
 | `identity.credentials` | `navigator.credentials` |
 | `identity.permissions` | `navigator.permissions` |
+| `navigation.location` | assignment to `location` / `location.href` etc., `location.assign` / `replace` / `reload` |
+| `navigation.open` | `window.open` |
+| `navigation.history` | `history.pushState` / `replaceState` / `back` / `forward` / `go` |
+| `navigation.postmessage` | `postMessage` to `parent` / `top` / `opener` / `contentWindow`, or with a string origin |
 
 Each is recognized bare, via `window` / `globalThis` / `self`, and via a
 string-literal computed member (`window["localStorage"]`). Uses via `self`

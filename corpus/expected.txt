@@ -51,6 +51,9 @@ swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:333544 dom-escape.html certain (ze
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:33575 identity.device certain navigator.userAgent
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:406140 dom-escape.html certain (s=P.createElement("div")).innerHTML="<script><\/script>"
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:55140 dom-escape.html certain i.documentElement.innerHTML=ir?ut:w
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:561896 navigation.history certain history.replaceState(j,"")
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:562144 navigation.location certain window.location=P
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:562230 navigation.history certain history.pushState({},"",P)
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:567900 identity.device certain navigator.userAgent
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:573046 codegen.function certain Function("return this")()
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:594578 codegen.function certain new Function("return this")()
@@ -58,6 +61,7 @@ swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:631208 storage.local certain local
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:636895 storage.local certain localStorage.getItem("authorized")
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:637170 storage.cookie certain document.cookie
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:637609 storage.cookie certain document.cookie
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:683983 navigation.history certain history.pushState(null,null,`#${s}`)
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:72543 codegen.function certain Function("binder","return function ("+function(s,i){for(var u="",_=0;_<s.length;_+=1)u+=s[_],_+1<s.l
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:74446 codegen.eval certain eval
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:794178 network.fetch certain globalThis.fetch
@@ -71,6 +75,7 @@ swagger-ui-dist@5.11.0/swagger-ui-es-bundle-core.js:2:137933 storage.local certa
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle-core.js:2:141039 storage.local certain localStorage.getItem("authorized")
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle-core.js:2:141314 storage.cookie certain document.cookie
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle-core.js:2:141753 storage.cookie certain document.cookie
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle-core.js:2:144914 navigation.history certain history.pushState(null,null,`#${e}`)
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:101312 dom-escape.html certain s.innerHTML=s.innerHTML.replace(/\n/g,"").replace(/<br[ /]*>/g,"\n")
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:102246 dom-escape.html certain s.innerHTML=x.value
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:1169076 dom-escape.html certain (eI=eI||document.createElement("textarea")).innerHTML="&"+s+";"
@@ -85,6 +90,9 @@ swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:333267 dom-escape.html certain 
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:333290 dom-escape.html certain (ze=ze||document.createElement("div")).innerHTML="<svg>"+i.valueOf().toString()+"</svg>"
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:405886 dom-escape.html certain (s=P.createElement("div")).innerHTML="<script><\/script>"
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:54886 dom-escape.html certain i.documentElement.innerHTML=ir?ut:w
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:561642 navigation.history certain history.replaceState(j,"")
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:561890 navigation.location certain window.location=P
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:561976 navigation.history certain history.pushState({},"",P)
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:567646 identity.device certain navigator.userAgent
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:572792 codegen.function certain Function("return this")()
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:594324 codegen.function certain new Function("return this")()
@@ -92,6 +100,7 @@ swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:630948 storage.local certain lo
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:636635 storage.local certain localStorage.getItem("authorized")
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:636910 storage.cookie certain document.cookie
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:637349 storage.cookie certain document.cookie
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:683723 navigation.history certain history.pushState(null,null,`#${s}`)
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:72289 codegen.function certain Function("binder","return function ("+function(s,i){for(var u="",_=0;_<s.length;_+=1)u+=s[_],_+1<s.l
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:74192 codegen.eval certain eval
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:793918 network.fetch certain globalThis.fetch
@@ -104,10 +113,12 @@ swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js:2:118344 codegen.function
 swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js:2:150310 identity.device certain navigator.userAgent
 swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js:2:153967 codegen.function certain Function("return this")()
 swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js:2:161809 codegen.function certain new Function("return this")()
+swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js:2:165142 navigation.history certain window.history.replaceState(null,"",`${r}?${n=t,Object.keys(n).map((e=>encodeURIComponent(e)+"="+enc
 swagger-ui-dist@5.11.0/swagger-ui.js:1:30575 storage.local certain localStorage.setItem("authorized",JSON.stringify(r))
 swagger-ui-dist@5.11.0/swagger-ui.js:1:33581 storage.local certain localStorage.getItem("authorized")
 swagger-ui-dist@5.11.0/swagger-ui.js:1:33856 storage.cookie certain document.cookie
 swagger-ui-dist@5.11.0/swagger-ui.js:1:34295 storage.cookie certain document.cookie
+swagger-ui-dist@5.11.0/swagger-ui.js:1:37299 navigation.history certain history.pushState(null,null,`#${e}`)
 three@0.160.0/examples/jsm/capabilities/WebGL.js:100:3 dom-escape.html certain element.innerHTML = message
 three@0.160.0/examples/jsm/capabilities/WebGPU.js:45:3 dom-escape.html certain element.innerHTML = message
 three@0.160.0/examples/jsm/controls/ArcballControls.js:2049:3 identity.clipboard certain navigator.clipboard.writeText( state )
@@ -167,6 +178,7 @@ three@0.160.0/examples/jsm/libs/ecsy.module.js:1615:16 dom-escape.script certain
 three@0.160.0/examples/jsm/libs/ecsy.module.js:1670:3 dom-escape.html certain infoDiv.innerHTML = `Open ECSY devtools to connect to this page using the code:&nbsp;<b style="color
 three@0.160.0/examples/jsm/libs/ecsy.module.js:1683:5 storage.local certain window.localStorage.clear()
 three@0.160.0/examples/jsm/libs/ecsy.module.js:1685:5 storage.local certain window.localStorage.setItem("ecsyRemoteId", remoteId)
+three@0.160.0/examples/jsm/libs/ecsy.module.js:1686:5 navigation.location certain window.location.reload(false)
 three@0.160.0/examples/jsm/libs/ecsy.module.js:1689:26 storage.local certain window.localStorage.getItem("ecsyRemoteId")
 three@0.160.0/examples/jsm/libs/ecsy.module.js:1692:5 storage.local certain window.localStorage.setItem("ecsyRemoteId", remoteId)
 three@0.160.0/examples/jsm/libs/ecsy.module.js:1734:11 dom-escape.html certain infoDiv.innerHTML = "Connected"

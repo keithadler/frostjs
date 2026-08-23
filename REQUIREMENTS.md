@@ -319,8 +319,10 @@ Ported directly from `exact`, because it is already proven.
     copy/paste; destructuring from navigator. Canvas/audio fingerprinting
     signatures deliberately omitted as unseparable from charting and 3D
     rendering. Corpus 220 -> 246, all verified.
-14-16. One step per remaining capability family from section 7 (navigation,
-   globals, worker), each with tests and a corpus check that the
+14. `navigation`. **DONE 2026-08-23.** location writes and calls (reads and
+    `hash` excluded), window.open, history, postMessage to another window.
+    Targets resolved from the assigned URL or origin. Corpus 246 -> 258.
+15-16. `globals`, `worker`, each with tests and a corpus check that the
    false-positive count does not move.
 
 **Phase D - noise control**
