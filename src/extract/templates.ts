@@ -20,7 +20,7 @@ export interface TemplateExtract {
   uses: CapabilityUse[];
 }
 
-const SCRIPT = /<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi;
+const SCRIPT = /<script\b((?:"[^"]*"|'[^']*'|[^>])*)>([\s\S]*?)<\/script\s*>/gi;
 const IS_TS = /\blang\s*=\s*["']?(ts|typescript)["']?/i;
 
 /** True for a framework single-file component discovery analyzes. */
@@ -35,7 +35,9 @@ function parseScripts(file: string, source: string, lines: readonly number[]): P
   for (const m of source.matchAll(SCRIPT)) {
     const content = m[2] ?? "";
     if (content.trim() === "") continue;
-    const open = m.index! + m[0].indexOf(">") + 1;
+    // Content starts after `<script`, the attributes (m[1], which may contain
+    // a `>` inside a quoted value like generics="Record<...>"), and the closing `>`.
+    const open = m.index! + "<script".length + (m[1] ?? "").length + 1;
     const masked = mask(source, open, open + content.length);
     const lang = IS_TS.test(m[1] ?? "") ? "ts" : "js";
     const result = parseSync(path.basename(file) + `.${lang}`, masked, { lang, sourceType: "module" });

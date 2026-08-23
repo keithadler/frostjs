@@ -9,6 +9,8 @@ change the policy grammar or the JSON schema; the changelog will say so.
 
 ### Changed
 
+- `frostjs audit` and `init` skip files that do not parse instead of
+  aborting; `check` still fails closed on a parse error.
 - Open redirect (`location = tainted`, `window.open(tainted)`) is no longer
   a taint sink. A sweep of 20 top web apps found it fired 15 times and every
   hit was benign same-origin navigation (reload-with-query,

@@ -21,7 +21,7 @@ export interface ScriptBlock {
   module: boolean;
 }
 
-const SCRIPT = /<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi;
+const SCRIPT = /<script\b((?:"[^"]*"|'[^']*'|[^>])*)>([\s\S]*?)<\/script\s*>/gi;
 const ATTR = /([a-zA-Z_:][-a-zA-Z0-9_:.]*)\s*(?:=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
 
 /** Script types that carry JavaScript. Anything else (json, importmap, templates) is data. */
@@ -49,7 +49,9 @@ export function scriptBlocks(html: string): ScriptBlock[] {
     if (!JS_TYPES.has(type)) continue;
     const content = m[2] ?? "";
     if (content.trim() === "") continue;
-    const open = m.index! + m[0].indexOf(">") + 1;
+    // Content starts after `<script`, the attributes (m[1], which may contain
+    // a `>` inside a quoted value like generics="Record<...>"), and the closing `>`.
+    const open = m.index! + "<script".length + (m[1] ?? "").length + 1;
     out.push({ start: open, end: open + content.length, module: type === "module" });
   }
   return out;

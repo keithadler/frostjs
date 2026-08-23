@@ -341,6 +341,7 @@ function extractAll(
   cwd: string,
   io: Io,
   special: (file: string, name: string) => CapabilityUse[] | null = () => null,
+  tolerant = false,
 ): CapabilityUse[] | number {
   const syntaxErrors: ParseError[] = [];
   const uses: CapabilityUse[] = [];
@@ -368,6 +369,13 @@ function extractAll(
       if (parsed.errors.length > 0) syntaxErrors.push(...parsed.errors.map((e) => ({ ...e, file: name })));
       else uses.push(...extract(parsed).map((u) => ({ ...u, file: name })));
     }
+  }
+  if (tolerant) {
+    // Informational scans (audit) skip files that do not parse rather than
+    // aborting; one exotic file in a large app must not sink the whole run.
+    const skipped = new Set(syntaxErrors.map((e) => e.file));
+    if (skipped.size > 0) io.stderr(`frostjs: skipped ${skipped.size} file(s) that did not parse\n`);
+    return uses;
   }
   for (const e of syntaxErrors) io.stderr(`${e.file}:${e.line}:${e.column}: syntax error: ${e.message}\n`);
   return syntaxErrors.length > 0 ? 2 : uses;
@@ -404,7 +412,7 @@ function runAudit(args: ParsedArgs, io: Io): number {
   // A dependency's shipped code lives in dist/ or build/; the default excludes are for a project's own output.
   const files = discoverOrFail(args, io, [], ["dist", "build"]);
   if (typeof files === "number") return files;
-  const uses = extractAll(files, cwd, io);
+  const uses = extractAll(files, cwd, io, undefined, true);
   if (typeof uses === "number") return uses;
   const sources = new Map<string, FileSource>();
   const taintFlows: TaintFinding[] = [];
@@ -432,7 +440,7 @@ function runInit(args: ParsedArgs, io: Io): number {
   if (args.paths.length === 0) args = { ...args, paths: ["."] };
   const files = discoverOrFail(args, io, []);
   if (typeof files === "number") return files;
-  const uses = extractAll(files, cwd, io);
+  const uses = extractAll(files, cwd, io, undefined, true);
   if (typeof uses === "number") return uses;
   const policy = starterPolicy(policyNameFor(cwd), uses, args.today ?? isoToday());
   fs.writeFileSync(target, policy);
