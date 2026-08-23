@@ -17,10 +17,18 @@ export interface ParseError {
   message: string;
 }
 
+export interface Comment {
+  type: "Line" | "Block";
+  value: string;
+  start: number;
+  end: number;
+}
+
 export interface ParsedFile {
   file: string;
   source: string;
   program: Program;
+  comments: Comment[];
   errors: ParseError[];
   lines: LineIndex;
 }
@@ -59,7 +67,7 @@ export function parseSource(file: string, source: string): ParsedFile {
     const pos = positionAt(lines, offset);
     return { file, line: pos.line, column: pos.column, message: e.message };
   });
-  return { file, source, program: result.program, errors, lines };
+  return { file, source, program: result.program, comments: result.comments as Comment[], errors, lines };
 }
 
 export function parseFile(file: string): ParsedFile {

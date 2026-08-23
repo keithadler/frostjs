@@ -32,6 +32,7 @@ function what(d: Decision): string {
 export function text(decisions: readonly Decision[], totals: Totals, opts: TextOptions = {}): string {
   const denied = decisions.filter((d) => d.verdict === "denied");
   const unknown = decisions.filter((d) => d.verdict === "unknown");
+  const suppressed = decisions.filter((d) => d.verdict === "suppressed").length;
   const lines: string[] = [];
 
   for (const d of denied) {
@@ -50,6 +51,9 @@ export function text(decisions: readonly Decision[], totals: Totals, opts: TextO
     lines.push(`warning: ${w}`);
   }
   if (lines.length > 0) lines.push("");
-  lines.push(`${plural(totals.files, "file")}, ${denied.length} denied, ${unknown.length} unknown`);
+  lines.push(
+    `${plural(totals.files, "file")}, ${denied.length} denied, ${unknown.length} unknown` +
+      (suppressed > 0 ? `, ${suppressed} suppressed` : ""),
+  );
   return lines.join("\n") + "\n";
 }

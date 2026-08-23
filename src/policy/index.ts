@@ -5,7 +5,7 @@ import type { Rule } from "./parse.js";
 export { compile, type Policy, type Evaluation, type Reason } from "./compile.js";
 export { parsePolicy, PolicyError, type ParsedPolicy, type Rule } from "./parse.js";
 
-export type Verdict = "allowed" | "denied" | "unknown";
+export type Verdict = "allowed" | "denied" | "unknown" | "suppressed";
 
 export interface Decision {
   use: CapabilityUse;
@@ -35,6 +35,7 @@ export function decide(uses: readonly CapabilityUse[], policy: Policy, opts: Dec
   return uses.map((use) => {
     const e = policy.evaluate(opts.scopePath ? { ...use, file: opts.scopePath(use) } : use);
     if (e.verdict === "allowed") return { use, verdict: "allowed", reason: e.reason, rule: e.rule };
+    if (use.suppressed) return { use, verdict: "suppressed", reason: null, rule: null };
     if (CONFIDENCE_ORDER.indexOf(use.confidence) < floor) return { use, verdict: "unknown", reason: null, rule: null };
     return { use, verdict: "denied", reason: e.reason, rule: e.rule };
   });

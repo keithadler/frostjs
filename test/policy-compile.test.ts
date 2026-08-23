@@ -16,6 +16,7 @@ const use = (capability: string, file = "src/app.js"): CapabilityUse => ({
   expression: "x",
   confidence: "certain",
   origin: "first-party",
+  suppressed: false,
 });
 
 describe("compile: grants", () => {

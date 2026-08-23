@@ -342,7 +342,8 @@ Ported directly from `exact`, because it is already proven.
     were locals, 10 were promoted to certain. The interim file-level
     declared-name check from step 3 is gone.
 18. Confidence tiers, `--min-confidence`. **DONE 2026-08-23.**
-19. Inline suppression.
+19. Inline suppression. **DONE 2026-08-23.** `// permit: ignore[...]` on the
+    line or the line above; counted in the summary as suppressed.
 20. Baseline snapshots.
 21. Changed-lines-only mode.
 

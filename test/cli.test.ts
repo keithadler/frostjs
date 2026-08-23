@@ -187,3 +187,13 @@ describe("permit <paths> (step 7: policy discovery)", () => {
     expect(r.stderr).toContain("--today needs a date like 2026-12-01");
   });
 });
+
+describe("permit <paths> (step 19: inline suppression)", () => {
+  it("suppressed uses do not fail and are counted", () => {
+    const r = cli(path.join(__dirname, "fixtures", "suppress"));
+    expect(r.code).toBe(1);
+    expect(r.stdout).toContain("suppressed.js:6:1: storage.session denied");
+    expect(r.stdout).not.toContain("storage.local denied");
+    expect(r.stdout).toContain("1 file, 1 denied, 0 unknown, 2 suppressed");
+  });
+});

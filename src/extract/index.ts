@@ -4,6 +4,7 @@ import type { CapabilityUse, Origin } from "./capability.js";
 import { walk } from "./walk.js";
 import { analyzeScopes } from "./scope.js";
 import { AMBIGUOUS, FOLDED, FREE, isFoldedMember } from "./recognizers/globals.js";
+import { suppressions, isSuppressed } from "./suppress.js";
 import type { Recognizer } from "./recognizers/types.js";
 import { storage } from "./recognizers/storage.js";
 import { network } from "./recognizers/network.js";
@@ -38,6 +39,7 @@ type AnyNode = Node & Record<string, unknown>;
 export function extract(parsed: ParsedFile, opts: ExtractOptions = {}): CapabilityUse[] {
   const origin = opts.origin ?? "first-party";
   annotate(parsed.program);
+  const ignores = suppressions(parsed);
   const out: CapabilityUse[] = [];
   walk(parsed.program, (visit) => {
     for (const recognize of RECOGNIZERS) {
@@ -64,6 +66,7 @@ export function extract(parsed: ParsedFile, opts: ExtractOptions = {}): Capabili
         expression: parsed.source.slice(expr.start, expr.end),
         confidence,
         origin,
+        suppressed: isSuppressed(ignores.get(pos.line), m.capability),
       });
     }
   });

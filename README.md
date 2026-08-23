@@ -111,6 +111,22 @@ Exit codes: `0` clean, `1` policy violations, `2` usage or input error
 Uses with `possible` confidence are listed under "unknown" and never fail the
 build; `certain` and `probable` uses do.
 
+## Suppressing a single use
+
+```js
+// permit: ignore[storage.local]
+localStorage.setItem("draft", text);
+
+fetch(url); // permit: ignore
+```
+
+A bare `permit: ignore` suppresses every capability on that line; a
+bracketed list suppresses only those codes or families. The comment applies
+to its own line or, when it stands alone, to the line after it. Suppressed
+uses are counted in the summary and never fail the build. Prefer a scoped
+`may ... in "file"` line in the policy when the exception should be visible
+to a reviewer; suppression is for the one-off.
+
 ## Capabilities recognized so far
 
 | code | what |

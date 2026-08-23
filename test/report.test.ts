@@ -12,6 +12,7 @@ const use = (over: Partial<CapabilityUse> = {}): CapabilityUse => ({
   expression: 'localStorage.setItem("a", 1)',
   confidence: "certain",
   origin: "first-party",
+  suppressed: false,
   ...over,
 });
 
