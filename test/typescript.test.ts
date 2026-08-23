@@ -100,7 +100,7 @@ describe("JSX", () => {
 
 describe("discovery of TypeScript", () => {
   it("finds .ts .tsx .jsx .mts .cts and skips declaration files", () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "permit-ts-"));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "frostjs-ts-"));
     for (const f of ["a.ts", "b.tsx", "c.jsx", "d.mts", "e.cts", "f.d.ts", "g.d.mts", "h.js"]) {
       fs.writeFileSync(path.join(dir, f), "export {};\n");
     }
@@ -108,8 +108,8 @@ describe("discovery of TypeScript", () => {
   });
 
   it("the CLI checks a TypeScript project", () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "permit-ts-"));
-    fs.writeFileSync(path.join(dir, "permit.policy"), "may use session storage\n");
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "frostjs-ts-"));
+    fs.writeFileSync(path.join(dir, "frostjs.policy"), "may use session storage\n");
     fs.writeFileSync(
       path.join(dir, "app.tsx"),
       "export const A = () => <p dangerouslySetInnerHTML={{ __html: h }} />;\n",

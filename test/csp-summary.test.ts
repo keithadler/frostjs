@@ -6,7 +6,7 @@ import { summary } from "../src/report/summary.js";
 import { cli, cliIn } from "./helpers.js";
 
 const TODAY = "2026-08-23";
-const policy = (text: string) => compile(parsePolicy(text, "permit.policy"), { today: TODAY });
+const policy = (text: string) => compile(parsePolicy(text, "frostjs.policy"), { today: TODAY });
 
 describe("csp", () => {
   it("empty policy locks connections down", () => {
@@ -62,7 +62,7 @@ describe("summary", () => {
     );
     expect(summary(p)).toBe(
       [
-        'Policy "checkout-widget" (permit.policy)',
+        'Policy "checkout-widget" (frostjs.policy)',
         "",
         "This code may:",
         "  - reach api.example.com, its own origin (line 2)",
@@ -87,22 +87,22 @@ describe("summary", () => {
   it("marks expired grants and repeats warnings", () => {
     const s = summary(policy("may use storage until 2026-01-01\nmay use eval until 2026-08-30"));
     expect(s).toContain("use storage, expired 2026-01-01");
-    expect(s).toContain("Warning: permit.policy line 2");
+    expect(s).toContain("Warning: frostjs.policy line 2");
   });
 });
 
-describe("permit csp / permit summary", () => {
+describe("frostjs csp / frostjs summary", () => {
   const proj = path.join(__dirname, "fixtures", "proj");
 
   it("csp prints the header and nothing else", () => {
-    const r = cli("csp", "--policy", path.join(proj, "permit.policy"));
+    const r = cli("csp", "--policy", path.join(proj, "frostjs.policy"));
     expect(r.code).toBe(0);
     expect(r.stdout).toBe("connect-src 'none'; script-src 'self'\n");
     expect(r.stderr).toBe("");
   });
 
   it("summary prints the plain-English report", () => {
-    const r = cli("summary", "--today", TODAY, "--policy", path.join(proj, "permit.policy"));
+    const r = cli("summary", "--today", TODAY, "--policy", path.join(proj, "frostjs.policy"));
     expect(r.code).toBe(0);
     expect(r.stdout).toContain('Policy "proj"');
     expect(r.stdout).toContain("  - use cookies (line 4) - consent banner owns these");
@@ -118,11 +118,11 @@ describe("permit csp / permit summary", () => {
   it("no policy is an error for these commands", () => {
     const r = cliIn(path.join(__dirname, "fixtures", "discover"), "csp");
     expect(r.code).toBe(2);
-    expect(r.stderr).toContain("no permit.policy found");
+    expect(r.stderr).toContain("no frostjs.policy found");
   });
 
   it("help lists the commands", () => {
-    expect(cli("--help").stdout).toContain("permit csp");
-    expect(cli("--help").stdout).toContain("permit summary");
+    expect(cli("--help").stdout).toContain("frostjs csp");
+    expect(cli("--help").stdout).toContain("frostjs summary");
   });
 });

@@ -1,6 +1,6 @@
-# permit - requirements
+# frostjs - requirements
 
-**Working title:** `permit` (alternatives: `warden`, `least`, `frostguard`).
+**Name:** `frostjs`, decided 2026-08-23 (the working title was `permit`; `permit` was taken on npm, and frostjs says what it is: frost's capability model, for JavaScript).
 
 **One line:** A policy-driven, deny-by-default static analyzer for JavaScript that
 runs in CI and refuses to let code ship if it reaches for a capability the project
@@ -155,7 +155,7 @@ the policy grants it.
    enough to deserve its own family rather than hiding inside `network`.
 
 Each capability has a stable code for `--select` / `--ignore` and for inline
-suppression, following `exact`'s convention: `// permit: ignore[storage.local]`.
+suppression, following `exact`'s convention: `// frostjs: ignore[storage.local]`.
 
 ## 8. Third-party dependencies
 
@@ -165,7 +165,7 @@ The hard part, handled by not solving the general case.
    `(package, version, capability set)`. A dependency whose hash is in the
    registry is admitted with its recorded capabilities checked against policy.
 2. **Unknown hash = build failure**, with a report naming the file and offering
-   `permit vendor add <path>` to review and admit it deliberately.
+   `frostjs vendor add <path>` to review and admit it deliberately.
 3. **Registry population.** Bootstrap by analyzing a package once, recording the
    capability set, and committing the entry. Optionally a shared community
    registry later; do not depend on one existing.
@@ -173,7 +173,7 @@ The hard part, handled by not solving the general case.
    browser enforces the registry at load time.
 
 Version churn is the known pain point: every patch release is a new hash. Mitigate
-with a `permit registry sync` command that re-fingerprints on lockfile change.
+with a `frostjs registry sync` command that re-fingerprints on lockfile change.
 A repo with no lockfile gets a warning from `registry sync`; the gate itself
 does not care, since a vendored file is checked by its own hash.
 
@@ -209,7 +209,7 @@ forbid everything else                            (optional, readability only)
 grants the whole family. `may reach "<host>"` arrives with the network family
 in Phase C. Deny-by-default, so the file only ever grants; `forbid` exists to
 carve an exception out of a broader grant (`may use storage` + `forbid cookies`)
-and always wins over `may`. The config file is `permit.policy`, matching
+and always wins over `may`. The config file is `frostjs.policy`, matching
 frost's `.policy` extension for policies (`.frost` is for scripts).
 
 Requirements:
@@ -222,7 +222,7 @@ Requirements:
    `Content-Security-Policy` header string, and a human-readable summary.
 4. Policy compilation errors are fatal and precise - file, line, and what was
    expected.
-5. `deny everything else` is optional, since deny is the default. `permit summary`
+5. `deny everything else` is optional, since deny is the default. `frostjs summary`
    always prints the implicit deny so a non-engineer reviewer sees it.
 
 ## 10. Outputs
@@ -239,20 +239,20 @@ Requirements:
 
 Ported directly from `exact`, because it is already proven.
 
-1. **Baseline snapshots.** `permit --baseline .permit-baseline.json` freezes
+1. **Baseline snapshots.** `frostjs --baseline .frostjs-baseline.json` freezes
    existing violations. Only new ones fail. Key on
    `(file, capability, expression text)`, not line number. A file rename
    invalidates its entries; this is accepted and documented.
-2. **Inline suppression.** `// permit: ignore[storage.local]` with an optional
-   bracketed capability list. A bare `// permit: ignore` suppresses all.
+2. **Inline suppression.** `// frostjs: ignore[storage.local]` with an optional
+   bracketed capability list. A bare `// frostjs: ignore` suppresses all.
 3. **Changed-lines-only mode** for PR checks, using the git diff.
 4. **`--exit-zero`** for informational runs.
-5. **Config discovery** walking up to the nearest `permit.policy`, mirroring
+5. **Config discovery** walking up to the nearest `frostjs.policy`, mirroring
    `exact`'s `[tool.exact]` discovery.
 
 ## 12. Integrations
 
-1. **CLI** - `permit <paths>`, the primary interface.
+1. **CLI** - `frostjs <paths>`, the primary interface.
 2. **GitHub Action** - composite action, inputs mirroring `exact`'s `action.yml`
    (`paths`, `format`, `args`, `fail-on-findings`). Pass inputs via `env`, never
    spliced into the script body - splicing is a shell injection vector.
@@ -260,7 +260,7 @@ Ported directly from `exact`, because it is already proven.
 4. **ESLint plugin** - runs the same engine as an ESLint rule, sharing config and
    suppression semantics with the CLI. Same relationship `flake8_plugin.py` has to
    `exact`'s CLI.
-5. **Deploy step** - `permit csp` emits the header for nginx or the CDN config.
+5. **Deploy step** - `frostjs csp` emits the header for nginx or the CDN config.
 
 ---
 
@@ -287,7 +287,7 @@ Ported directly from `exact`, because it is already proven.
 6. Policy compiler to internal ruleset. **DONE 2026-08-23.** `forbid` always
    wins over `may`; a family grants its members; expired grants deny with a
    distinct reason; grants within 14 days of expiry warn.
-7. Config discovery and `permit.policy` resolution. **DONE 2026-08-23.**
+7. Config discovery and `frostjs.policy` resolution. **DONE 2026-08-23.**
    Searched from the common ancestor of the inputs upward, nearest wins;
    `--policy` overrides; globs resolve relative to the policy file; `--today`
    pins the date for expiry checks.
@@ -342,7 +342,7 @@ Ported directly from `exact`, because it is already proven.
     were locals, 10 were promoted to certain. The interim file-level
     declared-name check from step 3 is gone.
 18. Confidence tiers, `--min-confidence`. **DONE 2026-08-23.**
-19. Inline suppression. **DONE 2026-08-23.** `// permit: ignore[...]` on the
+19. Inline suppression. **DONE 2026-08-23.** `// frostjs: ignore[...]` on the
     line or the line above; counted in the summary as suppressed.
 20. Baseline snapshots. **DONE 2026-08-23.** `--baseline <file>` and
     `--update-baseline`; keyed on (file, capability, expression), paths
@@ -358,21 +358,21 @@ Ported directly from `exact`, because it is already proven.
 23. GitHub annotations. **DONE 2026-08-23.** `--format github`.
 24. GitHub Action, pre-commit hook. **DONE 2026-08-23.** Composite action
     with inputs via `env` into `scripts/action.sh`; injection test included.
-25. CSP emission. **DONE 2026-08-23.** `permit csp` and `permit summary`
+25. CSP emission. **DONE 2026-08-23.** `frostjs csp` and `frostjs summary`
     (sections 9.3, 10.5, 10.6). **Phase E complete.**
 
 **Phase F - dependencies**
 
 26. Fingerprint registry format and `vendor add`. **DONE 2026-08-23.**
-    `vendored "<glob>"` policy line; `.permit/registry.json` beside the
-    policy keyed on `sha384-` integrity; `permit vendor add`.
+    `vendored "<glob>"` policy line; `.frostjs/registry.json` beside the
+    policy keyed on `sha384-` integrity; `frostjs vendor add`.
 27. `registry sync` against the lockfile. **DONE 2026-08-23.** Same
     capability set re-admits; a gained capability refuses with a diff; gone
     files prune; lockfile hash recorded; no lockfile warns. The earlier note
     that the gate hard-fails without a lockfile is withdrawn: a project that
     vendors one minified file into `static/` has no lockfile and no reason
     to fail.
-28. SRI attribute emission. **DONE 2026-08-23.** `permit sri` in text, json
+28. SRI attribute emission. **DONE 2026-08-23.** `frostjs sri` in text, json
     and html forms. **Phase F complete.**
 
 **Phase G - reach**
@@ -384,8 +384,8 @@ Ported directly from `exact`, because it is already proven.
 30. Inline `<script>` in HTML. **DONE 2026-08-23.** Blocks parsed with the
     rest of the file masked to whitespace so positions are exact; origin
     `inline-html`.
-31. ESLint plugin. **DONE 2026-08-23.** `permit/eslint` exports a plugin
-    with one rule, `permit/capability`, and a recommended config. **Phase G
+31. ESLint plugin. **DONE 2026-08-23.** `frostjs/eslint` exports a plugin
+    with one rule, `frostjs/capability`, and a recommended config. **Phase G
     complete.**
 
 **Phase H - the showpiece**
@@ -416,16 +416,16 @@ All resolved 2026-08-23.
 
 1. **Node or Python** - Node/TypeScript with `oxc-parser`. See section 5.
 2. **Where the policy compiler lives** - this repo. Frost supplies the grammar and
-   parser as a dependency; `permit` owns the semantics (what `allow network to`
+   parser as a dependency; `frostjs` owns the semantics (what `allow network to`
    means, CSP emission) in `src/policy/`. Putting capability semantics in frost
-   would couple frost's release cadence to permit's taxonomy.
+   would couple frost's release cadence to frostjs's taxonomy.
 3. **Fingerprint registry** - both, with per-project first. A committed
-   `.permit/registry.json` is mandatory. A shared registry is an optional
+   `.frostjs/registry.json` is mandatory. A shared registry is an optional
    upstream that per-project entries can be pinned from. Not built until Phase F
    has users.
 4. **Expired grants** - warning window, then hard failure. A grant with
    `until <date>` warns for a configurable period (default 14 days) before the
    date and fails after it. A surprise hard failure on a Monday for a reason
    nobody remembers is the "linter gets disabled" failure mode from 4.1.
-5. **Per-tenant mode** - later. `permit.frost` discovery walks up, so a monorepo
+5. **Per-tenant mode** - later. `frostjs.frost` discovery walks up, so a monorepo
    with one policy per tenant directory already gets most of the way there.

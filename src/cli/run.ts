@@ -61,12 +61,12 @@ export function run(argv: readonly string[], io: Io): number {
     args = parseArgs(argv);
   } catch (e) {
     if (!(e instanceof UsageError)) throw e;
-    io.stderr(`permit: ${e.message}\n`);
+    io.stderr(`frostjs: ${e.message}\n`);
     io.stderr(HELP);
     return 2;
   }
   if (args.version) {
-    io.stdout(`permit ${VERSION}\n`);
+    io.stdout(`frostjs ${VERSION}\n`);
     return 0;
   }
   if (args.help) {
@@ -110,7 +110,7 @@ function realpath(p: string): string {
 }
 
 function fail(io: Io, message: string): number {
-  io.stderr(`permit: ${message}\n`);
+  io.stderr(`frostjs: ${message}\n`);
   return 2;
 }
 
@@ -122,13 +122,13 @@ interface Loaded {
 /** Find and compile the policy for the inputs; DENY_ALL with a note when there is none and it is not required. */
 function loadPolicy(args: ParsedArgs, io: Io, inputs: readonly string[], required: boolean): Loaded | number {
   const cwd = cwdOf(io);
-  const command = `permit ${args.command.replace("-", " ")}`;
+  const command = `frostjs ${args.command.replace("-", " ")}`;
   const policyFile = args.policy
     ? path.resolve(cwd, args.policy)
     : findPolicyFile(inputs.length ? commonAncestor(inputs) : cwd);
   if (policyFile === null) {
-    if (required) return fail(io, `no permit.policy found; ${command} needs one`);
-    io.stderr("permit: no permit.policy found; denying everything\n");
+    if (required) return fail(io, `no frostjs.policy found; ${command} needs one`);
+    io.stderr("frostjs: no frostjs.policy found; denying everything\n");
     return { policy: DENY_ALL, policyDir: cwd };
   }
   try {
@@ -163,14 +163,14 @@ function readRegistryOrFail(policyDir: string, io: Io): Registry | number {
   }
 }
 
-// permit <paths...>
+// frostjs <paths...>
 
 function runCheck(args: ParsedArgs, io: Io): number {
   const cwd = cwdOf(io);
   if (args.updateBaseline && args.baseline === null) return fail(io, "--update-baseline needs --baseline <file>");
-  if (args.format === "html") return fail(io, "--format html is only for permit sri");
+  if (args.format === "html") return fail(io, "--format html is only for frostjs sri");
   if (args.paths.length === 0) {
-    io.stderr("permit: no paths given\n");
+    io.stderr("frostjs: no paths given\n");
     io.stderr(HELP);
     return 2;
   }
@@ -298,11 +298,11 @@ function vendoredUses(file: string, name: string, registry: Registry): Capabilit
   return entry.uses.map((u) => ({ ...base, capability: u.capability, target: u.target, expression }));
 }
 
-// permit vendor add <files...>
+// frostjs vendor add <files...>
 
 function runVendorAdd(args: ParsedArgs, io: Io): number {
   const cwd = cwdOf(io);
-  if (args.paths.length === 0) return fail(io, "permit vendor add needs one or more files");
+  if (args.paths.length === 0) return fail(io, "frostjs vendor add needs one or more files");
   const inputs = args.paths.map((p) => path.resolve(cwd, p));
   const loaded = loadPolicy(args, io, inputs, true);
   if (typeof loaded === "number") return loaded;
@@ -319,7 +319,7 @@ function runVendorAdd(args: ParsedArgs, io: Io): number {
     const rel = relToPolicy(policyDir, file);
     if (!policy.vendored.some((g) => matchesGlob(g, rel))) {
       io.stderr(
-        `permit: note: ${name} is not covered by a 'vendored' line in the policy; add one or it will be analyzed line by line\n`,
+        `frostjs: note: ${name} is not covered by a 'vendored' line in the policy; add one or it will be analyzed line by line\n`,
       );
     }
     const parsed = parseFile(file);
@@ -342,7 +342,7 @@ function runVendorAdd(args: ParsedArgs, io: Io): number {
   return 0;
 }
 
-// permit registry sync
+// frostjs registry sync
 
 function runRegistrySync(args: ParsedArgs, io: Io): number {
   const cwd = cwdOf(io);
@@ -356,14 +356,14 @@ function runRegistrySync(args: ParsedArgs, io: Io): number {
   const result = sync(registry, policyDir, policy.vendored, args.today ?? isoToday());
   const regFile = registryPath(policyDir);
   writeRegistry(regFile, result.registry);
-  for (const w of result.warnings) io.stderr(`permit: warning: ${w}\n`);
+  for (const w of result.warnings) io.stderr(`frostjs: warning: ${w}\n`);
   for (const line of result.lines) io.stdout(line + "\n");
   const n = result.registry.entries.length;
   io.stdout(`${shown(cwd, regFile)}: ${n} ${n === 1 ? "entry" : "entries"}\n`);
   return result.needsReview ? 1 : 0;
 }
 
-// permit sri [paths...]
+// frostjs sri [paths...]
 
 function runSri(args: ParsedArgs, io: Io): number {
   const cwd = cwdOf(io);
@@ -384,7 +384,7 @@ function runSri(args: ParsedArgs, io: Io): number {
     const integrity = integrityOfFile(file);
     const name = shown(cwd, file);
     if (lookup(registry, integrity) === null) {
-      io.stderr(`${name}: not in the registry; review it with: permit vendor add ${name}\n`);
+      io.stderr(`${name}: not in the registry; review it with: frostjs vendor add ${name}\n`);
       missing++;
     } else out.push({ file: name, integrity });
   }
@@ -402,7 +402,7 @@ function runSri(args: ParsedArgs, io: Io): number {
   return missing > 0 ? 1 : 0;
 }
 
-// permit csp, permit summary
+// frostjs csp, frostjs summary
 
 function runPolicyCommand(args: ParsedArgs, io: Io): number {
   const cwd = cwdOf(io);

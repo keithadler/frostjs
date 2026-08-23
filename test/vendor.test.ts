@@ -8,11 +8,11 @@ import { parsePolicy } from "../src/policy/parse.js";
 
 /** A project with one vendored library that stores and phones home. */
 function project(): string {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "permit-vendor-"));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "frostjs-vendor-"));
   fs.mkdirSync(path.join(dir, "lib"));
   fs.mkdirSync(path.join(dir, "src"));
   fs.writeFileSync(
-    path.join(dir, "permit.policy"),
+    path.join(dir, "frostjs.policy"),
     ['policy "vendor-test"', 'vendored "lib/*.js"', "may use local storage", ""].join("\n"),
   );
   fs.writeFileSync(
@@ -25,13 +25,13 @@ function project(): string {
 
 describe("policy: vendored", () => {
   it("parses a list of globs", () => {
-    const p = parsePolicy('vendored "lib/*.js", "static/vendor/**"', "permit.policy");
+    const p = parsePolicy('vendored "lib/*.js", "static/vendor/**"', "frostjs.policy");
     expect(p.vendored).toEqual(["lib/*.js", "static/vendor/**"]);
     expect(p.rules).toEqual([]);
   });
 
   it("needs quoted globs", () => {
-    expect(() => parsePolicy("vendored lib/*.js", "permit.policy")).toThrow(
+    expect(() => parsePolicy("vendored lib/*.js", "frostjs.policy")).toThrow(
       /'vendored' needs one or more quoted paths/,
     );
   });
@@ -60,14 +60,14 @@ describe("vendored files in the gate", () => {
     const r = cliIn(dir, ".");
     expect(r.code).toBe(1);
     expect(r.stdout).toContain(
-      "lib/widget.min.js:1:1: vendored file is not in the registry; review it with: permit vendor add lib/widget.min.js",
+      "lib/widget.min.js:1:1: vendored file is not in the registry; review it with: frostjs vendor add lib/widget.min.js",
     );
     // First-party code is still analyzed normally.
     expect(r.stdout).toContain("src/app.js:1:1: storage.session denied");
     expect(r.stdout).toContain("2 files, 2 denied");
   });
 
-  it("permit vendor add records the capability set for review", () => {
+  it("frostjs vendor add records the capability set for review", () => {
     const dir = project();
     const r = cliIn(dir, "vendor", "add", "lib/widget.min.js");
     expect(r.code).toBe(0);
@@ -75,8 +75,8 @@ describe("vendored files in the gate", () => {
     expect(r.stdout).toContain("  network.fetch to telemetry.example");
     expect(r.stdout).toContain("  storage.cookie");
     expect(r.stdout).toContain("  storage.local");
-    expect(r.stdout).toContain("added to .permit/registry.json");
-    const reg = readRegistry(path.join(dir, ".permit", "registry.json"));
+    expect(r.stdout).toContain("added to .frostjs/registry.json");
+    const reg = readRegistry(path.join(dir, ".frostjs", "registry.json"));
     expect(reg.entries.length).toBe(1);
     expect(reg.entries[0]).toMatchObject({
       package: "widget.min.js",
@@ -106,7 +106,7 @@ describe("vendored files in the gate", () => {
     const dir = project();
     cliIn(dir, "vendor", "add", "lib/widget.min.js");
     fs.appendFileSync(
-      path.join(dir, "permit.policy"),
+      path.join(dir, "frostjs.policy"),
       'may reach "telemetry.example" in "lib/*"\nmay use cookies in "lib/*"\n',
     );
     expect(cliIn(dir, "lib").code).toBe(0);
@@ -131,6 +131,6 @@ describe("vendored files in the gate", () => {
   it("vendor add without paths is a usage error", () => {
     const r = cliIn(project(), "vendor", "add");
     expect(r.code).toBe(2);
-    expect(r.stderr).toContain("permit vendor add needs one or more files");
+    expect(r.stderr).toContain("frostjs vendor add needs one or more files");
   });
 });

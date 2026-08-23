@@ -6,15 +6,15 @@ import { cliIn } from "./helpers.js";
 import { integrityOfFile } from "../src/registry.js";
 
 function project(): string {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "permit-sri-"));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "frostjs-sri-"));
   fs.mkdirSync(path.join(dir, "vendor"));
-  fs.writeFileSync(path.join(dir, "permit.policy"), 'vendored "vendor/*.js"\nmay use local storage\n');
+  fs.writeFileSync(path.join(dir, "frostjs.policy"), 'vendored "vendor/*.js"\nmay use local storage\n');
   fs.writeFileSync(path.join(dir, "vendor", "a.js"), 'localStorage.setItem("a",1);\n');
   fs.writeFileSync(path.join(dir, "vendor", "b.js"), "const b = 2;\n");
   return dir;
 }
 
-describe("permit sri", () => {
+describe("frostjs sri", () => {
   it("prints path and integrity for every registered vendored file", () => {
     const dir = project();
     cliIn(dir, "vendor", "add", "vendor/a.js", "vendor/b.js");
@@ -48,7 +48,7 @@ describe("permit sri", () => {
     const r = cliIn(dir, "sri");
     expect(r.code).toBe(1);
     expect(r.stdout).toContain("vendor/a.js sha384-");
-    expect(r.stderr).toContain("vendor/b.js: not in the registry; review it with: permit vendor add vendor/b.js");
+    expect(r.stderr).toContain("vendor/b.js: not in the registry; review it with: frostjs vendor add vendor/b.js");
   });
 
   it("non-vendored files are ignored", () => {

@@ -18,6 +18,6 @@ export interface CapabilityUse {
   expression: string;
   confidence: Confidence;
   origin: Origin;
-  /** An inline `permit: ignore` comment covers this use. */
+  /** An inline `frostjs: ignore` comment covers this use. */
   suppressed: boolean;
 }

@@ -1,14 +1,14 @@
 /**
  * The fingerprint registry for vendored code (REQUIREMENTS section 8).
- * Lives at .permit/registry.json beside the policy. Maps a SHA-384 of a
+ * Lives at .frostjs/registry.json beside the policy. Maps a SHA-384 of a
  * file's bytes to the package it came from and the capability set it was
- * found to use when somebody reviewed it with `permit vendor add`.
+ * found to use when somebody reviewed it with `frostjs vendor add`.
  */
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
-const REGISTRY_RELATIVE = path.join(".permit", "registry.json");
+const REGISTRY_RELATIVE = path.join(".frostjs", "registry.json");
 
 export interface RegistryUse {
   capability: string;
@@ -44,7 +44,7 @@ export function integrityOfFile(file: string): string {
   return integrityOf(fs.readFileSync(file));
 }
 
-/** Where the registry lives for a policy: .permit/registry.json beside it. */
+/** Where the registry lives for a policy: .frostjs/registry.json beside it. */
 export function registryPath(policyDir: string): string {
   return path.join(policyDir, REGISTRY_RELATIVE);
 }
@@ -63,7 +63,7 @@ export function readRegistry(file: string): Registry {
   return { version: 1, ...(r.lockfile ? { lockfile: r.lockfile } : {}), entries: r.entries };
 }
 
-/** Write the registry with entries sorted by package, version and file, creating .permit/ if needed. */
+/** Write the registry with entries sorted by package, version and file, creating .frostjs/ if needed. */
 export function writeRegistry(file: string, registry: Registry): void {
   const sorted = [...registry.entries].sort((a, b) =>
     a.package === b.package

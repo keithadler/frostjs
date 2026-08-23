@@ -3,16 +3,16 @@ import path from "node:path";
 import { cli } from "./helpers.js";
 import { VERSION } from "../src/version.js";
 
-describe("permit --version", () => {
+describe("frostjs --version", () => {
   it("prints the package version and exits 0", () => {
     const r = cli("--version");
     expect(r.code).toBe(0);
-    expect(r.stdout).toBe(`permit ${VERSION}\n`);
+    expect(r.stdout).toBe(`frostjs ${VERSION}\n`);
     expect(r.stderr).toBe("");
   });
 
   it("accepts -V", () => {
-    expect(cli("-V").stdout).toBe(`permit ${VERSION}\n`);
+    expect(cli("-V").stdout).toBe(`frostjs ${VERSION}\n`);
   });
 
   it("version matches package.json", () => {
@@ -20,11 +20,11 @@ describe("permit --version", () => {
   });
 });
 
-describe("permit --help", () => {
+describe("frostjs --help", () => {
   it("prints usage and exits 0", () => {
     const r = cli("--help");
     expect(r.code).toBe(0);
-    expect(r.stdout).toContain("usage: permit");
+    expect(r.stdout).toContain("usage: frostjs");
     expect(r.stdout).toContain("--version");
   });
 });
@@ -37,13 +37,13 @@ describe("unknown options", () => {
   });
 });
 
-describe("permit <paths> (step 2: discover and parse)", () => {
+describe("frostjs <paths> (step 2: discover and parse)", () => {
   const root = path.join(__dirname, "fixtures", "discover");
 
   it("parses discovered files and reports a count", () => {
     const r = cli(root);
     expect(r.code).toBe(0);
-    expect(r.stderr).toBe("permit: no permit.policy found; denying everything\n");
+    expect(r.stderr).toBe("frostjs: no frostjs.policy found; denying everything\n");
     expect(r.stdout).toContain("4 files");
   });
 
@@ -73,7 +73,7 @@ describe("permit <paths> (step 2: discover and parse)", () => {
   });
 });
 
-describe("permit <paths> (step 4: deny-all gate)", () => {
+describe("frostjs <paths> (step 4: deny-all gate)", () => {
   const fx = path.join(__dirname, "fixtures", "deny");
 
   it("acceptance: localStorage.setItem fails the build and names the line", () => {
@@ -118,10 +118,10 @@ describe("permit <paths> (step 4: deny-all gate)", () => {
   });
 });
 
-describe("permit <paths> (step 7: policy discovery)", () => {
+describe("frostjs <paths> (step 7: policy discovery)", () => {
   const proj = path.join(__dirname, "fixtures", "proj");
 
-  it("finds permit.policy above the inputs and applies it", () => {
+  it("finds frostjs.policy above the inputs and applies it", () => {
     const r = cli("--today", "2026-08-23", path.join(proj, "src"));
     expect(r.code).toBe(1);
     expect(r.stdout).toContain(
@@ -139,7 +139,7 @@ describe("permit <paths> (step 7: policy discovery)", () => {
     const r = cli("--today", "2026-08-23", path.join(proj, "src", "sw.js"));
     expect(r.code).toBe(0);
     expect(r.stdout).toContain(
-      'warning: test/fixtures/proj/permit.policy line 5: "may use the cache until 2026-08-30" expires in 7 days',
+      'warning: test/fixtures/proj/frostjs.policy line 5: "may use the cache until 2026-08-30" expires in 7 days',
     );
   });
 
@@ -158,20 +158,20 @@ describe("permit <paths> (step 7: policy discovery)", () => {
   });
 
   it("--policy overrides discovery and scopes paths to the policy's directory", () => {
-    const r = cli("--policy", path.join(proj, "tenant", "permit.policy"), path.join(proj, "src"));
+    const r = cli("--policy", path.join(proj, "tenant", "frostjs.policy"), path.join(proj, "src"));
     expect(r.code).toBe(0);
   });
 
   it("no policy found means deny everything, with a note on stderr", () => {
     const r = cli(path.join(__dirname, "fixtures", "deny", "clean.js"));
     expect(r.code).toBe(0);
-    expect(r.stderr).toContain("no permit.policy found");
+    expect(r.stderr).toContain("no frostjs.policy found");
   });
 
   it("a policy that does not parse exits 2 with file and line", () => {
     const r = cli(path.join(__dirname, "fixtures", "bad"));
     expect(r.code).toBe(2);
-    expect(r.stderr).toContain("test/fixtures/bad/permit.policy line 2: cannot read 'allow cookies'");
+    expect(r.stderr).toContain("test/fixtures/bad/frostjs.policy line 2: cannot read 'allow cookies'");
     expect(r.stderr).toContain("try: may use cookies");
   });
 
@@ -188,7 +188,7 @@ describe("permit <paths> (step 7: policy discovery)", () => {
   });
 });
 
-describe("permit <paths> (step 19: inline suppression)", () => {
+describe("frostjs <paths> (step 19: inline suppression)", () => {
   it("suppressed uses do not fail and are counted", () => {
     const r = cli(path.join(__dirname, "fixtures", "suppress"));
     expect(r.code).toBe(1);

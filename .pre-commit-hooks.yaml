@@ -1,7 +1,7 @@
-- id: permit
-  name: permit
+- id: frostjs
+  name: frostjs
   description: Deny-by-default capability linter for JavaScript.
-  entry: permit
+  entry: frostjs
   language: node
   types_or: [javascript]
   require_serial: true

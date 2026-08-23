@@ -1,7 +1,7 @@
 /**
  * Reproduce SHOWCASE.md: copy three.js 0.160.0 (already fetched and
  * hash-verified by `npm run corpus`) next to the showcase policy and run
- * permit over it.
+ * frostjs over it.
  *
  *   npm run showcase            the two files the write-up is about
  *   npm run showcase -- --all   everything under src and examples/jsm
@@ -23,7 +23,7 @@ fs.rmSync(work, { recursive: true, force: true });
 fs.mkdirSync(work, { recursive: true });
 fs.cpSync(path.join(source, "src"), path.join(work, "src"), { recursive: true });
 fs.cpSync(path.join(source, "examples", "jsm"), path.join(work, "examples", "jsm"), { recursive: true });
-fs.copyFileSync(path.join(root, "showcase", "three", "permit.policy"), path.join(work, "permit.policy"));
+fs.copyFileSync(path.join(root, "showcase", "three", "frostjs.policy"), path.join(work, "frostjs.policy"));
 
 const all = process.argv.includes("--all");
 const targets = all

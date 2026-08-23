@@ -1,6 +1,6 @@
-# Contributing to permit
+# Contributing to frostjs
 
-Thanks for looking. permit is small on purpose, and the rules below are
+Thanks for looking. frostjs is small on purpose, and the rules below are
 what keep it small and keep it trusted.
 
 ## The one rule that matters
@@ -27,8 +27,8 @@ bug in the recognizer, not a judgment call.
 ## Setting up
 
 ```bash
-git clone https://github.com/keithadler/permit
-cd permit
+git clone https://github.com/keithadler/frostjs
+cd frostjs
 npm install
 npm test            # vitest, about a second
 npm run lint        # prettier --check, then typecheck src, test and scripts
@@ -87,7 +87,7 @@ line in the README grammar block.
 
 ## Reporting a false positive
 
-Open an issue with the smallest file that reproduces it and the permit
+Open an issue with the smallest file that reproduces it and the frostjs
 output. A false positive is a bug with the highest priority this project
 has. If you can, add the case to the relevant `must stay quiet` test block
 in the same pull request as the fix.

@@ -27,10 +27,10 @@ export interface JsonDecision {
   rule: JsonRule | null;
 }
 
-/** The document `--format json` prints. `schema` is SCHEMA_VERSION; `permit` is the tool version. */
+/** The document `--format json` prints. `schema` is SCHEMA_VERSION; `frostjs` is the tool version. */
 export interface JsonReport {
   schema: number;
-  permit: string;
+  frostjs: string;
   policy: { file: string; name: string };
   /** Files analyzed. */
   files: number;
@@ -54,7 +54,7 @@ function buildJson(decisions: readonly Decision[], files: number, policy: Policy
   for (const d of decisions) summary[d.verdict]++;
   return {
     schema: SCHEMA_VERSION,
-    permit: VERSION,
+    frostjs: VERSION,
     policy: { file: policy.file, name: policy.name },
     files,
     summary,

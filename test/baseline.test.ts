@@ -5,7 +5,7 @@ import path from "node:path";
 import { baselineKey, readBaseline, writeBaseline } from "../src/baseline.js";
 import { cli } from "./helpers.js";
 
-const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), "permit-baseline-"));
+const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), "frostjs-baseline-"));
 
 describe("baseline file", () => {
   it("key normalizes whitespace in the expression", () => {
@@ -17,7 +17,7 @@ describe("baseline file", () => {
 
   it("round-trips sorted, deduplicated entries", () => {
     const dir = tmp();
-    const file = path.join(dir, ".permit-baseline.json");
+    const file = path.join(dir, ".frostjs-baseline.json");
     writeBaseline(file, [
       { file: "b.js", capability: "network.fetch", expression: "fetch(u)" },
       { file: "a.js", capability: "storage.local", expression: "localStorage" },
@@ -42,7 +42,7 @@ describe("baseline file", () => {
   });
 });
 
-describe("permit --baseline", () => {
+describe("frostjs --baseline", () => {
   const proj = path.join(__dirname, "fixtures", "proj");
 
   it("--update-baseline freezes current denials and exits 0", () => {
@@ -69,7 +69,7 @@ describe("permit --baseline", () => {
     expect(again.stdout).toContain("3 files, 0 denied, 0 unknown, 2 baselined");
 
     // A new violation appears.
-    fs.writeFileSync(path.join(dir, "permit.policy"), 'policy "tmp"\n');
+    fs.writeFileSync(path.join(dir, "frostjs.policy"), 'policy "tmp"\n');
     fs.writeFileSync(path.join(dir, "new.js"), 'localStorage.setItem("x", 1);\n');
     const r = cli("--baseline", file, path.join(dir, "new.js"));
     expect(r.code).toBe(1);
@@ -79,7 +79,7 @@ describe("permit --baseline", () => {
   it("baseline paths are relative to the baseline file", () => {
     const dir = tmp();
     fs.mkdirSync(path.join(dir, "sub"));
-    fs.writeFileSync(path.join(dir, "permit.policy"), "");
+    fs.writeFileSync(path.join(dir, "frostjs.policy"), "");
     fs.writeFileSync(path.join(dir, "sub", "x.js"), "localStorage.x;\n");
     const file = path.join(dir, "sub", "b.json");
     cli("--baseline", file, "--update-baseline", path.join(dir, "sub"));

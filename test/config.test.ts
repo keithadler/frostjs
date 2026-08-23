@@ -17,14 +17,14 @@ describe("commonAncestor", () => {
 });
 
 describe("findPolicyFile", () => {
-  it("finds permit.policy in the start directory", () => {
-    expect(findPolicyFile(path.join(fx, "proj"))).toBe(path.join(fx, "proj", "permit.policy"));
+  it("finds frostjs.policy in the start directory", () => {
+    expect(findPolicyFile(path.join(fx, "proj"))).toBe(path.join(fx, "proj", "frostjs.policy"));
   });
   it("walks up", () => {
-    expect(findPolicyFile(path.join(fx, "proj", "src", "legacy"))).toBe(path.join(fx, "proj", "permit.policy"));
+    expect(findPolicyFile(path.join(fx, "proj", "src", "legacy"))).toBe(path.join(fx, "proj", "frostjs.policy"));
   });
   it("nearest wins", () => {
-    expect(findPolicyFile(path.join(fx, "proj", "tenant"))).toBe(path.join(fx, "proj", "tenant", "permit.policy"));
+    expect(findPolicyFile(path.join(fx, "proj", "tenant"))).toBe(path.join(fx, "proj", "tenant", "frostjs.policy"));
   });
   it("stops at the given root", () => {
     expect(findPolicyFile(path.join(fx, "proj", "src"), path.join(fx, "proj", "src"))).toBe(null);

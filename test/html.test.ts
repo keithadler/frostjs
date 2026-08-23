@@ -71,14 +71,14 @@ describe("parseHtml and extract", () => {
   });
 
   it("suppression comments work inside a block", () => {
-    const parsed = parseHtml("x.html", "<script>\n// permit: ignore\nlocalStorage.x;\n</script>");
+    const parsed = parseHtml("x.html", "<script>\n// frostjs: ignore\nlocalStorage.x;\n</script>");
     expect(extract(parsed[0]!)[0]?.suppressed).toBe(true);
   });
 });
 
 describe("HTML in the CLI", () => {
   it("discovers .html and .htm", () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "permit-html-"));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "frostjs-html-"));
     fs.writeFileSync(path.join(dir, "a.html"), "<p>");
     fs.writeFileSync(path.join(dir, "b.htm"), "<p>");
     fs.writeFileSync(path.join(dir, "c.css"), "p{}");
@@ -86,8 +86,8 @@ describe("HTML in the CLI", () => {
   });
 
   it("checks inline scripts against the policy", () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "permit-html-"));
-    fs.writeFileSync(path.join(dir, "permit.policy"), "may use local storage\n");
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "frostjs-html-"));
+    fs.writeFileSync(path.join(dir, "frostjs.policy"), "may use local storage\n");
     fs.writeFileSync(path.join(dir, "index.html"), page);
     const r = cliIn(dir, "index.html");
     expect(r.code).toBe(1);
@@ -99,8 +99,8 @@ describe("HTML in the CLI", () => {
   });
 
   it("a page with no scripts is clean", () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "permit-html-"));
-    fs.writeFileSync(path.join(dir, "permit.policy"), "");
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "frostjs-html-"));
+    fs.writeFileSync(path.join(dir, "frostjs.policy"), "");
     fs.writeFileSync(path.join(dir, "plain.html"), "<p>hello</p>");
     expect(cliIn(dir, "plain.html")).toMatchObject({ code: 0, stdout: "1 file, 0 denied, 0 unknown\n" });
   });

@@ -1,22 +1,22 @@
 # Security
 
-## What permit promises, and what it does not
+## What frostjs promises, and what it does not
 
-permit is a build-time gate, not a sandbox. It catches first-party, tenant
+frostjs is a build-time gate, not a sandbox. It catches first-party, tenant
 or model-generated code that reaches for a capability the policy did not
 grant, and it catches dependency bumps that quietly add one. It does not
 catch deliberately obfuscated code, runtime-constructed access beyond a
 shallow constant fold, or anything injected after the build. The README
-states this plainly and so should anyone deploying it: a green permit run
+states this plainly and so should anyone deploying it: a green frostjs run
 means "nothing we could see asked for more than it was granted," not
 "this code is safe."
 
 The runtime backstop is the `Content-Security-Policy` header that
-`permit csp` derives from the same policy file. Deploy both.
+`frostjs csp` derives from the same policy file. Deploy both.
 
 ## Reporting a vulnerability
 
-If you find a way to make permit pass code it should refuse (a bypass in a
+If you find a way to make frostjs pass code it should refuse (a bypass in a
 recognizer, a scope-analysis hole that lets a shadowed global slip through,
 a policy parser quirk that grants more than the author wrote, a path
 traversal in policy discovery, an injection in the GitHub Action), please
@@ -33,7 +33,7 @@ a normal issue.
 
 ## Supply chain
 
-permit has one runtime dependency, `oxc-parser`, and installs into other
+frostjs has one runtime dependency, `oxc-parser`, and installs into other
 people's CI. Releases are built from a clean checkout by `npm run build`
 and published with `npm publish`; the `files` list in `package.json` is the
 whole of what ships. The corpus packages used for testing are pinned by

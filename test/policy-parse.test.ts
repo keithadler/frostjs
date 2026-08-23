@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parsePolicy, PolicyError } from "../src/policy/parse.js";
 
-const parse = (text: string) => parsePolicy(text, "permit.policy");
+const parse = (text: string) => parsePolicy(text, "frostjs.policy");
 const rules = (text: string) => parse(text).rules;
 
 describe("policy: lines and comments", () => {
@@ -43,7 +43,7 @@ describe("policy: header", () => {
   });
 
   it("defaults the name to the file name", () => {
-    expect(parse("may use storage").name).toBe("permit.policy");
+    expect(parse("may use storage").name).toBe("frostjs.policy");
   });
 
   it("rejects a second policy line", () => {
@@ -137,9 +137,9 @@ describe("policy: errors are precise", () => {
 
   it("unknown line", () => {
     const e = err("allow storage");
-    expect(e.file).toBe("permit.policy");
+    expect(e.file).toBe("frostjs.policy");
     expect(e.line).toBe(1);
-    expect(e.message).toContain("permit.policy line 1: cannot read 'allow storage'");
+    expect(e.message).toContain("frostjs.policy line 1: cannot read 'allow storage'");
     expect(e.message).toContain("try: may use storage");
   });
 
@@ -202,7 +202,7 @@ describe("policy: error precision (step 8)", () => {
     expect(e.line).toBe(2);
     expect(e.column).toBe(20);
     expect(e.message).toBe(
-      "permit.policy line 2: 'in' needs one or more quoted paths\n" +
+      "frostjs.policy line 2: 'in' needs one or more quoted paths\n" +
         "  may use storage in src/*\n" +
         "                     ^\n" +
         '  try: may use storage in "src/*"',

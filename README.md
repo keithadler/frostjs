@@ -1,4 +1,4 @@
-# permit
+# frostjs
 
 A policy-driven, deny-by-default static analyzer for JavaScript. It runs in CI
 and refuses to let code ship if it reaches for a capability the project has not
@@ -9,7 +9,7 @@ explicitly granted: storage, network, `eval`, DOM injection, identity, and so on
 three.js 0.160.0 ships `examples/jsm/libs/ecsy.module.js`, which, if a page
 that imports it is opened with `?enable-remote-devtools` in the URL, loads a
 script from a third-party CDN, connects to a third-party relay, and `eval`s
-whatever the relay sends. permit reports it as
+whatever the relay sends. frostjs reports it as
 `codegen.eval denied by default (no rule grants it): eval(data.script)` under any policy
 an application would plausibly write. The same run names a runtime
 `import()` of physics engine code from `cdn.skypack.dev`. The full story, the
@@ -25,18 +25,18 @@ an ESLint plugin, a fingerprint registry for vendored code with SRI output,
 TypeScript, JSX and inline HTML. Not yet published to npm.
 
 ```
-$ cat permit.policy
+$ cat frostjs.policy
 policy "checkout-widget"
 may use session storage
 may use local storage in "src/legacy/*"      -- old code, rewrite by Q4
 forbid cookies                               -- consent banner owns these
 may use the cache until 2026-08-30           -- service worker experiment
 
-$ permit src
+$ frostjs src
 src/app.js:2:1: storage.local denied by default (no rule grants it): localStorage.setItem("not-here", 1)
 src/legacy/old.js:2:1: storage.cookie denied by "forbid cookies" (line 4): consent banner owns these: document.cookie
 
-warning: permit.policy line 5: "may use the cache until 2026-08-30" expires in 7 days
+warning: frostjs.policy line 5: "may use the cache until 2026-08-30" expires in 7 days
 
 3 files, 2 denied, 0 unknown
 $ echo $?
@@ -45,7 +45,7 @@ $ echo $?
 
 ## Policy files
 
-A policy is a `permit.policy` file in frost's policy dialect: one rule per
+A policy is a `frostjs.policy` file in frost's policy dialect: one rule per
 line, `--` or `#` comments, case-insensitive keywords. Deny-by-default, so
 the file only ever grants. A trailing comment on a rule is its *hint*, and is
 printed whenever that rule refuses something.
@@ -96,7 +96,7 @@ Rules:
   after the date the grant denies with its own message. This is how drift is
   fought: an exception has to be renewed on purpose.
 
-`permit.policy` is searched for in the directory shared by all the given
+`frostjs.policy` is searched for in the directory shared by all the given
 paths, then upward; the nearest one wins, so a monorepo can keep one per
 tenant directory. `--policy <file>` overrides the search. With no policy at
 all, every capability is denied and a note says so.
@@ -104,23 +104,23 @@ all, every capability is denied and a note says so.
 ## Usage
 
 ```
-permit <paths...>        discover and analyze .js/.mjs/.cjs/.jsx/.ts/.tsx/.mts/.cts and inline <script> in .html under paths
-permit csp               print the Content-Security-Policy header the policy implies
-permit summary           print a plain-English reading of the policy
-permit vendor add <files>  fingerprint third-party files and record their capabilities
-permit registry sync     re-admit bumped dependencies whose capabilities did not change
-permit sri [paths]       print Subresource Integrity values for registered vendored files
-permit --exclude <name>  skip directories with this name (repeatable)
-permit --exit-zero       report findings but always exit 0
-permit --policy <file>   use this policy instead of searching for permit.policy
-permit --today <date>    treat YYYY-MM-DD as today when checking expiry
-permit --min-confidence <c>  lowest confidence that fails: certain, probable (default), possible
-permit --baseline <file>     denials recorded in this file do not fail the build
-permit --update-baseline     write every current denial into the baseline and exit 0
-permit --changed-since <ref> fail only on uses in lines changed since the git ref
-permit --format <f>      text (default), json, sarif, or github
-permit --version         print the version and exit
-permit --help            show usage
+frostjs <paths...>        discover and analyze .js/.mjs/.cjs/.jsx/.ts/.tsx/.mts/.cts and inline <script> in .html under paths
+frostjs csp               print the Content-Security-Policy header the policy implies
+frostjs summary           print a plain-English reading of the policy
+frostjs vendor add <files>  fingerprint third-party files and record their capabilities
+frostjs registry sync     re-admit bumped dependencies whose capabilities did not change
+frostjs sri [paths]       print Subresource Integrity values for registered vendored files
+frostjs --exclude <name>  skip directories with this name (repeatable)
+frostjs --exit-zero       report findings but always exit 0
+frostjs --policy <file>   use this policy instead of searching for frostjs.policy
+frostjs --today <date>    treat YYYY-MM-DD as today when checking expiry
+frostjs --min-confidence <c>  lowest confidence that fails: certain, probable (default), possible
+frostjs --baseline <file>     denials recorded in this file do not fail the build
+frostjs --update-baseline     write every current denial into the baseline and exit 0
+frostjs --changed-since <ref> fail only on uses in lines changed since the git ref
+frostjs --format <f>      text (default), json, sarif, or github
+frostjs --version         print the version and exit
+frostjs --help            show usage
 ```
 
 `node_modules`, `dist`, `build`, `coverage` and `.git` are always skipped
@@ -151,10 +151,10 @@ build; `certain` and `probable` uses do.
 ## GitHub Action
 
 ```yaml
-- uses: keithadler/permit@main
+- uses: keithadler/frostjs@main
   with:
     paths: src
-    args: --baseline .permit-baseline.json --changed-since origin/main
+    args: --baseline .frostjs-baseline.json --changed-since origin/main
     fail-on-findings: "true"
 ```
 
@@ -167,15 +167,15 @@ an argument and not a command.
 ## ESLint plugin
 
 The same engine as an ESLint rule, so denials show up in the editor and on
-`eslint` runs, with the same policy discovery (nearest `permit.policy`
-above the file) and the same `permit: ignore` comments. `eslint-disable`
+`eslint` runs, with the same policy discovery (nearest `frostjs.policy`
+above the file) and the same `frostjs: ignore` comments. `eslint-disable`
 works too.
 
 ```js
 // eslint.config.js
-import permit from "permit/eslint";
-export default [permit.configs.recommended];
-// or: [{ plugins: { permit }, rules: { "permit/capability": ["error", { reportUnknown: true }] } }]
+import frostjs from "frostjs/eslint";
+export default [frostjs.configs.recommended];
+// or: [{ plugins: { frostjs }, rules: { "frostjs/capability": ["error", { reportUnknown: true }] } }]
 ```
 
 Options: `policy` (explicit file), `minConfidence`, `reportUnknown`
@@ -185,10 +185,10 @@ Options: `policy` (explicit file), `minConfidence`, `reportUnknown`
 
 ```yaml
 repos:
-  - repo: https://github.com/keithadler/permit
+  - repo: https://github.com/keithadler/frostjs
     rev: main
     hooks:
-      - id: permit
+      - id: frostjs
 ```
 
 ## Third-party code
@@ -201,18 +201,18 @@ vendored "vendor/**", "static/lib/*.min.js"
 ```
 
 A vendored file is hashed (SHA-384, the same value SRI uses) and looked up
-in `.permit/registry.json` beside the policy. A known hash contributes the
+in `.frostjs/registry.json` beside the policy. A known hash contributes the
 capability set somebody recorded for it, checked against the policy like
 any first-party use. An unknown hash fails the build:
 
 ```
-vendor/widget.min.js:1:1: vendored file is not in the registry; review it with: permit vendor add vendor/widget.min.js
+vendor/widget.min.js:1:1: vendored file is not in the registry; review it with: frostjs vendor add vendor/widget.min.js
 ```
 
-`permit vendor add` analyzes the file once, prints what it found so a
+`frostjs vendor add` analyzes the file once, prints what it found so a
 person can look at it, and records the entry. A patch release changes the
 hash, so the review happens again; that is the point. To keep that from
-being a chore, `permit registry sync` walks the vendored paths after a
+being a chore, `frostjs registry sync` walks the vendored paths after a
 dependency bump: a new version that uses exactly the capabilities the old
 one did is re-admitted automatically and noted; one that gained a
 capability or a new destination is refused with the difference printed,
@@ -222,17 +222,17 @@ pruned, and the lockfile's hash is recorded so the next run can say
 whether anything moved. A vendored glob may reach into `node_modules`;
 the walk follows it there.
 
-`permit sri` prints the same SHA-384 values as `integrity` attributes
+`frostjs sri` prints the same SHA-384 values as `integrity` attributes
 (`--format html` for ready-made script tags, `--format json` for a build
 step), so the browser refuses at load time exactly what the registry never
 reviewed. A vendored file that is not in the registry is refused here too.
 
 ## One policy, three artifacts
 
-The same `permit.policy` drives the linter ruleset, a CSP header, and a
+The same `frostjs.policy` drives the linter ruleset, a CSP header, and a
 reviewer's summary, so they cannot drift apart.
 
-`permit csp` prints the header and nothing else, for nginx or the CDN
+`frostjs csp` prints the header and nothing else, for nginx or the CDN
 config. Only directives the policy determines are emitted: `connect-src`
 from `may reach` hosts (`'none'` when nothing is granted, `*` for
 `may use the network`), `script-src 'self'` plus `'unsafe-eval'` when code
@@ -240,11 +240,11 @@ generation is granted and the reach hosts when dynamic import is, and
 `worker-src` when workers are. Expired grants do not widen it; path-scoped
 grants do, because a header covers the whole page.
 
-`permit summary` prints what the code may do, what it may not, and spells
+`frostjs summary` prints what the code may do, what it may not, and spells
 out the implicit deny:
 
 ```
-Policy "proj" (permit.policy)
+Policy "proj" (frostjs.policy)
 
 This code may:
   - use session storage (line 2)
@@ -269,32 +269,32 @@ Everything else is denied. In particular this code may not use: the network, cod
 - `github`: GitHub Actions workflow commands (`::error file=...`) so each
   denial shows up inline on the pull request, followed by the text report.
 
-## Adopting permit on an existing codebase
+## Adopting frostjs on an existing codebase
 
 ```bash
-permit --baseline .permit-baseline.json --update-baseline src
+frostjs --baseline .frostjs-baseline.json --update-baseline src
 ```
 
 That records every current denial, keyed on file, capability and expression
 text (never line numbers), and exits 0. From then on
-`permit --baseline .permit-baseline.json src` fails only on *new* uses;
+`frostjs --baseline .frostjs-baseline.json src` fails only on *new* uses;
 existing ones are counted as "baselined". Commit the file; shrink it as the
 debt is paid down. Paths inside it are relative to the file's directory.
 
-For pull-request checks, `permit --changed-since origin/main src` fails only
+For pull-request checks, `frostjs --changed-since origin/main src` fails only
 on uses that sit in lines the branch added or modified; the rest are counted
 as "unchanged". Untracked files count as entirely changed.
 
 ## Suppressing a single use
 
 ```js
-// permit: ignore[storage.local]
+// frostjs: ignore[storage.local]
 localStorage.setItem("draft", text);
 
-fetch(url); // permit: ignore
+fetch(url); // frostjs: ignore
 ```
 
-A bare `permit: ignore` suppresses every capability on that line; a
+A bare `frostjs: ignore` suppresses every capability on that line; a
 bracketed list suppresses only those codes or families. The comment applies
 to its own line or, when it stands alone, to the line after it. Suppressed
 uses are counted in the summary and never fail the build. Prefer a scoped
@@ -377,7 +377,7 @@ reported.
 
 ## Threat model, honestly
 
-`permit` catches careless or accidental use of forbidden APIs in first-party,
+`frostjs` catches careless or accidental use of forbidden APIs in first-party,
 tenant, or model-generated code, and it catches drift over time. It does **not**
 catch deliberately obfuscated code, runtime-constructed access beyond a shallow
 constant fold, or anything injected after the build. The value is a high floor,

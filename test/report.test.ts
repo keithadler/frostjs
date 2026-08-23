@@ -92,8 +92,8 @@ describe("text report", () => {
   });
 
   it("prints warnings before the summary", () => {
-    const out = text([], { files: 1 }, { warnings: ["permit.policy line 1: x expires in 3 days"] });
-    expect(out).toBe("warning: permit.policy line 1: x expires in 3 days\n\n1 file, 0 denied, 0 unknown\n");
+    const out = text([], { files: 1 }, { warnings: ["frostjs.policy line 1: x expires in 3 days"] });
+    expect(out).toBe("warning: frostjs.policy line 1: x expires in 3 days\n\n1 file, 0 denied, 0 unknown\n");
   });
 });
 

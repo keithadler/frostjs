@@ -4,7 +4,7 @@
  */
 import { CONFIDENCE_ORDER, type Confidence } from "../policy/index.js";
 
-/** The subcommand, `check` being the bare `permit <paths>` form. */
+/** The subcommand, `check` being the bare `frostjs <paths>` form. */
 type Command = "check" | "csp" | "summary" | "vendor-add" | "registry-sync" | "sri";
 
 export interface ParsedArgs {
@@ -63,14 +63,15 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
       if (arg === "registry") {
         const sub = argv[i + 1];
         if (sub !== "sync")
-          throw new UsageError(`permit registry needs a subcommand: sync${sub ? ` (got '${sub}')` : ""}`);
+          throw new UsageError(`frostjs registry needs a subcommand: sync${sub ? ` (got '${sub}')` : ""}`);
         out.command = "registry-sync";
         i++;
         continue;
       }
       if (arg === "vendor") {
         const sub = argv[i + 1];
-        if (sub !== "add") throw new UsageError(`permit vendor needs a subcommand: add${sub ? ` (got '${sub}')` : ""}`);
+        if (sub !== "add")
+          throw new UsageError(`frostjs vendor needs a subcommand: add${sub ? ` (got '${sub}')` : ""}`);
         out.command = "vendor-add";
         i++;
         continue;
@@ -150,29 +151,29 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
 }
 
 /** The `--help` text, also printed after a usage error. */
-export const HELP = `usage: permit [options] <paths...>
-       permit csp [--policy <file>]
-       permit summary [--policy <file>]
-       permit vendor add <files...>
-       permit registry sync
-       permit sri [--format text|json|html] [paths...]
+export const HELP = `usage: frostjs [options] <paths...>
+       frostjs csp [--policy <file>]
+       frostjs summary [--policy <file>]
+       frostjs vendor add <files...>
+       frostjs registry sync
+       frostjs sri [--format text|json|html] [paths...]
 
 Deny-by-default capability linter for JavaScript.
 
 commands:
   (default)            analyze the given paths against the policy
-  permit csp           print the Content-Security-Policy header the policy
+  frostjs csp           print the Content-Security-Policy header the policy
                        implies, and nothing else, for the deploy step
-  permit summary       print a plain-English reading of the policy for a
+  frostjs summary       print a plain-English reading of the policy for a
                        reviewer who does not write JavaScript
-  permit vendor add    analyze third-party files once, print the capability
+  frostjs vendor add    analyze third-party files once, print the capability
                        set found, and record it with the file's SHA-384 in
-                       .permit/registry.json beside the policy
-  permit registry sync after a dependency bump: re-admit vendored files
+                       .frostjs/registry.json beside the policy
+  frostjs registry sync after a dependency bump: re-admit vendored files
                        whose capability set did not change, refuse and show
                        the difference for those that gained one, prune
                        entries whose file is gone, record the lockfile hash
-  permit sri           print Subresource Integrity values for registered
+  frostjs sri           print Subresource Integrity values for registered
                        vendored files (text: path and hash; json: a map;
                        html: script tags), so the browser enforces the same
                        hashes the registry reviewed
@@ -184,23 +185,23 @@ options:
                        node_modules, dist, build, coverage and .git are
                        always skipped
   --exit-zero          report findings but always exit 0
-  --policy <file>      use this policy instead of searching for permit.policy
+  --policy <file>      use this policy instead of searching for frostjs.policy
   --today <date>       treat this YYYY-MM-DD as today when checking expiry
   --min-confidence <c> lowest confidence that can fail the build:
                        certain, probable (default) or possible; uses below
                        it are listed as unknown
   --baseline <file>    denials recorded in this file do not fail the build
   --update-baseline    write every current denial into the baseline file
-                       and exit 0; use once to adopt permit on a codebase
+                       and exit 0; use once to adopt frostjs on a codebase
   --changed-since <ref>  fail only on uses in lines changed since the git
                        ref (e.g. origin/main); untracked files count whole
   --format <f>         text (default), json (versioned schema), sarif
                        (2.1.0, one rule per capability), or github
                        (inline PR annotations followed by the text report);
-                       html only with permit sri
+                       html only with frostjs sri
 
 policy:
-  permit.policy is searched for in the directory shared by all the given
+  frostjs.policy is searched for in the directory shared by all the given
   paths, then in each parent directory. The nearest one wins. Path globs in
   a policy are relative to the policy file's directory. With no policy, every
   capability is denied.

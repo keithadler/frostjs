@@ -6,9 +6,9 @@ import { Linter } from "eslint";
 import plugin from "../src/eslint.js";
 
 function project(): string {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "permit-eslint-"));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "frostjs-eslint-"));
   fs.writeFileSync(
-    path.join(dir, "permit.policy"),
+    path.join(dir, "frostjs.policy"),
     ["may use session storage", "forbid cookies -- consent banner owns these", 'may reach "api.example.com"', ""].join(
       "\n",
     ),
@@ -29,8 +29,8 @@ function lint(
     [
       {
         files: ["**/*.js"],
-        plugins: { permit: plugin as never },
-        rules: { "permit/capability": ["error", { today: "2026-08-23", ...options }] },
+        plugins: { frostjs: plugin as never },
+        rules: { "frostjs/capability": ["error", { today: "2026-08-23", ...options }] },
         languageOptions: { ecmaVersion: 2022, sourceType },
       },
     ],
@@ -41,7 +41,7 @@ function lint(
 describe("eslint plugin", () => {
   it("exposes the rule and a recommended config", () => {
     expect(plugin.rules.capability.meta.type).toBe("problem");
-    expect((plugin.configs["recommended"] as { rules: Record<string, string> }).rules["permit/capability"]).toBe(
+    expect((plugin.configs["recommended"] as { rules: Record<string, string> }).rules["frostjs/capability"]).toBe(
       "error",
     );
   });
@@ -57,7 +57,7 @@ describe("eslint plugin", () => {
       [2, 11, 'storage.cookie denied by "forbid cookies" (line 2): consent banner owns these'],
       [3, 3, "storage.local denied by default (no rule grants it)"],
     ]);
-    expect(msgs.every((m) => m.ruleId === "permit/capability")).toBe(true);
+    expect(msgs.every((m) => m.ruleId === "frostjs/capability")).toBe(true);
   });
 
   it("network targets are named", () => {
@@ -69,15 +69,15 @@ describe("eslint plugin", () => {
   it("finds the nearest policy above the file and scopes globs to it", () => {
     const dir = project();
     fs.mkdirSync(path.join(dir, "src", "legacy"), { recursive: true });
-    fs.appendFileSync(path.join(dir, "permit.policy"), 'may use local storage in "src/legacy/*"\n');
+    fs.appendFileSync(path.join(dir, "frostjs.policy"), 'may use local storage in "src/legacy/*"\n');
     expect(lint(dir, "src/legacy/old.js", "localStorage.x;")).toEqual([]);
     expect(lint(dir, "src/new.js", "localStorage.x;").length).toBe(1);
   });
 
-  it("permit: ignore and eslint-disable both silence a use", () => {
+  it("frostjs: ignore and eslint-disable both silence a use", () => {
     const dir = project();
-    expect(lint(dir, "a.js", "localStorage.x; // permit: ignore")).toEqual([]);
-    expect(lint(dir, "a.js", "localStorage.x; // eslint-disable-line permit/capability")).toEqual([]);
+    expect(lint(dir, "a.js", "localStorage.x; // frostjs: ignore")).toEqual([]);
+    expect(lint(dir, "a.js", "localStorage.x; // eslint-disable-line frostjs/capability")).toEqual([]);
   });
 
   it("unknown uses are reported only when asked", () => {
@@ -98,21 +98,21 @@ describe("eslint plugin", () => {
 
   it("a broken policy is one report, not a crash", () => {
     const dir = project();
-    fs.writeFileSync(path.join(dir, "permit.policy"), "allow storage\n");
+    fs.writeFileSync(path.join(dir, "frostjs.policy"), "allow storage\n");
     const msgs = lint(dir, "a.js", "localStorage.x;");
     expect(msgs.length).toBe(1);
     expect(msgs[0]?.message).toContain("cannot read 'allow storage'");
   });
 
   it("no policy means deny everything, like the CLI", () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "permit-eslint-none-"));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "frostjs-eslint-none-"));
     expect(lint(dir, "a.js", "localStorage.x;").length).toBe(1);
   });
 
   it("picks up a changed policy without restarting", () => {
     const dir = project();
     expect(lint(dir, "a.js", "localStorage.x;").length).toBe(1);
-    const p = path.join(dir, "permit.policy");
+    const p = path.join(dir, "frostjs.policy");
     fs.writeFileSync(p, "may use local storage\n");
     const t = new Date(Date.now() + 5000);
     fs.utimesSync(p, t, t);

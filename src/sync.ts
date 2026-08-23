@@ -1,5 +1,5 @@
 /**
- * `permit registry sync`: keep the vendored-code registry in step with the
+ * `frostjs registry sync`: keep the vendored-code registry in step with the
  * tree after a dependency bump.
  *
  * For every vendored file whose hash is unknown, find the previous entry
@@ -112,7 +112,7 @@ export function sync(registry: Registry, policyDir: string, vendored: readonly s
     const uses = usesOf(parsed);
     if (!previous) {
       lines.push(
-        `${rel} (${pkg.package}@${pkg.version}): new package, not in the registry; review it with: permit vendor add ${rel}`,
+        `${rel} (${pkg.package}@${pkg.version}): new package, not in the registry; review it with: frostjs vendor add ${rel}`,
       );
       needsReview = true;
       continue;
@@ -138,7 +138,7 @@ export function sync(registry: Registry, policyDir: string, vendored: readonly s
     } else {
       needsReview = true;
       lines.push(`${rel}: ${pkg.package} ${previous.version} -> ${pkg.version} adds ${added.join(", ")}; NOT admitted`);
-      lines.push(`  review it with: permit vendor add ${rel}`);
+      lines.push(`  review it with: frostjs vendor add ${rel}`);
     }
   }
 

@@ -5,7 +5,7 @@ import type { CapabilityUse } from "../src/extract/capability.js";
 
 const TODAY = "2026-08-23";
 
-const policy = (text: string, today = TODAY) => compile(parsePolicy(text, "permit.policy"), { today });
+const policy = (text: string, today = TODAY) => compile(parsePolicy(text, "frostjs.policy"), { today });
 
 const use = (capability: string, file = "src/app.js"): CapabilityUse => ({
   capability,
@@ -116,7 +116,7 @@ describe("compile: expiry", () => {
 
   it("warns inside the 14-day window, not outside it", () => {
     expect(policy("may use storage until 2026-09-06").warnings).toEqual([
-      'permit.policy line 1: "may use storage until 2026-09-06" expires in 14 days',
+      'frostjs.policy line 1: "may use storage until 2026-09-06" expires in 14 days',
     ]);
     expect(policy("may use storage until 2026-08-24").warnings[0]).toContain("expires in 1 day");
     expect(policy("may use storage until 2026-08-23").warnings[0]).toContain("expires today");

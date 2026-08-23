@@ -24,7 +24,7 @@ export function sarif(decisions: readonly Decision[]): string {
     id,
     name: id.replace(/[.-](\w)/g, (_, c: string) => c.toUpperCase()).replace(/^\w/, (c) => c.toUpperCase()),
     shortDescription: { text: `Use of the ${id} capability` },
-    helpUri: "https://github.com/keithadler/permit#capabilities-recognized-so-far",
+    helpUri: "https://github.com/keithadler/frostjs#capabilities-recognized-so-far",
   }));
   const results = reported.map((d) => {
     const carried = d.verdict === "baselined" || d.verdict === "unchanged";
@@ -57,9 +57,9 @@ export function sarif(decisions: readonly Decision[]): string {
       {
         tool: {
           driver: {
-            name: "permit",
+            name: "frostjs",
             version: VERSION,
-            informationUri: "https://github.com/keithadler/permit",
+            informationUri: "https://github.com/keithadler/frostjs",
             rules,
           },
         },

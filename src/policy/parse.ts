@@ -1,5 +1,5 @@
 /**
- * Parser for permit's policy files, written in frost's policy dialect:
+ * Parser for frostjs's policy files, written in frost's policy dialect:
  * line-oriented, one rule per line, `--` or `#` comments, case-insensitive
  * keywords, double-quoted strings. A trailing comment on a rule is its hint
  * and is printed when the rule refuses something.

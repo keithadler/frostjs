@@ -9,11 +9,11 @@ import { discover } from "../src/discover/index.js";
 
 /** A project depending on node_modules/widget, vendored by policy, with a lockfile. */
 function project(): string {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "permit-sync-"));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "frostjs-sync-"));
   fs.mkdirSync(path.join(dir, "node_modules", "widget"), { recursive: true });
   fs.mkdirSync(path.join(dir, "src"));
   fs.writeFileSync(
-    path.join(dir, "permit.policy"),
+    path.join(dir, "frostjs.policy"),
     ['policy "sync-test"', 'vendored "node_modules/widget/*.js"', "may use local storage", ""].join("\n"),
   );
   setWidget(dir, "1.0.0", 'localStorage.setItem("w",1);\n');
@@ -44,7 +44,7 @@ describe("discover include", () => {
   });
 });
 
-describe("permit registry sync", () => {
+describe("frostjs registry sync", () => {
   it("the gate sees vendored files inside node_modules", () => {
     const dir = project();
     const r = cliIn(dir, ".");
@@ -61,7 +61,7 @@ describe("permit registry sync", () => {
     expect(r.stdout).toContain(
       "node_modules/widget/index.js: widget 1.0.0 -> 1.0.1, capabilities unchanged, re-admitted",
     );
-    const reg = readRegistry(path.join(dir, ".permit", "registry.json"));
+    const reg = readRegistry(path.join(dir, ".frostjs", "registry.json"));
     expect(reg.lockfile?.path).toBe("package-lock.json");
     expect(reg.entries.map((e) => e.version).sort()).toEqual(["1.0.0", "1.0.1"]);
     expect(cliIn(dir, ".").code).toBe(0);
@@ -76,8 +76,8 @@ describe("permit registry sync", () => {
     expect(r.stdout).toContain(
       "node_modules/widget/index.js: widget 1.0.0 -> 2.0.0 adds network.fetch to telemetry.example; NOT admitted",
     );
-    expect(r.stdout).toContain("review it with: permit vendor add node_modules/widget/index.js");
-    expect(readRegistry(path.join(dir, ".permit", "registry.json")).entries.length).toBe(1);
+    expect(r.stdout).toContain("review it with: frostjs vendor add node_modules/widget/index.js");
+    expect(readRegistry(path.join(dir, ".frostjs", "registry.json")).entries.length).toBe(1);
     expect(cliIn(dir, ".").code).toBe(1);
   });
 
@@ -99,7 +99,7 @@ describe("permit registry sync", () => {
       JSON.stringify({ name: "other", version: "3.0.0" }),
     );
     fs.writeFileSync(path.join(dir, "node_modules", "other", "index.js"), "eval(x);\n");
-    fs.writeFileSync(path.join(dir, "permit.policy"), 'vendored "node_modules/*/*.js"\n');
+    fs.writeFileSync(path.join(dir, "frostjs.policy"), 'vendored "node_modules/*/*.js"\n');
     const r = cliIn(dir, "registry", "sync");
     expect(r.code).toBe(1);
     expect(r.stdout).toContain("node_modules/other/index.js (other@3.0.0): new package, not in the registry");
@@ -112,7 +112,7 @@ describe("permit registry sync", () => {
     const r = cliIn(dir, "registry", "sync");
     expect(r.code).toBe(0);
     expect(r.stdout).toContain("node_modules/widget/index.js: gone, widget@1.0.0 removed from the registry");
-    expect(readRegistry(path.join(dir, ".permit", "registry.json")).entries).toEqual([]);
+    expect(readRegistry(path.join(dir, ".frostjs", "registry.json")).entries).toEqual([]);
   });
 
   it("warns when there is no lockfile", () => {
@@ -132,6 +132,6 @@ describe("permit registry sync", () => {
   it("needs a subcommand", () => {
     const r = cliIn(project(), "registry");
     expect(r.code).toBe(2);
-    expect(r.stderr).toContain("permit registry needs a subcommand: sync");
+    expect(r.stderr).toContain("frostjs registry needs a subcommand: sync");
   });
 });

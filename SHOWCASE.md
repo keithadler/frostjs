@@ -1,6 +1,6 @@
 # Showcase: three.js ships a remote eval behind a URL parameter
 
-This is the finding that explains what permit is for. Everything below is
+This is the finding that explains what frostjs is for. Everything below is
 reproducible with `npm run showcase` (the corpus fetch verifies three.js
 0.160.0 against its npm integrity hash first).
 
@@ -46,7 +46,7 @@ library, and the library's devtools came along. That is the threat model in
 section 3 of the requirements, word for word: a dependency that reaches for
 something nobody asked it to.
 
-## What permit says
+## What frostjs says
 
 A plausible policy for an application built on three.js:
 
@@ -62,7 +62,7 @@ may use html injection in "examples/jsm/webxr/*"   -- "WEBXR NEEDS HTTPS" messag
 Against the two files in question:
 
 ```
-$ permit examples/jsm/libs/ecsy.module.js examples/jsm/physics/RapierPhysics.js
+$ frostjs examples/jsm/libs/ecsy.module.js examples/jsm/physics/RapierPhysics.js
 examples/jsm/libs/ecsy.module.js:1615:16: dom-escape.script denied by default (no rule grants it): document.createElement("script")
 examples/jsm/libs/ecsy.module.js:1670:3: dom-escape.html denied by default (no rule grants it): infoDiv.innerHTML = `Open ECSY devtools to connect to this page using the code:&nbsp;<b style="color: #fff">${remoteId}</b>&nbsp;<button onClick="generateNewCode()">Generate new code</button>`
 examples/jsm/libs/ecsy.module.js:1682:3: globals.window denied by default (no rule grants it): window.generateNewCode = () => { ... }
@@ -100,7 +100,7 @@ the host rather than saying the destination is unknown.
 The CSP the same policy emits is the runtime backstop for both:
 
 ```
-$ permit csp
+$ frostjs csp
 connect-src 'self'; script-src 'self'; worker-src 'self'
 ```
 
@@ -114,9 +114,9 @@ Run over all of `src` and `examples/jsm` (921 files), the same policy
 produces 121 denials, and most of them are not interesting: 82 are
 `network` denials in Emscripten glue (`draco_decoder.js`, `basis_transcoder.js`,
 `rhino3dm.js`, `ammo.wasm.js`) of the form `fetch(wasmBinaryFile, ...)`
-where the destination is a variable. Frost's rule applies and permit applies
+where the destination is a variable. Frost's rule applies and frostjs applies
 it: a destination that cannot be shown to be allowed is not allowed. An
-application adopting permit on top of three.js would do one of two things
+application adopting frostjs on top of three.js would do one of two things
 on the first afternoon: grant `may use the network in "examples/jsm/libs/**"`
 with a hint explaining why, or run `--update-baseline` and pay the debt
 down file by file. Either is a visible, reviewable decision, which is the
@@ -129,7 +129,7 @@ npm run showcase          # the two files above
 npm run showcase -- --all # all 921 files
 ```
 
-The threat model's limits apply here as everywhere. permit did not find
+The threat model's limits apply here as everywhere. frostjs did not find
 this by understanding what ECSY does; it found it because `eval` is `eval`
 and a policy said no. Obfuscated code would not have been caught. The file
 was not obfuscated, because nobody was hiding anything, and that is the

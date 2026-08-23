@@ -4,7 +4,7 @@ import path from "node:path";
 import { compile, type Policy } from "./compile.js";
 import { parsePolicy } from "./parse.js";
 
-export const POLICY_FILENAME = "permit.policy";
+export const POLICY_FILENAME = "frostjs.policy";
 
 /** The deepest directory containing every input (a file counts as its directory). */
 export function commonAncestor(inputs: readonly string[]): string {
@@ -30,7 +30,7 @@ export function commonAncestor(inputs: readonly string[]): string {
 }
 
 /**
- * Walk up from `start` looking for permit.policy. `stopAt`, when given, is the
+ * Walk up from `start` looking for frostjs.policy. `stopAt`, when given, is the
  * last directory searched. Returns the absolute path or null.
  */
 export function findPolicyFile(start: string, stopAt?: string): string | null {

@@ -7,12 +7,12 @@ import { changedLines, isChanged } from "../src/changed.js";
 import { cli } from "./helpers.js";
 
 function repo(): string {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "permit-git-"));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "frostjs-git-"));
   const g = (...args: string[]) => execFileSync("git", args, { cwd: dir, stdio: "ignore" });
   g("init", "-q");
   g("config", "user.email", "t@example.com");
   g("config", "user.name", "t");
-  fs.writeFileSync(path.join(dir, "permit.policy"), 'policy "t"\n');
+  fs.writeFileSync(path.join(dir, "frostjs.policy"), 'policy "t"\n');
   fs.writeFileSync(
     path.join(dir, "a.js"),
     ["const a = 1;", 'localStorage.setItem("old", 1);', "const b = 2;", ""].join("\n"),
@@ -36,7 +36,7 @@ describe("changedLines", () => {
     expect(isChanged(c, a, 4)).toBe(true);
     expect(isChanged(c, a, 2)).toBe(false);
     expect(isChanged(c, fs.realpathSync(path.join(dir, "new.js")), 1)).toBe(true);
-    expect(isChanged(c, path.join(dir, "permit.policy"), 1)).toBe(false);
+    expect(isChanged(c, path.join(dir, "frostjs.policy"), 1)).toBe(false);
   });
 
   it("a ref that looks like an option is refused before git sees it", () => {
@@ -53,12 +53,12 @@ describe("changedLines", () => {
   });
 
   it("outside a repository is a clear error", () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "permit-nogit-"));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "frostjs-nogit-"));
     expect(() => changedLines("HEAD", dir)).toThrow(/needs a git repository/);
   });
 });
 
-describe("permit --changed-since", () => {
+describe("frostjs --changed-since", () => {
   it("fails only on uses in changed lines", () => {
     const dir = repo();
     fs.writeFileSync(

@@ -1,5 +1,5 @@
 /**
- * The policy stage: parse a permit.policy, compile it, and decide each
+ * The policy stage: parse a frostjs.policy, compile it, and decide each
  * CapabilityUse. Everything outside this directory imports from here.
  */
 import type { CapabilityUse, Confidence } from "../extract/capability.js";
@@ -16,7 +16,7 @@ export type { Confidence } from "../extract/capability.js";
 /**
  * What became of a use. `allowed` and `denied` come from the policy;
  * `unknown` is a use below the confidence floor (listed, never failing);
- * `suppressed` has an inline `permit: ignore`; `baselined` is on record in
+ * `suppressed` has an inline `frostjs: ignore`; `baselined` is on record in
  * the baseline file; `unchanged` sits outside the lines a `--changed-since`
  * diff touched. Only `denied` fails the build.
  */
@@ -30,7 +30,7 @@ export interface Decision {
   rule: Rule | null;
 }
 
-/** The policy used when no permit.policy exists: nothing is granted. */
+/** The policy used when no frostjs.policy exists: nothing is granted. */
 export const DENY_ALL: Policy = compile(
   { file: "(no policy)", name: "deny-all", rules: [], vendored: [] },
   { today: "1970-01-01" },

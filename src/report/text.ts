@@ -32,12 +32,12 @@ export function describeUse(capability: string, target: string | null): string {
  *
  * An unregistered vendored file has no capability or expression to show,
  * so its whole message is the sentence `vendored file is not in the
- * registry; review it with: permit vendor add lib/x.js`; see denialMessage.
+ * registry; review it with: frostjs vendor add lib/x.js`; see denialMessage.
  */
 export function denialText(d: Decision): string {
   const { rule, reason, use } = d;
   if (reason === "unregistered")
-    return `vendored file is not in the registry; review it with: permit vendor add ${use.file}`;
+    return `vendored file is not in the registry; review it with: frostjs vendor add ${use.file}`;
   if (rule === null) return "denied by default (no rule grants it)";
   const where = `"${rule.text}" (line ${rule.line})`;
   const hint = rule.hint ? `: ${rule.hint}` : "";

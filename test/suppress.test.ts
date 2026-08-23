@@ -9,7 +9,7 @@ describe("suppression comments", () => {
   it("parses bare and bracketed forms, line and block", () => {
     const p = parseSource(
       "t.js",
-      "// permit: ignore\nx;\n/* permit: ignore[storage.local, network] */\ny; // permit:ignore[codegen.eval]\n",
+      "// frostjs: ignore\nx;\n/* frostjs: ignore[storage.local, network] */\ny; // frostjs:ignore[codegen.eval]\n",
     );
     const s = suppressions(p);
     expect(s.get(1)).toEqual({ all: true, codes: [] });
@@ -19,7 +19,7 @@ describe("suppression comments", () => {
   });
 
   it("ignores unrelated comments", () => {
-    const p = parseSource("t.js", "// permit the user\n// eslint-disable-next-line\nx;");
+    const p = parseSource("t.js", "// frostjs the user\n// eslint-disable-next-line\nx;");
     expect(suppressions(p).size).toBe(0);
   });
 
@@ -32,37 +32,37 @@ describe("suppression comments", () => {
 
 describe("suppressed uses", () => {
   it("same-line trailing comment", () => {
-    const [u] = uses('localStorage.setItem("a", 1); // permit: ignore[storage.local]');
+    const [u] = uses('localStorage.setItem("a", 1); // frostjs: ignore[storage.local]');
     expect(u?.suppressed).toBe(true);
   });
 
   it("comment on the line above", () => {
-    const [u] = uses('// permit: ignore\nlocalStorage.setItem("a", 1);');
+    const [u] = uses('// frostjs: ignore\nlocalStorage.setItem("a", 1);');
     expect(u?.suppressed).toBe(true);
   });
 
   it("a comment two lines above does not apply", () => {
-    const [u] = uses('// permit: ignore\n\nlocalStorage.setItem("a", 1);');
+    const [u] = uses('// frostjs: ignore\n\nlocalStorage.setItem("a", 1);');
     expect(u?.suppressed).toBe(false);
   });
 
   it("the line above must be only a comment", () => {
-    const u = uses("foo(); // permit: ignore\nlocalStorage.x;");
+    const u = uses("foo(); // frostjs: ignore\nlocalStorage.x;");
     expect(u[0]?.suppressed).toBe(false);
   });
 
   it("wrong capability does not suppress", () => {
-    const [u] = uses("localStorage.x; // permit: ignore[network]");
+    const [u] = uses("localStorage.x; // frostjs: ignore[network]");
     expect(u?.suppressed).toBe(false);
   });
 
   it("family suppresses its members", () => {
-    const [u] = uses("localStorage.x; // permit: ignore[storage]");
+    const [u] = uses("localStorage.x; // frostjs: ignore[storage]");
     expect(u?.suppressed).toBe(true);
   });
 
   it("a multi-line expression is keyed on its first line", () => {
-    const [u] = uses("// permit: ignore\nfetch(\n  url\n);");
+    const [u] = uses("// frostjs: ignore\nfetch(\n  url\n);");
     expect(u?.suppressed).toBe(true);
   });
 });

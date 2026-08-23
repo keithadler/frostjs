@@ -1,12 +1,12 @@
 /**
- * ESLint plugin. One rule, `permit/capability`, runs the same engine the
- * CLI does on each file ESLint hands it: permit's own parse, extraction,
- * policy discovery (nearest permit.policy above the file) and decision.
+ * ESLint plugin. One rule, `frostjs/capability`, runs the same engine the
+ * CLI does on each file ESLint hands it: frostjs's own parse, extraction,
+ * policy discovery (nearest frostjs.policy above the file) and decision.
  * Reports are ESLint problems at the use's position, so they show in
- * editors and `eslint-disable` comments work alongside `permit: ignore`.
+ * editors and `eslint-disable` comments work alongside `frostjs: ignore`.
  *
- *   import permit from "permit/eslint";
- *   export default [{ plugins: { permit }, rules: { "permit/capability": "error" } }];
+ *   import frostjs from "frostjs/eslint";
+ *   export default [{ plugins: { frostjs }, rules: { "frostjs/capability": "error" } }];
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -25,9 +25,9 @@ import {
 import { denialText, describeUse } from "./report/text.js";
 import { VERSION } from "./version.js";
 
-/** Options for the `permit/capability` rule, all optional. */
+/** Options for the `frostjs/capability` rule, all optional. */
 export interface RuleOptions {
-  /** Explicit policy file; otherwise the nearest permit.policy above the linted file. */
+  /** Explicit policy file; otherwise the nearest frostjs.policy above the linted file. */
   policy?: string;
   /** Lowest confidence that is reported as an error; default probable. */
   minConfidence?: Confidence;
@@ -77,11 +77,11 @@ function loadPolicy(file: string, today: string, explicit?: string): { policy: P
   }
 }
 
-/** The `permit/capability` rule. See RuleOptions. */
+/** The `frostjs/capability` rule. See RuleOptions. */
 export const capabilityRule = {
   meta: {
     type: "problem",
-    docs: { description: "Deny capability uses the permit policy has not granted", recommended: true },
+    docs: { description: "Deny capability uses the frostjs policy has not granted", recommended: true },
     schema: [
       {
         type: "object",
@@ -106,7 +106,7 @@ export const capabilityRule = {
 
         const { policy, dir, error } = loadPolicy(file, today, opts.policy);
         if (error) {
-          context.report({ message: `permit: ${error.split("\n")[0]}`, loc: { line: 1, column: 0 } });
+          context.report({ message: `frostjs: ${error.split("\n")[0]}`, loc: { line: 1, column: 0 } });
           return;
         }
 
@@ -132,14 +132,14 @@ export const capabilityRule = {
 };
 
 const plugin = {
-  meta: { name: "permit", version: VERSION },
+  meta: { name: "frostjs", version: VERSION },
   rules: { capability: capabilityRule },
   configs: {} as Record<string, unknown>,
 };
 
 plugin.configs["recommended"] = {
-  plugins: { permit: plugin },
-  rules: { "permit/capability": "error" },
+  plugins: { frostjs: plugin },
+  rules: { "frostjs/capability": "error" },
 };
 
 export default plugin;

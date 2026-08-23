@@ -1,8 +1,8 @@
 /**
  * Inline suppression:
  *
- *   // permit: ignore                      suppress every capability on this line
- *   // permit: ignore[storage.local, net]  suppress the listed codes or families
+ *   // frostjs: ignore                      suppress every capability on this line
+ *   // frostjs: ignore[storage.local, net]  suppress the listed codes or families
  *
  * A comment applies to uses on its own line, or, when the comment is alone on
  * its line, to uses starting on the next line.
@@ -11,13 +11,13 @@ import type { ParsedFile } from "./ast.js";
 import { positionAt } from "./ast.js";
 
 export interface Suppression {
-  /** A bare `permit: ignore`: every capability on the line. */
+  /** A bare `frostjs: ignore`: every capability on the line. */
   all: boolean;
   /** Codes or families listed in brackets. */
   codes: string[];
 }
 
-const MARKER = /^\s*permit:\s*ignore(?:\[([^\]]*)\])?\s*$/;
+const MARKER = /^\s*frostjs:\s*ignore(?:\[([^\]]*)\])?\s*$/;
 
 /** Line number -> suppression in force for uses starting on that line. */
 export function suppressions(parsed: ParsedFile): Map<number, Suppression> {

@@ -24,7 +24,7 @@ export function github(decisions: readonly Decision[], totals: Totals, opts: Tex
     const subject = describeUse(use.capability, use.target);
     const kind = d.verdict === "denied" ? "error" : "warning";
     const title =
-      d.verdict === "denied" ? `permit: ${use.capability} denied` : `permit: ${use.capability} ${use.confidence}`;
+      d.verdict === "denied" ? `frostjs: ${use.capability} denied` : `frostjs: ${use.capability} ${use.confidence}`;
     const message =
       d.verdict === "denied"
         ? denialMessage(d)
@@ -34,7 +34,7 @@ export function github(decisions: readonly Decision[], totals: Totals, opts: Tex
     );
   }
   for (const w of opts.warnings ?? []) {
-    lines.push(`::warning title=${escapeProperty("permit: grant expiring")}::${escapeData(w)}`);
+    lines.push(`::warning title=${escapeProperty("frostjs: grant expiring")}::${escapeData(w)}`);
   }
   const body = lines.length ? lines.join("\n") + "\n" : "";
   return body + text(decisions, totals, opts);

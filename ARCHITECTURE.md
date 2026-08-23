@@ -1,6 +1,6 @@
 # Architecture
 
-permit is a pipeline of five stages. Each is a directory or a file under
+frostjs is a pipeline of five stages. Each is a directory or a file under
 `src/`, each has one job, and data flows one way.
 
 ```
@@ -31,7 +31,7 @@ included.
 | `scope.ts` | Lexical scope analysis with hoisting. For every reference-position identifier decides: free (a global), bound (a local), or ambiguous (inside `with`). Also folds `const k = "literal"`. Results are written onto the identifier nodes as annotations (`annotations.ts`). |
 | `typescript.ts` | What counts as type-only (never a reference) and which TypeScript expression wrappers to look through. |
 | `target.ts` | Static resolution of a network destination from an argument expression, under frost's rule: a literal that closes the authority fixes the host and nothing after the slash can move it. |
-| `suppress.ts` | `// permit: ignore[...]` comments. |
+| `suppress.ts` | `// frostjs: ignore[...]` comments. |
 | `capability.ts` | The `CapabilityUse` record. |
 | `index.ts` | Runs the scope analysis, walks the tree, asks each recognizer, applies the free/bound/ambiguous rule, grows the reported expression outward through the member/call chain, and emits records. |
 | `recognizers/` | One file per capability family. |
@@ -77,7 +77,7 @@ build is `probable`; `possible` is listed as unknown.
 | `vocabulary.ts` | Phrases a policy author may write (`local storage`, `cookies`, `the network`) mapped to codes; the list of families and member codes. |
 | `compile.ts` | Turns a parsed policy into a `Policy` whose `evaluate(use)` applies: forbids first, then live grants, then expired grants (their own reason), then "not granted". Host lists match known destinations by pattern; an unknown destination is never allowed by a host list. Computes expiry warnings. |
 | `glob.ts` | Path globs for `in`: `*` within a segment, `**` across, a bare name at any depth, a plain directory covering everything beneath it. |
-| `config.ts` | Finds `permit.policy` from the inputs' common ancestor upward. |
+| `config.ts` | Finds `frostjs.policy` from the inputs' common ancestor upward. |
 | `csp.ts` | Derives the `Content-Security-Policy` header from the same policy. |
 | `index.ts` | `decide()`: applies the confidence floor, suppression and the vendored-unregistered case on top of `Policy.evaluate`, producing `Decision` records with a verdict (`allowed`, `denied`, `unknown`, `suppressed`, `baselined`, `unchanged`). |
 
