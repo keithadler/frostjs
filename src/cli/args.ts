@@ -5,6 +5,7 @@ export interface ParsedArgs {
   exitZero: boolean;
   policy: string | null;
   today: string | null;
+  minConfidence: "certain" | "probable" | "possible" | null;
   paths: string[];
 }
 
@@ -18,6 +19,7 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
     exitZero: false,
     policy: null,
     today: null,
+    minConfidence: null,
     paths: [],
   };
   let positionalOnly = false;
@@ -56,6 +58,14 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
       case "--policy":
         out.policy = takeValue();
         break;
+      case "--min-confidence": {
+        const v = takeValue();
+        if (v !== "certain" && v !== "probable" && v !== "possible") {
+          throw new UsageError("--min-confidence must be certain, probable or possible");
+        }
+        out.minConfidence = v;
+        break;
+      }
       case "--today": {
         const v = takeValue();
         if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) throw new UsageError("--today needs a date like 2026-12-01");
@@ -85,6 +95,9 @@ options:
   --exit-zero          report findings but always exit 0
   --policy <file>      use this policy instead of searching for permit.policy
   --today <date>       treat this YYYY-MM-DD as today when checking expiry
+  --min-confidence <c> lowest confidence that can fail the build:
+                       certain, probable (default) or possible; uses below
+                       it are listed as unknown
 
 policy:
   permit.policy is searched for in the directory shared by all the given

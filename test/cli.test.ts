@@ -99,6 +99,18 @@ describe("permit <paths> (step 4: deny-all gate)", () => {
     expect(r.stdout).toContain("test/fixtures/deny/shadowed.js:2:3: storage.cache possible: caches.x");
   });
 
+  it("--min-confidence possible makes an unknown fail", () => {
+    const r = cli("--min-confidence", "possible", path.join(fx, "shadowed.js"));
+    expect(r.code).toBe(1);
+    expect(r.stdout).toContain("storage.cache denied");
+  });
+
+  it("--min-confidence rejects other words", () => {
+    const r = cli("--min-confidence", "high", path.join(fx, "clean.js"));
+    expect(r.code).toBe(2);
+    expect(r.stderr).toContain("--min-confidence must be certain, probable or possible");
+  });
+
   it("--exit-zero reports but never fails", () => {
     const r = cli("--exit-zero", path.join(fx, "violation.js"));
     expect(r.code).toBe(0);

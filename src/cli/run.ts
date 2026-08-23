@@ -111,6 +111,7 @@ export function run(argv: readonly string[], io: Io): number {
   // Report paths relative to cwd; scope policy globs relative to the policy file.
   const decisions = decide(uses, policy, {
     scopePath: (u) => path.relative(policyDir, path.resolve(cwd, u.file)),
+    ...(args.minConfidence ? { minConfidence: args.minConfidence } : {}),
   });
   io.stdout(text(decisions, { files: files.length }, { warnings: policy.warnings }));
 

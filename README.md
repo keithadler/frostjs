@@ -97,6 +97,7 @@ permit --exclude <name>  skip directories with this name (repeatable)
 permit --exit-zero       report findings but always exit 0
 permit --policy <file>   use this policy instead of searching for permit.policy
 permit --today <date>    treat YYYY-MM-DD as today when checking expiry
+permit --min-confidence <c>  lowest confidence that fails: certain, probable (default), possible
 permit --version         print the version and exit
 permit --help            show usage
 ```
