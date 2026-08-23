@@ -5,13 +5,7 @@ import path from "node:path";
 export const EXTENSIONS: ReadonlySet<string> = new Set([".js", ".mjs"]);
 
 /** Directory names skipped wherever they appear in the tree. */
-export const DEFAULT_EXCLUDES: readonly string[] = [
-  "node_modules",
-  "dist",
-  "build",
-  "coverage",
-  ".git",
-];
+export const DEFAULT_EXCLUDES: readonly string[] = ["node_modules", "dist", "build", "coverage", ".git"];
 
 export interface DiscoverOptions {
   /** Extra directory names to skip, added to DEFAULT_EXCLUDES. */

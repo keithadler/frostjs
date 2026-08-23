@@ -3,8 +3,7 @@ import path from "node:path";
 import { discover } from "../src/discover/index.js";
 
 const root = path.join(__dirname, "fixtures", "discover");
-const rel = (files: string[]) =>
-  files.map((f) => path.relative(root, f).split(path.sep).join("/")).sort();
+const rel = (files: string[]) => files.map((f) => path.relative(root, f).split(path.sep).join("/")).sort();
 
 describe("discover", () => {
   it("finds .js and .mjs recursively, sorted", () => {

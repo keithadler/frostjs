@@ -4,11 +4,12 @@ import type { CapabilityUse, Origin } from "./capability.js";
 import { walk } from "./walk.js";
 import type { Recognizer } from "./recognizers/types.js";
 import { storage } from "./recognizers/storage.js";
+import { network } from "./recognizers/network.js";
 
 export type { CapabilityUse } from "./capability.js";
 
 /** One recognizer per capability family. Phase C adds the rest. */
-export const RECOGNIZERS: readonly Recognizer[] = [storage];
+export const RECOGNIZERS: readonly Recognizer[] = [storage, network];
 
 export interface ExtractOptions {
   origin?: Origin;

@@ -41,7 +41,9 @@ printed whenever that rule refuses something.
 ```
 policy "<name>"                                    optional, once
 may use <capability> [in "<glob>", ...] [until YYYY-MM-DD]
+may reach "<host>", ... [in "<glob>", ...] [until YYYY-MM-DD]
 forbid [using] <capability> [in "<glob>", ...]
+forbid reaching "<host>", ... [in "<glob>", ...]
 forbid everything else                             optional, readability only
 ```
 
@@ -56,7 +58,7 @@ forbid everything else                             optional, readability only
 | `indexeddb` | `storage.indexeddb` |
 | `the cache`, `caches` | `storage.cache` |
 | `navigator storage` | `storage.navigator` |
-| `the network` | `network` (Phase C) |
+| `the network` | `network` (any destination) |
 | `code generation`, `eval` | `codegen` (Phase C) |
 | `html injection` | `dom-escape` (Phase C) |
 | `identity`, `fingerprinting` | `identity` (Phase C) |
@@ -72,6 +74,11 @@ Rules:
 - `in` scopes a rule to path globs (`*` within a segment, `**` across
   segments, a bare name matches at any depth, a plain directory matches
   everything beneath it). Globs are relative to the policy file's directory.
+- `may reach` grants the network family only to the named hosts. `*` in a
+  host spans any characters (`*.internal`). `"same-origin"` names relative
+  URLs. A destination that cannot be read from the code is **not** allowed by
+  a host list: cannot be shown to be allowed is not allowed. Grant
+  `may use the network` if you really mean any destination.
 - `until` puts an expiry on a grant. Inside the last 14 days the build warns;
   after the date the grant denies with its own message. This is how drift is
   fought: an exception has to be renewed on purpose.
@@ -112,12 +119,26 @@ build; `certain` and `probable` uses do.
 | `storage.cache` | `caches` |
 | `storage.cookie` | `document.cookie` |
 | `storage.navigator` | `navigator.storage` |
+| `network.fetch` | `fetch` |
+| `network.xhr` | `XMLHttpRequest` |
+| `network.websocket` | `WebSocket` |
+| `network.eventsource` | `EventSource` |
+| `network.beacon` | `navigator.sendBeacon` |
+| `network.import` | dynamic `import()` of an absolute URL or an expression |
 
 Each is recognized bare, via `window` / `globalThis` / `self`, and via a
 string-literal computed member (`window["localStorage"]`). Uses via `self`
 are `probable` rather than `certain`, since `self` is often a local alias for
 `this`. If a file declares a variable with the same name as the global, the
 use is downgraded to `possible` until proper scope analysis lands.
+
+Network uses carry a **target** when it can be fixed statically. Frost's
+rule applies: a literal that closes the authority fixes the host, and nothing
+after the slash can move it. `fetch("https://api.example.com/items/" + id)`
+reaches `api.example.com`; `fetch("https://" + host)` reaches nobody we can
+name. Relative URLs are `same-origin`. Dynamic `import()` of a relative path
+or a bare package name goes through the bundler, not the network, and is not
+reported.
 
 ## What this is not
 

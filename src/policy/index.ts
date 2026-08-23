@@ -17,6 +17,7 @@ export interface Decision {
 
 /** The policy used when no permit.policy exists: nothing is granted. */
 export const DENY_ALL: Policy = compile({ file: "(no policy)", name: "deny-all", rules: [] }, { today: "1970-01-01" });
+export { matchesHost } from "./compile.js";
 
 /**
  * Confidence below this is never a hard failure; it is reported as unknown.

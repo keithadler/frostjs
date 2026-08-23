@@ -302,9 +302,14 @@ Ported directly from `exact`, because it is already proven.
    packages by npm integrity hash; `npm run corpus` fetches once, verifies,
    scans, and diffs against `corpus/expected.txt`. Baseline: 2013 files,
    21.1 MB, 3.3s, 32 findings, every `certain` one a verified true positive.
-10-16. One step per remaining capability family from section 7 (network,
-   codegen, dom-escape, identity, navigation, globals, worker), each with tests
-   and a corpus check that the false-positive count does not move.
+10. `network`. **DONE 2026-08-23.** fetch, XMLHttpRequest, WebSocket,
+    EventSource, sendBeacon, dynamic import of an absolute URL; static target
+    resolution under frost's closed-authority rule; `may reach` / `forbid
+    reaching` with host globs; unknown destination is never allowed by a host
+    list. Corpus: 32 -> 126 findings, all certain ones verified true.
+11-16. One step per remaining capability family from section 7 (codegen,
+   dom-escape, identity, navigation, globals, worker), each with tests and a
+   corpus check that the false-positive count does not move.
 
 **Phase D - noise control**
 

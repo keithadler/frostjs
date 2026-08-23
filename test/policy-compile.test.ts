@@ -134,3 +134,62 @@ describe("compile: name", () => {
     expect(policy('policy "widget"').name).toBe("widget");
   });
 });
+
+describe("compile: network hosts", () => {
+  const net = (target: string | null, file = "src/app.js"): CapabilityUse => ({
+    ...use("network.fetch", file),
+    target,
+  });
+
+  it("may reach allows only the named hosts", () => {
+    const p = policy('may reach "api.example.com", "*.internal"');
+    expect(p.evaluate(net("api.example.com")).verdict).toBe("allowed");
+    expect(p.evaluate(net("db.internal")).verdict).toBe("allowed");
+    expect(p.evaluate(net("API.EXAMPLE.COM")).verdict).toBe("allowed");
+    expect(p.evaluate(net("evil.example.com"))).toMatchObject({ verdict: "denied", reason: "not granted" });
+  });
+
+  it("a destination that cannot be read is not allowed by a host list", () => {
+    const p = policy('may reach "api.example.com"');
+    const e = p.evaluate(net(null));
+    expect(e).toMatchObject({ verdict: "denied", reason: "unknown destination" });
+    expect(e.rule?.text).toBe('may reach "api.example.com"');
+  });
+
+  it("may use the network allows any destination, known or not", () => {
+    const p = policy("may use the network");
+    expect(p.evaluate(net(null)).verdict).toBe("allowed");
+    expect(p.evaluate(net("anything.example")).verdict).toBe("allowed");
+  });
+
+  it("same-origin is a host name in the policy", () => {
+    const p = policy('may reach "same-origin"');
+    expect(p.evaluate(net("same-origin")).verdict).toBe("allowed");
+    expect(p.evaluate(net("api.example.com")).verdict).toBe("denied");
+  });
+
+  it("forbid reaching wins over a blanket grant", () => {
+    const p = policy('may use the network\nforbid reaching "*.telemetry.example" -- no reporting');
+    const e = p.evaluate(net("x.telemetry.example"));
+    expect(e).toMatchObject({ verdict: "denied", reason: "forbidden" });
+    expect(p.evaluate(net("api.example.com")).verdict).toBe("allowed");
+  });
+
+  it("forbid reaching does not fire on an unknown destination", () => {
+    // A forbid names what you fear; it cannot match what it cannot read. The allow side handles unknowns.
+    const p = policy('may use the network\nforbid reaching "*.telemetry.example"');
+    expect(p.evaluate(net(null)).verdict).toBe("allowed");
+  });
+
+  it("host patterns: * spans labels, match is whole-host", () => {
+    const p = policy('may reach "*.example.com"');
+    expect(p.evaluate(net("a.b.example.com")).verdict).toBe("allowed");
+    expect(p.evaluate(net("example.com")).verdict).toBe("denied");
+    expect(p.evaluate(net("xexample.com")).verdict).toBe("denied");
+  });
+
+  it("applies to every member of the network family", () => {
+    const p = policy('may reach "ws.example.com"');
+    expect(p.evaluate({ ...net("ws.example.com"), capability: "network.websocket" }).verdict).toBe("allowed");
+  });
+});

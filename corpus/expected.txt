@@ -8,6 +8,11 @@ swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:631208 storage.local certain local
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:636895 storage.local certain localStorage.getItem("authorized")
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:637170 storage.cookie certain document.cookie
 swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:637609 storage.cookie certain document.cookie
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:794178 network.fetch certain globalThis.fetch
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:794197 network.fetch certain globalThis.fetch
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:798540 network.fetch certain fetch(s,{headers:{Accept:Fu},loadSpec:!0}).then((s=>s.text())).then((s=>so.load(s)))
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:813121 network.fetch certain fetch
+swagger-ui-dist@5.11.0/swagger-ui-bundle.js:2:994692 network.fetch certain fetch(s,i)
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle-core.js:2:137933 storage.local certain localStorage.setItem("authorized",JSON.stringify(r))
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle-core.js:2:141039 storage.local certain localStorage.getItem("authorized")
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle-core.js:2:141314 storage.cookie certain document.cookie
@@ -16,17 +21,106 @@ swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:630948 storage.local certain lo
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:636635 storage.local certain localStorage.getItem("authorized")
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:636910 storage.cookie certain document.cookie
 swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:637349 storage.cookie certain document.cookie
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:793918 network.fetch certain globalThis.fetch
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:793937 network.fetch certain globalThis.fetch
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:798280 network.fetch certain fetch(s,{headers:{Accept:Fu},loadSpec:!0}).then((s=>s.text())).then((s=>so.load(s)))
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:812861 network.fetch certain fetch
+swagger-ui-dist@5.11.0/swagger-ui-es-bundle.js:2:994432 network.fetch certain fetch(s,i)
 swagger-ui-dist@5.11.0/swagger-ui.js:1:30575 storage.local certain localStorage.setItem("authorized",JSON.stringify(r))
 swagger-ui-dist@5.11.0/swagger-ui.js:1:33581 storage.local certain localStorage.getItem("authorized")
 swagger-ui-dist@5.11.0/swagger-ui.js:1:33856 storage.cookie certain document.cookie
 swagger-ui-dist@5.11.0/swagger-ui.js:1:34295 storage.cookie certain document.cookie
+three@0.160.0/examples/jsm/libs/ammo.wasm.js:15:160 network.xhr certain new XMLHttpRequest
+three@0.160.0/examples/jsm/libs/ammo.wasm.js:15:60 network.xhr certain new XMLHttpRequest
+three@0.160.0/examples/jsm/libs/ammo.wasm.js:19:260 network.fetch certain fetch
+three@0.160.0/examples/jsm/libs/ammo.wasm.js:19:315 network.fetch certain fetch(Qa,{credentials:"same-origin"}).then(function(a){if(!a.ok)throw"failed to load wasm binary fil
+three@0.160.0/examples/jsm/libs/ammo.wasm.js:25:121 network.fetch certain fetch
+three@0.160.0/examples/jsm/libs/ammo.wasm.js:25:139 network.fetch certain fetch(Qa,{credentials:"same-origin"}).then(function(g){return WebAssembly.instantiateStreaming(g,e).
+three@0.160.0/examples/jsm/libs/basis/basis_transcoder.js:9:11323 network.fetch certain fetch
+three@0.160.0/examples/jsm/libs/basis/basis_transcoder.js:9:11378 network.fetch certain fetch(wasmBinaryFile,{credentials:"same-origin"}).then(function(response){if(!response["ok"]){throw"
+three@0.160.0/examples/jsm/libs/basis/basis_transcoder.js:9:12452 network.fetch certain fetch
+three@0.160.0/examples/jsm/libs/basis/basis_transcoder.js:9:12479 network.fetch certain fetch(wasmBinaryFile,{credentials:"same-origin"}).then(function(response){var result=WebAssembly.ins
+three@0.160.0/examples/jsm/libs/basis/basis_transcoder.js:9:3007 network.xhr certain new XMLHttpRequest
+three@0.160.0/examples/jsm/libs/basis/basis_transcoder.js:9:3162 network.xhr certain new XMLHttpRequest
+three@0.160.0/examples/jsm/libs/basis/basis_transcoder.js:9:3347 network.xhr certain new XMLHttpRequest
+three@0.160.0/examples/jsm/libs/draco/draco_decoder.js:22:5423 network.fetch certain fetch
+three@0.160.0/examples/jsm/libs/draco/draco_decoder.js:22:5477 network.fetch certain fetch(wasmBinaryFile,{credentials:"same-origin"}).then(function(response){if(!response["ok"]){throw"
+three@0.160.0/examples/jsm/libs/draco/draco_decoder.js:22:6770 network.fetch certain fetch
+three@0.160.0/examples/jsm/libs/draco/draco_decoder.js:22:6796 network.fetch certain fetch(wasmBinaryFile,{credentials:"same-origin"}).then(function(response){var result=WebAssembly.ins
+three@0.160.0/examples/jsm/libs/draco/draco_decoder.js:8:3205 network.xhr certain new XMLHttpRequest
+three@0.160.0/examples/jsm/libs/draco/draco_decoder.js:8:3438 network.xhr certain new XMLHttpRequest
+three@0.160.0/examples/jsm/libs/draco/draco_decoder.js:8:3682 network.xhr certain new XMLHttpRequest
+three@0.160.0/examples/jsm/libs/draco/draco_encoder.js:4:3523 network.xhr certain new XMLHttpRequest
+three@0.160.0/examples/jsm/libs/draco/draco_encoder.js:4:3785 network.xhr certain new XMLHttpRequest
+three@0.160.0/examples/jsm/libs/draco/draco_encoder.js:4:4055 network.xhr certain new XMLHttpRequest
+three@0.160.0/examples/jsm/libs/draco/draco_wasm_wrapper.js:24:323 network.fetch certain fetch
+three@0.160.0/examples/jsm/libs/draco/draco_wasm_wrapper.js:24:362 network.fetch certain fetch(P,{credentials:"same-origin"}).then(function(e){if(!e.ok)throw"failed to load wasm binary file
+three@0.160.0/examples/jsm/libs/draco/draco_wasm_wrapper.js:34:451 network.xhr certain new XMLHttpRequest
+three@0.160.0/examples/jsm/libs/draco/draco_wasm_wrapper.js:35:191 network.xhr certain new XMLHttpRequest
+three@0.160.0/examples/jsm/libs/draco/draco_wasm_wrapper.js:35:50 network.xhr certain new XMLHttpRequest
+three@0.160.0/examples/jsm/libs/draco/draco_wasm_wrapper.js:39:310 network.fetch certain fetch
+three@0.160.0/examples/jsm/libs/draco/draco_wasm_wrapper.js:39:321 network.fetch certain fetch(P,{credentials:"same-origin"}).then(function(g){return WebAssembly.instantiateStreaming(g,d).t
+three@0.160.0/examples/jsm/libs/draco/gltf/draco_decoder.js:21:5428 network.fetch certain fetch
+three@0.160.0/examples/jsm/libs/draco/gltf/draco_decoder.js:21:5482 network.fetch certain fetch(wasmBinaryFile,{credentials:"same-origin"}).then(function(response){if(!response["ok"]){throw"
+three@0.160.0/examples/jsm/libs/draco/gltf/draco_decoder.js:21:6775 network.fetch certain fetch
+three@0.160.0/examples/jsm/libs/draco/gltf/draco_decoder.js:21:6801 network.fetch certain fetch(wasmBinaryFile,{credentials:"same-origin"}).then(function(response){var result=WebAssembly.ins
+three@0.160.0/examples/jsm/libs/draco/gltf/draco_decoder.js:8:3205 network.xhr certain new XMLHttpRequest
+three@0.160.0/examples/jsm/libs/draco/gltf/draco_decoder.js:8:3438 network.xhr certain new XMLHttpRequest
+three@0.160.0/examples/jsm/libs/draco/gltf/draco_decoder.js:8:3682 network.xhr certain new XMLHttpRequest
+three@0.160.0/examples/jsm/libs/draco/gltf/draco_encoder.js:4:3523 network.xhr certain new XMLHttpRequest
+three@0.160.0/examples/jsm/libs/draco/gltf/draco_encoder.js:4:3785 network.xhr certain new XMLHttpRequest
+three@0.160.0/examples/jsm/libs/draco/gltf/draco_encoder.js:4:4055 network.xhr certain new XMLHttpRequest
+three@0.160.0/examples/jsm/libs/draco/gltf/draco_wasm_wrapper.js:24:323 network.fetch certain fetch
+three@0.160.0/examples/jsm/libs/draco/gltf/draco_wasm_wrapper.js:24:362 network.fetch certain fetch(P,{credentials:"same-origin"}).then(function(e){if(!e.ok)throw"failed to load wasm binary file
+three@0.160.0/examples/jsm/libs/draco/gltf/draco_wasm_wrapper.js:34:482 network.xhr certain new XMLHttpRequest
+three@0.160.0/examples/jsm/libs/draco/gltf/draco_wasm_wrapper.js:35:210 network.xhr certain new XMLHttpRequest
+three@0.160.0/examples/jsm/libs/draco/gltf/draco_wasm_wrapper.js:35:69 network.xhr certain new XMLHttpRequest
+three@0.160.0/examples/jsm/libs/draco/gltf/draco_wasm_wrapper.js:39:49 network.fetch certain fetch
+three@0.160.0/examples/jsm/libs/draco/gltf/draco_wasm_wrapper.js:39:60 network.fetch certain fetch(P,{credentials:"same-origin"}).then(function(g){return WebAssembly.instantiateStreaming(g,d).t
 three@0.160.0/examples/jsm/libs/ecsy.module.js:1683:5 storage.local certain window.localStorage.clear()
 three@0.160.0/examples/jsm/libs/ecsy.module.js:1685:5 storage.local certain window.localStorage.setItem("ecsyRemoteId", remoteId)
 three@0.160.0/examples/jsm/libs/ecsy.module.js:1689:26 storage.local certain window.localStorage.getItem("ecsyRemoteId")
 three@0.160.0/examples/jsm/libs/ecsy.module.js:1692:5 storage.local certain window.localStorage.setItem("ecsyRemoteId", remoteId)
+three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:14279:52 network.xhr possible XMLHttpRequest
+three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:14279:68 network.fetch possible fetch
+three@0.160.0/examples/jsm/libs/lottie_canvas.module.js:935:25 network.xhr possible new XMLHttpRequest()
+three@0.160.0/examples/jsm/libs/mikktspace.module.js:120:22 network.fetch certain fetch(wasmDataURI) .then((res) => res.arrayBuffer()) .then((buffer) => WebAssembly.instantiate(buffe
+three@0.160.0/examples/jsm/libs/motion-controllers.module.js:48:26 network.fetch certain fetch(path)
+three@0.160.0/examples/jsm/libs/opentype.module.js:14136:19 network.xhr certain new XMLHttpRequest()
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.js:1085:16 network.fetch certain fetch
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.js:1088:14 network.fetch certain fetch(wasmBinaryFile, { credentials: 'same-origin' }).then(function(response) { if (!response['ok'])
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.js:1191:16 network.fetch certain fetch
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.js:1192:14 network.fetch certain fetch(wasmBinaryFile, { credentials: 'same-origin' }).then(function(response) { // Suppress closure 
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.js:269:17 network.xhr certain new XMLHttpRequest()
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.js:277:19 network.xhr certain new XMLHttpRequest()
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.js:286:15 network.xhr certain new XMLHttpRequest()
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.js:3346:20 network.xhr certain XMLHttpRequest
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.js:3381:21 network.xhr certain new XMLHttpRequest()
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.js:3400:23 network.xhr certain new XMLHttpRequest()
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.js:3441:20 network.xhr certain XMLHttpRequest
 three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.js:3557:16 storage.indexeddb certain window.indexedDB
 three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.js:3565:29 storage.indexeddb possible indexedDB.open(FS.DB_NAME(), FS.DB_VERSION)
 three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.js:3595:29 storage.indexeddb possible indexedDB.open(FS.DB_NAME(), FS.DB_VERSION)
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.js:3818:40 network.websocket certain WebSocket
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.module.js:1096:16 network.fetch certain fetch
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.module.js:1099:14 network.fetch certain fetch(wasmBinaryFile, { credentials: 'same-origin' }).then(function(response) { if (!response['ok'])
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.module.js:1202:16 network.fetch certain fetch
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.module.js:1203:14 network.fetch certain fetch(wasmBinaryFile, { credentials: 'same-origin' }).then(function(response) { // Suppress closure 
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.module.js:275:17 network.xhr certain new XMLHttpRequest()
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.module.js:283:19 network.xhr certain new XMLHttpRequest()
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.module.js:292:15 network.xhr certain new XMLHttpRequest()
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.module.js:3357:20 network.xhr certain XMLHttpRequest
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.module.js:3392:21 network.xhr certain new XMLHttpRequest()
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.module.js:3411:23 network.xhr certain new XMLHttpRequest()
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.module.js:3452:20 network.xhr certain XMLHttpRequest
 three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.module.js:3568:16 storage.indexeddb certain window.indexedDB
 three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.module.js:3576:29 storage.indexeddb possible indexedDB.open(FS.DB_NAME(), FS.DB_VERSION)
 three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.module.js:3606:29 storage.indexeddb possible indexedDB.open(FS.DB_NAME(), FS.DB_VERSION)
+three@0.160.0/examples/jsm/libs/rhino3dm/rhino3dm.module.js:3829:40 network.websocket certain WebSocket
+three@0.160.0/examples/jsm/libs/utif.module.js:1476:13 network.xhr certain new XMLHttpRequest()
+three@0.160.0/examples/jsm/libs/zstddec.module.js:1:162 network.fetch certain fetch
+three@0.160.0/examples/jsm/libs/zstddec.module.js:1:168 network.fetch certain fetch("data:application/wasm;base64,"+C).then(A=>A.arrayBuffer()).then(A=>WebAssembly.instantiate(A,
+three@0.160.0/examples/jsm/physics/RapierPhysics.js:41:18 network.import certain import( RAPIER_PATH )
+three@0.160.0/src/loaders/FileLoader.js:88:3 network.fetch certain fetch( req ) .then( response => { if ( response.status === 200 || response.status === 0 ) { // Some 
+three@0.160.0/src/loaders/ImageBitmapLoader.js:18:15 network.fetch certain fetch
+three@0.160.0/src/loaders/ImageBitmapLoader.js:87:19 network.fetch certain fetch( url, fetchOptions ).then( function ( res ) { return res.blob(); } ).then( function ( blob ) {

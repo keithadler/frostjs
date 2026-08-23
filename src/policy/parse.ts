@@ -17,6 +17,8 @@ export interface Rule {
   verb: Verb;
   /** Capability code or family, or "*" for everything. */
   capability: string;
+  /** For `may reach` / `forbid reaching`: host patterns. Empty means any destination. */
+  hosts: string[];
   /** Path globs the rule is scoped to; empty means everywhere. */
   paths: string[];
   /** ISO date (YYYY-MM-DD) after which a `may` rule no longer grants, or null. */
@@ -104,47 +106,90 @@ function parseRule(tokens: Token[], text: string, hint: string, line: number, en
   const at = (): number => tokens[pos]?.at ?? end;
 
   let verb: Verb;
+  let reach = false;
   const second = tokens[1];
   if (word() === "may" && second?.kind === "word" && second.value === "use") {
     verb = "may";
+    pos += 2;
+  } else if (word() === "may" && second?.kind === "word" && second.value === "reach") {
+    verb = "may";
+    reach = true;
+    pos += 2;
+  } else if (word() === "forbid" && second?.kind === "word" && second.value === "reaching") {
+    verb = "forbid";
+    reach = true;
     pos += 2;
   } else if (word() === "forbid") {
     verb = "forbid";
     pos += 1;
     if (word() === "using") pos += 1;
   } else {
-    const rest = tokens.slice(1).map((t) => t.raw).join(" ");
+    const rest = tokens
+      .slice(1)
+      .map((t) => t.raw)
+      .join(" ");
     const guess = resolveCapability(rest) ? `may use ${rest}` : "may use storage";
     return fail(tokens[0]!.at, `cannot read '${text}'`, guess);
   }
-  const verbText = verb === "may" ? "may use" : "forbid";
+  const verbText = reach ? (verb === "may" ? "may reach" : "forbid reaching") : verb === "may" ? "may use" : "forbid";
 
-  // Capability phrase: words up to `in`, `until`, or end.
-  const phraseAt = at();
-  const phraseWords: string[] = [];
-  while (pos < tokens.length) {
-    const w = word();
-    if (w === null || w === "in" || w === "until") break;
-    phraseWords.push(w);
-    pos++;
-  }
-  if (phraseWords.length === 0) fail(phraseAt, "name a capability after the verb", `${verbText} storage`);
-  const phrase = phraseWords.join(" ");
-
+  const hosts: string[] = [];
   let capability: string;
-  if (verb === "forbid" && phrase === "everything else") {
-    capability = "*";
-  } else {
-    const resolved = resolveCapability(phrase);
-    if (resolved === null) {
-      const near = nearest(phrase);
-      fail(
-        phraseAt,
-        `unknown capability '${phrase}'` + (near ? `; did you mean '${near}'?` : ""),
-        near ? `${verbText} ${near}` : `one of ${FAMILIES.join(", ")}, or a phrase such as "local storage" or "cookies"`,
-      );
+  let phrase: string;
+  if (reach) {
+    // may reach "host", "host" ...
+    capability = "network";
+    phrase = "";
+    const t0 = tok();
+    if (t0?.kind !== "string") {
+      const guess = t0?.kind === "word" ? t0.raw : "api.example.com";
+      fail(at(), `'${verbText}' needs one or more quoted hosts`, `${verbText} "${guess}"`);
     }
-    capability = resolved;
+    for (;;) {
+      const t = tok();
+      if (t?.kind !== "string")
+        fail(at(), "expected another quoted host after the comma", `${verbText} "api.example.com"`);
+      const host = t.value.trim();
+      if (host === "") fail(t.at, "empty host", `${verbText} "api.example.com"`);
+      if (/[/:?#]/.test(host) && host !== "same-origin") {
+        const m = /^(?:[a-z][a-z0-9+.-]*:)?\/\/(?:[^/@]*@)?([^/:?#]+)/i.exec(host);
+        fail(t.at, "name a host, not a URL", `${verbText} "${m?.[1] ?? "api.example.com"}"`);
+      }
+      hosts.push(host.toLowerCase());
+      pos++;
+      if (tok()?.kind === "comma") pos++;
+      else break;
+    }
+    phrase = hosts.map((h) => `"${h}"`).join(", ");
+  } else {
+    // Capability phrase: words up to `in`, `until`, or end.
+    const phraseAt = at();
+    const phraseWords: string[] = [];
+    while (pos < tokens.length) {
+      const w = word();
+      if (w === null || w === "in" || w === "until") break;
+      phraseWords.push(w);
+      pos++;
+    }
+    if (phraseWords.length === 0) fail(phraseAt, "name a capability after the verb", `${verbText} storage`);
+    phrase = phraseWords.join(" ");
+
+    if (verb === "forbid" && phrase === "everything else") {
+      capability = "*";
+    } else {
+      const resolved = resolveCapability(phrase);
+      if (resolved === null) {
+        const near = nearest(phrase);
+        fail(
+          phraseAt,
+          `unknown capability '${phrase}'` + (near ? `; did you mean '${near}'?` : ""),
+          near
+            ? `${verbText} ${near}`
+            : `one of ${FAMILIES.join(", ")}, or a phrase such as "local storage" or "cookies"`,
+        );
+      }
+      capability = resolved;
+    }
   }
 
   const paths: string[] = [];
@@ -153,13 +198,20 @@ function parseRule(tokens: Token[], text: string, hint: string, line: number, en
   while (pos < tokens.length) {
     const w = word();
     if (w === "in") {
-      if (sawIn) fail(at(), "'in' given twice; list every path after one 'in', separated by commas", `${verbText} ${phrase} in "a/*", "b/*"`);
+      if (sawIn)
+        fail(
+          at(),
+          "'in' given twice; list every path after one 'in', separated by commas",
+          `${verbText} ${phrase} in "a/*", "b/*"`,
+        );
       sawIn = true;
       pos++;
-      if (tok()?.kind !== "string") fail(at(), "'in' needs one or more quoted paths", `${verbText} ${phrase} in "src/*"`);
+      if (tok()?.kind !== "string")
+        fail(at(), "'in' needs one or more quoted paths", `${verbText} ${phrase} in "src/*"`);
       for (;;) {
         const t = tok();
-        if (t?.kind !== "string") fail(at(), "expected another quoted path after the comma", `${verbText} ${phrase} in "src/*"`);
+        if (t?.kind !== "string")
+          fail(at(), "expected another quoted path after the comma", `${verbText} ${phrase} in "src/*"`);
         if (t.value === "") fail(t.at, "empty path; name a file or a glob", `${verbText} ${phrase} in "src/*"`);
         if (t.value.startsWith("/") || /^[a-zA-Z]:[\\/]/.test(t.value)) {
           fail(t.at, "paths are relative to the policy file, not absolute", `${verbText} ${phrase} in "src/*"`);
@@ -170,7 +222,8 @@ function parseRule(tokens: Token[], text: string, hint: string, line: number, en
         else break;
       }
     } else if (w === "until") {
-      if (verb === "forbid") fail(at(), "'until' only applies to 'may' rules; a forbid does not expire", `forbid ${phrase}`);
+      if (verb === "forbid")
+        fail(at(), "'until' only applies to 'may' rules; a forbid does not expire", `forbid ${phrase}`);
       if (until !== null) fail(at(), "'until' given twice", `${verbText} ${phrase} until 2026-12-01`);
       pos++;
       const t = tok();
@@ -185,7 +238,7 @@ function parseRule(tokens: Token[], text: string, hint: string, line: number, en
     }
   }
 
-  return { verb, capability, paths, until, hint, line, text };
+  return { verb, capability, hosts, paths, until, hint, line, text };
 }
 
 /** The closest known phrase or code, or null if nothing is within editing distance. */

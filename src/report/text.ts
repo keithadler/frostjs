@@ -18,7 +18,14 @@ export function denialText(d: Decision): string {
   const where = `${rule.text}" (line ${rule.line})`;
   const hint = rule.hint ? `: ${rule.hint}` : "";
   if (reason === "expired") return `denied, grant expired ${rule.until}: "${where}${hint}`;
+  if (reason === "unknown destination") return `denied, destination cannot be read and "${where} names hosts${hint}`;
   return `denied by "${where}${hint}`;
+}
+
+/** The capability plus its destination when one is known. */
+function what(d: Decision): string {
+  const { capability, target } = d.use;
+  return target !== null && target !== "same-origin" ? `${capability} to ${target}` : capability;
 }
 
 /** Default human-readable output. One line per denial, unknowns in their own section, then a summary. */
@@ -29,7 +36,7 @@ export function text(decisions: readonly Decision[], totals: Totals, opts: TextO
 
   for (const d of denied) {
     const { use } = d;
-    lines.push(`${use.file}:${use.line}:${use.column}: ${use.capability} ${denialText(d)}: ${use.expression}`);
+    lines.push(`${use.file}:${use.line}:${use.column}: ${what(d)} ${denialText(d)}: ${use.expression}`);
   }
   if (unknown.length > 0) {
     if (lines.length > 0) lines.push("");

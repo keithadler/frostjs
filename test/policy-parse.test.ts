@@ -12,7 +12,7 @@ describe("policy: lines and comments", () => {
   });
 
   it("keeps a trailing comment as the rule's hint", () => {
-    const [r] = rules('forbid cookies -- consent banner owns these');
+    const [r] = rules("forbid cookies -- consent banner owns these");
     expect(r?.hint).toBe("consent banner owns these");
     const [s] = rules("may use storage # fine");
     expect(s?.hint).toBe("fine");
@@ -30,7 +30,7 @@ describe("policy: lines and comments", () => {
   });
 
   it("records the rule's own source text", () => {
-    const [r] = rules('  may use cookies   -- hint');
+    const [r] = rules("  may use cookies   -- hint");
     expect(r?.text).toBe("may use cookies");
   });
 });
@@ -170,7 +170,7 @@ describe("policy: errors are precise", () => {
   });
 
   it("policy line needs a quoted name", () => {
-    expect(err("policy checkout").message).toContain("try: policy \"checkout\"");
+    expect(err("policy checkout").message).toContain('try: policy "checkout"');
   });
 
   it("stops at the first bad line", () => {
@@ -268,5 +268,47 @@ describe("policy: error precision (step 8)", () => {
 
   it("does not crash on a comment-only policy", () => {
     expect(parse("-- nothing here").rules).toEqual([]);
+  });
+});
+
+describe("policy: may reach / forbid reaching (network hosts)", () => {
+  it("may reach a list of hosts", () => {
+    const [r] = rules('may reach "api.example.com", "*.internal"');
+    expect(r).toMatchObject({ verb: "may", capability: "network", hosts: ["api.example.com", "*.internal"] });
+  });
+
+  it("forbid reaching", () => {
+    const [r] = rules('forbid reaching "*.telemetry.example" -- no third-party reporting');
+    expect(r).toMatchObject({
+      verb: "forbid",
+      capability: "network",
+      hosts: ["*.telemetry.example"],
+      hint: "no third-party reporting",
+    });
+  });
+
+  it("combines with in and until", () => {
+    const [r] = rules('may reach "cdn.example.com" in "src/lazy/*" until 2026-12-01');
+    expect(r).toMatchObject({ hosts: ["cdn.example.com"], paths: ["src/lazy/*"], until: "2026-12-01" });
+  });
+
+  it("may use rules have no hosts", () => {
+    expect(rules("may use the network")[0]?.hosts).toEqual([]);
+  });
+
+  it("errors", () => {
+    const err = (t: string) => {
+      try {
+        parse(t);
+      } catch (e) {
+        return (e as PolicyError).message;
+      }
+      throw new Error("expected error");
+    };
+    expect(err("may reach")).toContain("'may reach' needs one or more quoted hosts");
+    expect(err("may reach api.example.com")).toContain('try: may reach "api.example.com"');
+    expect(err('may reach "https://api.example.com/x"')).toContain("name a host, not a URL");
+    expect(err('may reach "https://api.example.com/x"')).toContain('try: may reach "api.example.com"');
+    expect(err('forbid reaching "a",')).toContain("expected another quoted host after the comma");
   });
 });

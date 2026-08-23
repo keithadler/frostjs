@@ -112,8 +112,12 @@ describe("permit <paths> (step 7: policy discovery)", () => {
   it("finds permit.policy above the inputs and applies it", () => {
     const r = cli("--today", "2026-08-23", path.join(proj, "src"));
     expect(r.code).toBe(1);
-    expect(r.stdout).toContain('test/fixtures/proj/src/app.js:2:1: storage.local denied by "deny everything": localStorage.setItem("not-here", 1)');
-    expect(r.stdout).toContain('test/fixtures/proj/src/legacy/old.js:2:1: storage.cookie denied by "forbid cookies" (line 4): consent banner owns these: document.cookie');
+    expect(r.stdout).toContain(
+      'test/fixtures/proj/src/app.js:2:1: storage.local denied by "deny everything": localStorage.setItem("not-here", 1)',
+    );
+    expect(r.stdout).toContain(
+      'test/fixtures/proj/src/legacy/old.js:2:1: storage.cookie denied by "forbid cookies" (line 4): consent banner owns these: document.cookie',
+    );
     expect(r.stdout).not.toContain("fine-here");
     expect(r.stdout).not.toContain('"ok"');
     expect(r.stdout).toContain("3 files, 2 denied, 0 unknown");
@@ -122,13 +126,17 @@ describe("permit <paths> (step 7: policy discovery)", () => {
   it("warns about a grant that is about to expire", () => {
     const r = cli("--today", "2026-08-23", path.join(proj, "src", "sw.js"));
     expect(r.code).toBe(0);
-    expect(r.stdout).toContain('warning: test/fixtures/proj/permit.policy line 5: "may use the cache until 2026-08-30" expires in 7 days');
+    expect(r.stdout).toContain(
+      'warning: test/fixtures/proj/permit.policy line 5: "may use the cache until 2026-08-30" expires in 7 days',
+    );
   });
 
   it("an expired grant denies with its own message", () => {
     const r = cli("--today", "2026-09-01", path.join(proj, "src", "sw.js"));
     expect(r.code).toBe(1);
-    expect(r.stdout).toContain('storage.cache denied, grant expired 2026-08-30: "may use the cache until 2026-08-30" (line 5): service worker experiment: caches.open("v1")');
+    expect(r.stdout).toContain(
+      'storage.cache denied, grant expired 2026-08-30: "may use the cache until 2026-08-30" (line 5): service worker experiment: caches.open("v1")',
+    );
   });
 
   it("nearest policy wins for a nested directory", () => {

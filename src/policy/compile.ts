@@ -2,7 +2,7 @@ import type { CapabilityUse } from "../extract/capability.js";
 import { matchesGlob } from "./glob.js";
 import type { ParsedPolicy, Rule } from "./parse.js";
 
-export type Reason = "granted" | "forbidden" | "expired" | "not granted";
+export type Reason = "granted" | "forbidden" | "expired" | "not granted" | "unknown destination";
 
 export interface Evaluation {
   verdict: "allowed" | "denied";
@@ -48,22 +48,33 @@ export function compile(parsed: ParsedPolicy, opts: CompileOptions): Policy {
     rules: parsed.rules,
     warnings,
     evaluate(use) {
-      const applies = (r: Rule): boolean =>
+      const inScope = (r: Rule): boolean =>
         matchesCapability(r.capability, use.capability) &&
         (r.paths.length === 0 || r.paths.some((p) => matchesGlob(p, use.file)));
+      // A host list matches a known destination by pattern. An unknown
+      // destination cannot be shown to match, so a forbid does not fire on
+      // it and a grant does not cover it.
+      const hostMatches = (r: Rule): boolean =>
+        r.hosts.length === 0 || (use.target !== null && r.hosts.some((h) => matchesHost(h, use.target!)));
 
-      const forbid = forbids.find(applies);
+      const forbid = forbids.find((r) => inScope(r) && hostMatches(r));
       if (forbid) return { verdict: "denied", reason: "forbidden", rule: forbid };
 
       let expired: Rule | null = null;
+      let hostListed: Rule | null = null;
       for (const g of grants) {
-        if (!applies(g)) continue;
+        if (!inScope(g)) continue;
         if (g.until !== null && daysBetween(opts.today, g.until) < 0) {
           expired ??= g;
           continue;
         }
+        if (!hostMatches(g)) {
+          if (use.target === null) hostListed ??= g;
+          continue;
+        }
         return { verdict: "allowed", reason: "granted", rule: g };
       }
+      if (hostListed) return { verdict: "denied", reason: "unknown destination", rule: hostListed };
       if (expired) return { verdict: "denied", reason: "expired", rule: expired };
       return { verdict: "denied", reason: "not granted", rule: null };
     },
@@ -73,6 +84,19 @@ export function compile(parsed: ParsedPolicy, opts: CompileOptions): Policy {
 /** "*" matches all; a family matches itself and its members; a code matches exactly. */
 export function matchesCapability(pattern: string, capability: string): boolean {
   return pattern === "*" || pattern === capability || capability.startsWith(pattern + ".");
+}
+
+/** Host patterns: `*` spans any characters including dots; the match is whole-host and case-insensitive. */
+export function matchesHost(pattern: string, host: string): boolean {
+  const rx =
+    "^" +
+    pattern
+      .toLowerCase()
+      .split("*")
+      .map((p) => p.replace(/[.+?^${}()|[\]\\]/g, "\\$&"))
+      .join(".*") +
+    "$";
+  return new RegExp(rx).test(host.toLowerCase());
 }
 
 /** Whole days from `from` to `to`; negative when `to` is in the past. */

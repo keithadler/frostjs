@@ -40,7 +40,9 @@ function ensure(pkg: Pkg): string {
   fs.mkdirSync(cacheDir, { recursive: true });
   const spec = `${pkg.name}@${pkg.version}`;
   process.stderr.write(`fetching ${spec}\n`);
-  const out = execFileSync("npm", ["pack", spec, "--pack-destination", cacheDir, "--silent"], { encoding: "utf8" }).trim();
+  const out = execFileSync("npm", ["pack", spec, "--pack-destination", cacheDir, "--silent"], {
+    encoding: "utf8",
+  }).trim();
   const tgz = path.join(cacheDir, out.split("\n").pop()!);
   verify(tgz, pkg.integrity);
   fs.rmSync(dir, { recursive: true, force: true });
@@ -67,7 +69,9 @@ for (const pkg of manifest.packages) {
     }
     for (const u of extract(parsed)) {
       const expr = u.expression.replace(/\s+/g, " ").slice(0, 100);
-      lines.push(`${pkg.name}@${pkg.version}/${path.relative(dir, file)}:${u.line}:${u.column} ${u.capability} ${u.confidence} ${expr}`);
+      lines.push(
+        `${pkg.name}@${pkg.version}/${path.relative(dir, file)}:${u.line}:${u.column} ${u.capability} ${u.confidence} ${expr}`,
+      );
     }
   }
 }
@@ -77,7 +81,9 @@ const actual = lines.join("\n") + (lines.length ? "\n" : "");
 
 if (process.argv.includes("--update")) {
   fs.writeFileSync(expectedFile, actual);
-  process.stderr.write(`wrote ${lines.length} findings to corpus/expected.txt (${files} files, ${(bytes / 1e6).toFixed(1)} MB, ${seconds}s)\n`);
+  process.stderr.write(
+    `wrote ${lines.length} findings to corpus/expected.txt (${files} files, ${(bytes / 1e6).toFixed(1)} MB, ${seconds}s)\n`,
+  );
   process.exit(0);
 }
 
@@ -90,7 +96,9 @@ for (const l of added) process.stdout.write(`+ ${l}\n`);
 for (const l of removed) process.stdout.write(`- ${l}\n`);
 process.stderr.write(`${files} files, ${(bytes / 1e6).toFixed(1)} MB, ${lines.length} findings, ${seconds}s`);
 if (added.length || removed.length) {
-  process.stderr.write(`: ${added.length} new, ${removed.length} gone. If this step intended the change, run: npm run corpus -- --update\n`);
+  process.stderr.write(
+    `: ${added.length} new, ${removed.length} gone. If this step intended the change, run: npm run corpus -- --update\n`,
+  );
   process.exit(1);
 }
 process.stderr.write(": unchanged\n");

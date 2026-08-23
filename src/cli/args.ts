@@ -11,7 +11,15 @@ export interface ParsedArgs {
 export class UsageError extends Error {}
 
 export function parseArgs(argv: readonly string[]): ParsedArgs {
-  const out: ParsedArgs = { version: false, help: false, exclude: [], exitZero: false, policy: null, today: null, paths: [] };
+  const out: ParsedArgs = {
+    version: false,
+    help: false,
+    exclude: [],
+    exitZero: false,
+    policy: null,
+    today: null,
+    paths: [],
+  };
   let positionalOnly = false;
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]!;
