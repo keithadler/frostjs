@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import path from "node:path";
-import { cli } from "./helpers.js";
+import { cli, cliIn } from "./helpers.js";
 import { VERSION } from "../src/version.js";
 
 describe("frostjs --version", () => {
@@ -195,5 +195,21 @@ describe("frostjs <paths> (step 19: inline suppression)", () => {
     expect(r.stdout).toContain("suppressed.js:6:1: storage.session denied");
     expect(r.stdout).not.toContain("storage.local denied");
     expect(r.stdout).toContain("1 file, 1 denied, 0 unknown, 2 suppressed");
+  });
+});
+
+describe("frostjs <paths> (policy ignore)", () => {
+  it("ignored files are neither analyzed nor counted", () => {
+    const fs = require("node:fs") as typeof import("node:fs");
+    const os = require("node:os") as typeof import("node:os");
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "frostjs-ignore-"));
+    fs.mkdirSync(path.join(dir, "public"));
+    fs.writeFileSync(path.join(dir, "frostjs.policy"), 'ignore "public/*.min.js"\n');
+    fs.writeFileSync(path.join(dir, "public", "app.min.js"), "eval(x);\n");
+    fs.writeFileSync(path.join(dir, "app.js"), "localStorage.x;\n");
+    const r = cliIn(dir, ".");
+    expect(r.code).toBe(1);
+    expect(r.stdout).not.toContain("app.min.js");
+    expect(r.stdout).toContain("1 file, 1 denied");
   });
 });

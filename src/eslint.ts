@@ -17,6 +17,7 @@ import {
   decide,
   findPolicyFile,
   isoToday,
+  matchesGlob,
   DENY_ALL,
   PolicyError,
   type Confidence,
@@ -110,6 +111,7 @@ export const capabilityRule = {
           return;
         }
 
+        if (policy.ignore.some((g) => matchesGlob(g, path.relative(dir, file)))) return;
         const parsed = parseSource(file, text);
         if (parsed.errors.length > 0) return; // ESLint's own parser will have complained already
         const decisions = decide(extract(parsed), policy, {

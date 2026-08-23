@@ -5,6 +5,7 @@
  * and is printed when the rule refuses something.
  *
  *   policy "checkout-widget"
+ *   ignore "public/*.min.js"
  *   vendored "vendor/**"
  *   may reach "api.example.com", "cdn.example.com"
  *   may use session storage
@@ -42,6 +43,8 @@ export interface ParsedPolicy {
   rules: Rule[];
   /** Globs, relative to the policy directory, of third-party files checked by fingerprint rather than analyzed. */
   vendored: string[];
+  /** Globs, relative to the policy directory, of files not analyzed at all (generated bundles, fixtures). */
+  ignore: string[];
 }
 
 /**
@@ -104,6 +107,7 @@ class Cursor {
 export function parsePolicy(text: string, file: string): ParsedPolicy {
   const rules: Rule[] = [];
   const vendored: string[] = [];
+  const ignore: string[] = [];
   let name: string | null = null;
   const lines = text.split(/\r?\n/);
   for (let i = 0; i < lines.length; i++) {
@@ -125,16 +129,19 @@ export function parsePolicy(text: string, file: string): ParsedPolicy {
       name = nameTok.value;
       continue;
     }
-    if (c.word() === "vendored") {
+    const pathList = c.word() === "vendored" ? vendored : c.word() === "ignore" ? ignore : null;
+    if (pathList !== null) {
+      const keyword = c.word()!;
+      const example = keyword === "vendored" ? 'vendored "vendor/**"' : 'ignore "public/*.min.js"';
       c.pos = 1;
-      if (c.tok()?.kind !== "string") fail(c.at(), "'vendored' needs one or more quoted paths", 'vendored "vendor/**"');
-      vendored.push(...quotedList(c, "path", 'vendored "vendor/**"', checkPath('vendored "vendor/**"')));
+      if (c.tok()?.kind !== "string") fail(c.at(), `'${keyword}' needs one or more quoted paths`, example);
+      pathList.push(...quotedList(c, "path", example, checkPath(example)));
       if (!c.done()) fail(c.at(), `unexpected '${c.tok()!.raw}' after the paths`);
       continue;
     }
     rules.push(parseRule(c, trimmed, hint, n));
   }
-  return { file, name: name ?? file, rules, vendored };
+  return { file, name: name ?? file, rules, vendored, ignore };
 }
 
 /** The verb forms a rule may start with, longest first so `forbid using` beats `forbid`. */

@@ -183,8 +183,9 @@ function runCheck(args: ParsedArgs, io: Io): number {
   if (typeof loaded === "number") return loaded;
   const { policy, policyDir } = loaded;
 
-  const files = discoverOrFail(args, io, policy.vendored);
-  if (typeof files === "number") return files;
+  const discovered = discoverOrFail(args, io, policy.vendored);
+  if (typeof discovered === "number") return discovered;
+  const files = discovered.filter((f) => !policy.ignore.some((g) => matchesGlob(g, relToPolicy(policyDir, f))));
 
   let registry: Registry | null = null;
   if (policy.vendored.length > 0) {

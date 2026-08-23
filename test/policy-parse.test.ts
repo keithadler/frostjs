@@ -319,3 +319,16 @@ describe("policy: may reach / forbid reaching (network hosts)", () => {
     expect(err('forbid reaching "a",')).toContain("expected another quoted host after the comma");
   });
 });
+
+describe("policy: ignore", () => {
+  it("parses a list of globs", () => {
+    const p = parsePolicy('ignore "public/*.min.js", "fixtures/**"\nmay use storage', "frostjs.policy");
+    expect(p.ignore).toEqual(["public/*.min.js", "fixtures/**"]);
+    expect(p.rules.length).toBe(1);
+  });
+
+  it("needs quoted globs and no trailing words", () => {
+    expect(() => parsePolicy("ignore public/*.min.js", "p")).toThrow(/'ignore' needs one or more quoted paths/);
+    expect(() => parsePolicy('ignore "a" please', "p")).toThrow(/unexpected 'please' after the paths/);
+  });
+});

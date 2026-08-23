@@ -36,6 +36,8 @@ export interface Policy {
   rules: readonly Rule[];
   /** Globs of vendored files, relative to the policy directory. */
   vendored: readonly string[];
+  /** Globs of files not analyzed at all, relative to the policy directory. */
+  ignore: readonly string[];
   /** Grants that expire within the warning window, as printable lines. */
   warnings: readonly string[];
   /** `use.file` must be relative to the policy file's directory. */
@@ -77,6 +79,7 @@ export function compile(parsed: ParsedPolicy, opts: CompileOptions): Policy {
     today,
     rules: parsed.rules,
     vendored: parsed.vendored,
+    ignore: parsed.ignore,
     warnings,
     evaluate(use) {
       const target = use.target;

@@ -119,3 +119,13 @@ describe("eslint plugin", () => {
     expect(lint(dir, "a.js", "localStorage.x;")).toEqual([]);
   });
 });
+
+describe("eslint plugin: ignore", () => {
+  it("files the policy ignores get no reports", () => {
+    const dir = project();
+    fs.appendFileSync(path.join(dir, "frostjs.policy"), 'ignore "public/**"\n');
+    fs.mkdirSync(path.join(dir, "public"));
+    expect(lint(dir, "public/app.js", "eval(s);")).toEqual([]);
+    expect(lint(dir, "src.js", "eval(s);").length).toBe(1);
+  });
+});

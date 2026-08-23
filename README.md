@@ -70,6 +70,7 @@ printed whenever that rule refuses something.
 
 ```
 policy "<name>"                                    optional, once
+ignore "<glob>", ...                               files not analyzed at all
 vendored "<glob>", ...                             third-party files, checked by fingerprint
 may use <capability> [in "<glob>", ...] [until YYYY-MM-DD]
 may reach "<host>", ... [in "<glob>", ...] [until YYYY-MM-DD]
@@ -105,6 +106,9 @@ Rules:
 - `in` scopes a rule to path globs (`*` within a segment, `**` across
   segments, a bare name matches at any depth, a plain directory matches
   everything beneath it). Globs are relative to the policy file's directory.
+- `ignore` skips files entirely: generated bundles, test fixtures, anything
+  that is not your code to police. It lives in the policy so the exception
+  is visible in review, where `--exclude` on the command line is not.
 - `may reach` grants the network family only to the named hosts. `*` in a
   host spans any characters (`*.internal`). `"same-origin"` names relative
   URLs. A destination that cannot be read from the code is **not** allowed by
