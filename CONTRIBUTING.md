@@ -84,6 +84,10 @@ line in the README grammar block.
 - **No new dependencies** without a reason in the pull request. The tool
   is installed into other people's CI; every dependency is their problem
   too.
+- **`oxc-parser` is pinned to patch releases** (`~`). Its AST shape moves
+  between minors. Bumping it is a deliberate change: update the range, run
+  the tests and `npm run corpus`, and fix `src/extract/ast.ts` if the tree
+  changed. Dependabot opens that PR weekly; it is not merged on green alone.
 
 ## Reporting a false positive
 

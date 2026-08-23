@@ -1,0 +1,16 @@
+version: 2
+updates:
+  # oxc-parser is pinned to patch releases on purpose: its AST shape moves
+  # between minors, and the adapter in src/extract/ast.ts should be updated
+  # deliberately with the corpus check green, not by a floating range.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      dev-dependencies:
+        dependency-type: development
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
