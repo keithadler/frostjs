@@ -244,6 +244,9 @@ function checkSinks(n: AnyNode, scope: Scope, add: (source: string, sink: string
     if (isIdentifier(callee, "eval")) return flag(args[0], "eval");
     if (isIdentifier(callee, "Function")) return flag(args[args.length - 1], "Function");
     if (isIdentifier(callee, "importScripts")) return args.forEach((a) => flag(a, "importScripts"));
+    // new Worker(tainted) / new SharedWorker(tainted): loads an attacker-chosen script off-thread.
+    if (n.type === "NewExpression" && (isIdentifier(callee, "Worker") || isIdentifier(callee, "SharedWorker")))
+      return flag(args[0], callee.name);
     // A tainted first argument to a timer is a string, so it is the string-code
     // form (setTimeout("...", n)); a function callback is never tainted.
     if (isIdentifier(callee, "setTimeout") || isIdentifier(callee, "setInterval")) return flag(args[0], callee.name);
@@ -265,6 +268,9 @@ function checkSinks(n: AnyNode, scope: Scope, add: (source: string, sink: string
       }
       if ((method === "assign" || method === "replace") && isLocation(obj)) return flag(args[0], "location (redirect)");
       if (method === "open" && freeGlobal(unwrap(obj), GLOBALS)) return flag(args[0], "window.open (redirect)");
+      // navigator.serviceWorker.register(tainted): registers an attacker-chosen script that intercepts every request.
+      if (method === "register" && obj.type === "MemberExpression" && memberName(obj) === "serviceWorker")
+        return flag(args[0], "serviceWorker.register");
     }
   }
 }

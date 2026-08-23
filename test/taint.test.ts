@@ -242,3 +242,17 @@ describe("taint: WebSocket / EventSource message data", () => {
     expect(flows("self.onmessage = (e) => { eval(e.data); };")).toEqual([]);
   });
 });
+
+describe("taint: worker registration from an untrusted URL", () => {
+  it("new Worker / new SharedWorker / serviceWorker.register with a tainted URL", () => {
+    expect(flows("new Worker(location.hash);")).toEqual(["location.hash->Worker"]);
+    expect(flows("new SharedWorker(location.search.slice(1));")).toEqual(["location.search->SharedWorker"]);
+    expect(flows("navigator.serviceWorker.register(location.hash);")).toEqual([
+      "location.hash->serviceWorker.register",
+    ]);
+  });
+  it("quiet for a constant or non-source URL", () => {
+    expect(flows('new Worker("/w.js"); navigator.serviceWorker.register("/sw.js");')).toEqual([]);
+    expect(flows("new Worker(cfg.path);")).toEqual([]);
+  });
+});
