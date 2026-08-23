@@ -74,17 +74,24 @@ const PRESERVING_METHODS: ReadonlySet<string> = new Set([
   "getAll",
   "toJSON",
 ]);
-/** Global functions that preserve taint on their first argument. */
+/**
+ * Global functions that preserve taint on their first argument. Only
+ * DECODING functions belong here: they un-neutralize a value (reveal HTML
+ * or script the encoding hid). ENCODING functions (encodeURIComponent,
+ * encodeURI, escape) are deliberately absent - they percent-encode `<`,
+ * `>`, `&`, so `el.innerHTML = encodeURIComponent(x)` cannot inject markup
+ * and must not be flagged.
+ */
 const PRESERVING_CALLS: ReadonlySet<string> = new Set([
   "decodeURIComponent",
   "decodeURI",
-  "encodeURIComponent",
-  "encodeURI",
   "atob",
-  "escape",
   "unescape",
   "String",
 ]);
+
+/** Properties whose value is a number, so they carry no attacker-controlled text. */
+const NUMERIC_PROPS: ReadonlySet<string> = new Set(["length", "size", "byteLength", "index", "lastIndex"]);
 
 type Scope = { tainted: Set<string>; sources: Map<string, string> };
 
@@ -143,6 +150,8 @@ function taintSource(n: AnyNode, scope: Scope): string | null {
     case "MemberExpression": {
       const direct = sourceMember(n);
       if (direct) return direct;
+      // t.length / t.size return a number, which carries no attacker text.
+      if (NUMERIC_PROPS.has(memberName(n) ?? "")) return null;
       // t.foo / t[i]: a member of a tainted object is tainted.
       return taintSource(n["object"] as AnyNode, scope);
     }

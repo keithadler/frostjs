@@ -7,6 +7,15 @@ change the policy grammar or the JSON schema; the changelog will say so.
 
 ## [Unreleased]
 
+### Fixed
+
+- Taint no longer flags `el.innerHTML = encodeURIComponent(x)` (and
+  `encodeURI`/`escape`): encoding functions percent-encode `< > &`, so they
+  neutralize a markup sink. Only decoding functions preserve taint now.
+- Taint no longer flags a numeric property of a tainted value
+  (`String(location.hash.length)`): a length or size carries no attacker
+  text. Both surfaced by a modern-syntax edge-case sweep.
+
 ## [0.6.0] - 2026-08-23
 
 Additive plus one validated behavior change (open redirect dropped as a

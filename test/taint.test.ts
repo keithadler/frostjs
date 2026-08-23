@@ -262,3 +262,24 @@ describe("taint: worker registration from an untrusted URL", () => {
     expect(flows("new Worker(cfg.path);")).toEqual([]);
   });
 });
+
+describe("taint: encoding neutralizes, numeric props carry no text (FP fixes)", () => {
+  it("encodeURIComponent/encodeURI/escape into an HTML sink is NOT a flow (they encode < > &)", () => {
+    expect(flows("el.innerHTML = encodeURIComponent(location.hash)")).toEqual([]);
+    expect(flows("el.innerHTML = encodeURI(location.search)")).toEqual([]);
+    expect(flows("el.innerHTML = escape(document.cookie)")).toEqual([]);
+    expect(flows("el.innerHTML = `${encodeURIComponent(location.hash)}`")).toEqual([]);
+  });
+  it("decoding still preserves taint (it reveals hidden markup)", () => {
+    expect(flows("el.innerHTML = decodeURIComponent(location.hash)")).toEqual(["location.hash->innerHTML"]);
+    expect(flows("eval(atob(location.hash))")).toEqual(["location.hash->eval"]);
+  });
+  it("a numeric property carries no attacker text", () => {
+    expect(flows("el.innerHTML = String(location.hash.length)")).toEqual([]);
+    expect(flows("el.innerHTML = location.search.length")).toEqual([]);
+  });
+  it("but string members and slices still flow", () => {
+    expect(flows("el.innerHTML = location.hash.slice(1)")).toEqual(["location.hash->innerHTML"]);
+    expect(flows("el.innerHTML = JSON.parse(location.hash).cmd")).toEqual(["location.hash->innerHTML"]);
+  });
+});
