@@ -1,0 +1,330 @@
+# permit - requirements
+
+**Working title:** `permit` (alternatives: `warden`, `least`, `frostguard`).
+
+**One line:** A policy-driven, deny-by-default static analyzer for JavaScript that
+runs in CI and refuses to let code ship if it reaches for a capability the project
+has not explicitly granted.
+
+**Relationship to existing projects:**
+
+- Same pipeline shape as [exact](https://github.com/keithadler/magic-float-linter):
+  extract -> triage -> recognize -> report -> gate. The architecture transfers; the
+  recognizer is replaced.
+- [frost](https://github.com/keithadler/frost) supplies the policy grammar. Policies
+  are written in frost's HyperTalk-descended syntax, not YAML or JSON.
+
+---
+
+## 1. Problem
+
+A team ships JavaScript to end users' browsers. Some of that code is written by
+people who are not the platform owner - tenants, contractors, marketing, or a
+language model. The platform owner is liable for what that code does in a
+visitor's browser: reading local storage, setting cookies, calling `eval`, beaconing
+to an unknown host.
+
+There is no cheap, boring way to state "this project may not touch storage, and may
+only talk to these three hosts" and have a build fail when someone violates it.
+
+## 2. What this is not
+
+Stating these up front, because each one is a project that eats a year.
+
+1. **Not a runtime sandbox.** No membrane, no proxied globals, no realms, no
+   `with`-scope tricks. A determined attacker with code execution defeats a
+   wrapper; that fight is not worth having.
+2. **Not a replacement for CSP.** It *emits* CSP, and CSP remains the runtime
+   backstop. This tool is the build-time gate.
+3. **Not a universal npm scanner.** Third-party dependency source is checked by
+   fingerprint against a registry, not analyzed line by line. See section 8.
+4. **Not a supply-chain security product.** Overlaps in places, but the goal is
+   capability policy, not malware detection.
+
+## 3. Threat model
+
+**In scope (catches these):**
+
+- First-party or tenant code that accidentally or carelessly uses a forbidden API.
+- Code that a model generated which reached for something the prompt did not intend.
+- A dependency bump that silently introduces a new network destination.
+- Drift: a policy was set, and six months later nobody noticed it eroding.
+
+**Out of scope (does not catch these):**
+
+- Deliberately obfuscated code designed to evade static analysis.
+- Runtime-constructed access (`window["local" + "Storage"]`) beyond a shallow
+  constant-folding pass.
+- Anything injected after the build, at serve time or via a compromised CDN.
+
+State this honestly in the README. The value is a high floor, not a ceiling.
+
+## 4. Success criteria
+
+1. Near-zero false positives on a corpus of real, popular JavaScript. This is the
+   product, exactly as it was for `exact`. A linter that cries wolf gets disabled.
+2. A policy file for a simple project fits on one screen and is readable by someone
+   who does not write JavaScript.
+3. Adoptable on a legacy codebase in one afternoon via a baseline snapshot, with no
+   cleanup sprint required first.
+4. Runs on a mid-size repo in under ten seconds.
+
+**Corpus (for 4.1 and ground rule 14.1).** Pinned by content hash in
+`corpus/manifest.json` so "the count must not move" is reproducible:
+lodash, react-dom, three.js, chart.js, marked, plus one large application bundle.
+
+---
+
+## 5. Core decision: implementation language
+
+**DECIDED 2026-08-23: Option A, Node/TypeScript, parsing with `oxc-parser`.**
+
+Rationale: the reusable asset from `exact` is the architecture and the
+false-positive discipline, not the Python. `oxc-parser` parses JS/TS/JSX natively
+and is fast enough to keep the ten-second criterion (4.4) safe. Its AST shape is
+less stable than ESTree, so it is wrapped behind an adapter in `src/extract/ast.ts`
+from day one.
+
+Rejected: Option B, Python with `tree-sitter-javascript`. JS users will not
+`pip install` a JS linter, and TS/JSX support is a fight.
+
+---
+
+## 6. Architecture
+
+Five stages. Each maps to a module.
+
+| Stage | Module | Job |
+| --- | --- | --- |
+| Discover | `discover` | Walk the repo. Find `.js`, `.mjs`, `.ts`, `.jsx`, `.tsx`, plus `<script>` blocks inside `.html`. Honour excludes. |
+| Extract | `extract` | Parse to AST. Emit a flat list of `CapabilityUse` records: what was touched, where, in what expression. |
+| Triage | `triage` | Discard uses that cannot matter (local shadowed identifiers, type-only positions, dead branches after constant folding). |
+| Decide | `policy` | Compare each surviving use against the compiled policy. Allowed, denied, or unknown. |
+| Report | `report` | Text, JSON, GitHub annotations, SARIF. Exit non-zero on any denial. |
+
+Type-only positions are skipped entirely: `declare` blocks, `import type`,
+`.d.ts` files. Without this, `lib.dom.d.ts` shapes leak into the corpus count.
+
+### 6.1 The `CapabilityUse` record
+
+```
+CapabilityUse {
+  capability: string     // "storage.local", "network.fetch", "eval"
+  target: string | null  // resolved URL/host if statically knowable
+  file: string
+  line: int
+  column: int
+  expression: string     // source text of the enclosing expression
+  confidence: enum       // certain | probable | possible
+  origin: enum           // first-party | vendored | inline-html
+}
+```
+
+`confidence` mirrors `exact`'s surplus scoring. A direct
+`localStorage.setItem(...)` is `certain`. A `window[k]` where `k` folds to a
+constant is `probable`. A dynamic member access that cannot be resolved is
+`possible` and is reported separately, never as a hard failure by default.
+
+`--min-confidence` defaults to `probable`. `possible` findings print in a
+separate section and never fail the build unless opted in.
+
+## 7. Capability taxonomy
+
+The denylist vocabulary. Deny-by-default means every one of these is off unless
+the policy grants it.
+
+1. **storage** - `localStorage`, `sessionStorage`, `indexedDB`, `caches`,
+   `document.cookie`, `navigator.storage`.
+2. **network** - `fetch`, `XMLHttpRequest`, `WebSocket`, `EventSource`,
+   `navigator.sendBeacon`, dynamic `import()`, `Worker`/`SharedWorker` URLs.
+3. **codegen** - `eval`, `new Function`, `setTimeout`/`setInterval` with a string
+   argument, `document.write`.
+4. **dom-escape** - `innerHTML`, `outerHTML`, `insertAdjacentHTML`,
+   `document.createElement("script")`, `<iframe>` creation, `srcdoc`.
+5. **identity** - `navigator.userAgent`, `geolocation`, `mediaDevices`,
+   `clipboard`, `credentials`, `permissions`, canvas/audio fingerprinting
+   signatures.
+6. **navigation** - `location` assignment, `window.open`, `history` manipulation,
+   `postMessage` to a non-`self` target.
+7. **globals** - assignment to `window.*`, `globalThis.*`, prototype mutation on
+   built-ins.
+8. **worker** - `navigator.serviceWorker.register`, `Worker`, `SharedWorker`.
+   A service worker intercepts every future request; its blast radius is large
+   enough to deserve its own family rather than hiding inside `network`.
+
+Each capability has a stable code for `--select` / `--ignore` and for inline
+suppression, following `exact`'s convention: `// permit: ignore[storage.local]`.
+
+## 8. Third-party dependencies
+
+The hard part, handled by not solving the general case.
+
+1. **Fingerprint registry.** A signed manifest mapping SHA-384 hashes to
+   `(package, version, capability set)`. A dependency whose hash is in the
+   registry is admitted with its recorded capabilities checked against policy.
+2. **Unknown hash = build failure**, with a report naming the file and offering
+   `permit vendor add <path>` to review and admit it deliberately.
+3. **Registry population.** Bootstrap by analyzing a package once, recording the
+   capability set, and committing the entry. Optionally a shared community
+   registry later; do not depend on one existing.
+4. **SRI output.** Emit `integrity` attributes from the same hashes, so the
+   browser enforces the registry at load time.
+
+Version churn is the known pain point: every patch release is a new hash. Mitigate
+with a `permit registry sync` command that re-fingerprints on lockfile change.
+A repo with no lockfile gets a warning from `registry sync` and a hard failure
+from the gate, because without a lockfile there is nothing to sync against.
+
+## 9. Policy language
+
+Policy is frost. Deny-by-default, so the file only ever grants.
+
+```
+policy for "checkout-widget"
+  allow network to "api.example.com"
+  allow network to "cdn.example.com"
+  allow storage session
+  allow dom-escape in "src/legacy/banner.js"
+  deny everything else
+end policy
+```
+
+Requirements:
+
+1. Grants may be scoped to a path glob (`in "src/legacy/*"`) so exceptions are
+   local and visible, not global.
+2. A grant may carry a note and an expiry date; expired grants fail the build with
+   a distinct message. This is how you fight drift.
+3. The compiler emits three artifacts from one policy: the linter ruleset, a
+   `Content-Security-Policy` header string, and a human-readable summary.
+4. Policy compilation errors are fatal and precise - file, line, and what was
+   expected.
+5. `deny everything else` is optional, since deny is the default. `permit summary`
+   always prints the implicit deny so a non-engineer reviewer sees it.
+
+## 10. Outputs
+
+1. `text` - default. File, line, column, capability, the offending expression, the
+   policy line that denied it.
+2. `json` - stable schema, versioned.
+3. `github` - inline PR annotations.
+4. `sarif` - SARIF 2.1.0 for code scanning, one rule per capability.
+5. `csp` - print the derived CSP header and nothing else, for the deploy step.
+6. `summary` - a plain-English capability report for a non-engineer reviewer.
+
+## 11. Adoption and noise control
+
+Ported directly from `exact`, because it is already proven.
+
+1. **Baseline snapshots.** `permit --baseline .permit-baseline.json` freezes
+   existing violations. Only new ones fail. Key on
+   `(file, capability, expression text)`, not line number. A file rename
+   invalidates its entries; this is accepted and documented.
+2. **Inline suppression.** `// permit: ignore[storage.local]` with an optional
+   bracketed capability list. A bare `// permit: ignore` suppresses all.
+3. **Changed-lines-only mode** for PR checks, using the git diff.
+4. **`--exit-zero`** for informational runs.
+5. **Config discovery** walking up to the nearest `permit.frost`, mirroring
+   `exact`'s `[tool.exact]` discovery.
+
+## 12. Integrations
+
+1. **CLI** - `permit <paths>`, the primary interface.
+2. **GitHub Action** - composite action, inputs mirroring `exact`'s `action.yml`
+   (`paths`, `format`, `args`, `fail-on-findings`). Pass inputs via `env`, never
+   spliced into the script body - splicing is a shell injection vector.
+3. **Pre-commit hook** - `.pre-commit-hooks.yaml`.
+4. **ESLint plugin** - runs the same engine as an ESLint rule, sharing config and
+   suppression semantics with the CLI. Same relationship `flake8_plugin.py` has to
+   `exact`'s CLI.
+5. **Deploy step** - `permit csp` emits the header for nginx or the CDN config.
+
+---
+
+## 13. Milestones
+
+**Phase A - walking skeleton**
+
+1. Repo, packaging, CI, licence, `--version`. **DONE 2026-08-23.**
+2. Discovery and parsing of `.js`/`.mjs` only.
+3. Extract one capability family end to end: `storage`.
+4. Hardcoded deny-all policy, text output, non-zero exit.
+   *Acceptance:* running it on a file containing `localStorage.setItem("a", 1)`
+   fails the build and names the line.
+
+**Phase B - the policy language**
+
+5. Frost grammar for `policy`, `allow`, `deny`, path scoping.
+6. Policy compiler to internal ruleset.
+7. Config discovery and `permit.frost` resolution.
+8. Precise policy syntax errors.
+
+**Phase C - full taxonomy**
+
+9-13. One step per capability family from section 7, each with tests and a corpus
+check that the false-positive count does not move.
+
+**Phase D - noise control**
+
+14. Triage: scope analysis, shadowed identifiers, constant folding.
+15. Confidence tiers, `--min-confidence`.
+16. Inline suppression.
+17. Baseline snapshots.
+18. Changed-lines-only mode.
+
+**Phase E - outputs and CI**
+
+19. JSON and SARIF.
+20. GitHub annotations.
+21. GitHub Action, pre-commit hook.
+22. CSP emission.
+
+**Phase F - dependencies**
+
+23. Fingerprint registry format and `vendor add`.
+24. `registry sync` against the lockfile.
+25. SRI attribute emission.
+
+**Phase G - reach**
+
+26. TypeScript and JSX.
+27. Inline `<script>` in HTML.
+28. ESLint plugin.
+
+**Phase H - the showpiece**
+
+29. Run against a well-known open-source web app, publish the findings and the
+    policy file that would have prevented them. This is the README hook, the same
+    role the sympy finding plays for `exact`.
+
+---
+
+## 14. Ground rules
+
+1. Zero false positives is the product. Any engine change re-runs the corpus scan;
+   the finding count must not move unless the step intends it.
+2. Never use em dashes in prose, docs, or comments - use " - " instead.
+3. New behaviour gets a test first or alongside, never after the commit.
+4. Every new CLI flag gets: help text, a README usage line, and a test.
+5. One step, one commit. Mark steps DONE with a date in this file.
+6. The README states the threat model's limits plainly. No security theatre.
+
+## 15. Open questions
+
+All resolved 2026-08-23.
+
+1. **Node or Python** - Node/TypeScript with `oxc-parser`. See section 5.
+2. **Where the policy compiler lives** - this repo. Frost supplies the grammar and
+   parser as a dependency; `permit` owns the semantics (what `allow network to`
+   means, CSP emission) in `src/policy/`. Putting capability semantics in frost
+   would couple frost's release cadence to permit's taxonomy.
+3. **Fingerprint registry** - both, with per-project first. A committed
+   `.permit/registry.json` is mandatory. A shared registry is an optional
+   upstream that per-project entries can be pinned from. Not built until Phase F
+   has users.
+4. **Expired grants** - warning window, then hard failure. A grant with
+   `until <date>` warns for a configurable period (default 14 days) before the
+   date and fails after it. A surprise hard failure on a Monday for a reason
+   nobody remembers is the "linter gets disabled" failure mode from 4.1.
+5. **Per-tenant mode** - later. `permit.frost` discovery walks up, so a monorepo
+   with one policy per tenant directory already gets most of the way there.
