@@ -103,15 +103,6 @@ const shown = (cwd: string, file: string): string => path.relative(cwd, file).sp
 const relToPolicy = (policyDir: string, file: string): string =>
   path.relative(policyDir, file).split(path.sep).join("/");
 
-/** git reports paths under the repository's real location; temp dirs on macOS are symlinked. */
-function realpath(p: string): string {
-  try {
-    return fs.realpathSync(p);
-  } catch {
-    return p;
-  }
-}
-
 function fail(io: Io, message: string): number {
   io.stderr(`frostjs: ${message}\n`);
   return 2;
@@ -244,7 +235,7 @@ function runCheck(args: ParsedArgs, io: Io): number {
       return fail(io, (e as Error).message);
     }
     decisions = decisions.map((d) =>
-      d.verdict === "denied" && !isChanged(changed, realpath(path.resolve(cwd, d.use.file)), d.use.line)
+      d.verdict === "denied" && !isChanged(changed, path.resolve(cwd, d.use.file), d.use.line)
         ? { ...d, verdict: "unchanged" }
         : d,
     );

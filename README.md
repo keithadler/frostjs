@@ -1,10 +1,128 @@
 # frostjs
 
-A policy-driven, deny-by-default static analyzer for JavaScript. It runs in CI
-and refuses to let code ship if it reaches for a capability the project has not
-explicitly granted: storage, network, `eval`, DOM injection, identity, and so on.
+**The model wrote it. Did anyone decide it could do that?**
 
-## What it found
+frostjs is a deny-by-default capability gate for JavaScript. You write a
+policy that fits on one screen, in plain words:
+
+```
+may reach "api.example.com"
+may use session storage
+forbid cookies        -- consent banner owns these
+```
+
+and the build fails on anything the code reaches for that the policy does
+not grant: reading storage, setting cookies, calling `eval`, injecting a
+`<script>`, opening a WebSocket to a host you have never heard of. The
+report names the file, the line, the expression, and the policy line that
+said no.
+
+## Why every AI-assisted JavaScript project needs this in the pipeline
+
+Code review was built for code written by a colleague at human speed. An
+assistant writes a hundred lines in the time it takes to read ten, and
+none of those lines arrive with an intent attached. A prompt says "cache
+the results"; the model reaches for `localStorage`. A prompt says "load the
+physics engine"; the model writes `import("https://cdn.skypack.dev/...")`.
+A prompt says "make the markdown render"; the model assigns `innerHTML`.
+Each is a reasonable reading of the words, each is a capability your
+application now has, and nobody decided it.
+
+A test suite does not catch this: the code works. A linter does not catch
+this: the code is well formed. A human reviewer skims it, because the
+diff is long and the code looks fine, which it is. The only thing that
+catches it is a rule that says what this project may do, written down
+before the code was, and a build that enforces it. That is the whole
+tool.
+
+frostjs gives you:
+
+- **Deny by default.** Everything is off until the policy turns it on. A
+  new capability cannot arrive unnoticed, whoever or whatever wrote it.
+- **A policy a non-engineer can read and sign off.** `frostjs summary`
+  prints it in English. `frostjs csp` turns the same file into your
+  `Content-Security-Policy` header, so the build-time gate and the runtime
+  backstop cannot disagree.
+- **Zero false positives as the product.** Real scope analysis, so a local
+  named `fetch` is not a network call. Every engine change runs against 21
+  MB of real, pinned, hash-verified JavaScript and the finding count must
+  not move.
+- **Adoption in one command.** `npx frostjs init src` writes a policy that
+  grants exactly what the code does today, with a note on each line saying
+  where. The first run passes. Then you delete what should not be allowed.
+- **Dependencies by fingerprint.** Vendored files are admitted by hash with
+  the capabilities someone reviewed; a version bump that gains a network
+  destination is refused and shown as a diff.
+- **Exceptions that expire.** `may use local storage in "src/legacy/*"
+  until 2026-12-01` warns for two weeks, then fails. Drift has a deadline.
+
+CLI, GitHub Action, pre-commit hook, ESLint plugin. One runtime
+dependency. MIT.
+
+## Two minutes to a gated pipeline
+
+```bash
+npx frostjs init src        # writes frostjs.policy from what the code does today
+git add frostjs.policy      # commit it; it is the contract
+npx frostjs src             # passes, because init granted what exists
+```
+
+Then add the check to CI:
+
+```yaml
+# .github/workflows/frostjs.yml
+on: [pull_request]
+jobs:
+  frostjs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: keithadler/frostjs@main
+        with:
+          paths: src
+          args: --changed-since origin/main
+```
+
+From here on, a pull request that reaches for a capability the policy does
+not grant fails with an inline annotation on the offending line. To allow
+it, someone edits `frostjs.policy` in the same PR, and the reviewer sees
+both changes side by side. That is the decision being made visible.
+
+## For AI coding agents
+
+If an assistant writes code in your project, tell it the gate exists.
+Paste this into `CLAUDE.md`, `AGENTS.md`, `.cursorrules`, or whatever your
+tool reads:
+
+```markdown
+## frostjs
+
+This project is gated by frostjs (https://github.com/keithadler/frostjs).
+`frostjs.policy` at the repository root says which browser capabilities
+the code may use: storage, network destinations, code generation, HTML
+injection, identity, navigation, globals, workers. Everything else is
+denied.
+
+- Before finishing any change to JavaScript or TypeScript, run
+  `npx frostjs <paths you changed>` and make it pass.
+- Read a denial as a question, not an obstacle. If the task genuinely needs
+  the capability, add the narrowest grant that covers it to
+  `frostjs.policy` (scope it with `in "<file>"`, name hosts with
+  `may reach "<host>"`, add `until <date>` if it is temporary) and say in
+  your summary that you widened the policy and why. If the task does not
+  need it, change the code instead.
+- Never add `may use everything`, never add `// frostjs: ignore` to make a
+  build pass, and never delete or loosen an existing `forbid` line. Those
+  are a person's decisions.
+- `npx frostjs summary` prints the policy in plain English if you need to
+  explain it.
+```
+
+The instructions above are also in [`AGENTS.md`](AGENTS.md) in this
+repository, which applies them to frostjs's own code.
+
+## Where it has already found something
 
 three.js 0.160.0 ships `examples/jsm/libs/ecsy.module.js`, which, if a page
 that imports it is opened with `?enable-remote-devtools` in the URL, loads a

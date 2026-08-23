@@ -30,7 +30,8 @@ describe.skipIf(process.platform === "win32")("GitHub Action", () => {
     for (const l of runLines) expect(l).not.toContain("inputs.");
   });
 
-  it("runs frostjs with the github format and fails on findings", () => {
+  it("runs frostjs with the github format and fails on findings", { timeout: 120_000 }, () => {
+    // The action runs the built CLI; build it here so the test does not depend on a prior npm run build.
     execFileSync("npm", ["run", "build"], { cwd: root, stdio: "ignore" });
     const r = action({ FROSTJS_PATHS: "src", FROSTJS_ARGS: "--today 2026-08-23" });
     expect(r.status).toBe(1);

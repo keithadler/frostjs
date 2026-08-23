@@ -1,0 +1,32 @@
+# frostjs
+
+> A deny-by-default capability linter for JavaScript. A one-screen policy says which browser capabilities the code may use (storage, network destinations, code generation, HTML injection, identity, navigation, globals, workers); the build fails on anything else, naming the file, line, expression and policy line. Built for pipelines where an AI assistant writes code.
+
+## Start here
+
+- [README](README.md): value proposition, two-minute setup, the policy grammar, every capability code, and a block to paste into CLAUDE.md or AGENTS.md so an assistant respects the gate.
+- [SHOWCASE](SHOWCASE.md): what it found in three.js 0.160.0 (a URL-parameter-gated remote eval, and a runtime import from a CDN).
+- [ARCHITECTURE](ARCHITECTURE.md): the pipeline, the contract a recognizer signs, the invariants.
+- [CONTRIBUTING](CONTRIBUTING.md): the zero-false-positive rule and how the corpus enforces it.
+- [AGENTS](AGENTS.md): instructions for AI agents changing this repository.
+- [SECURITY](SECURITY.md): what a green run promises, what it does not, how to report a bypass.
+
+## Commands
+
+- `npx frostjs init src`: write a starter policy from what the code does today.
+- `npx frostjs src`: check; exit 1 on a denial.
+- `npx frostjs summary`: the policy in plain English.
+- `npx frostjs csp`: the Content-Security-Policy header the policy implies.
+- `npx frostjs vendor add <file>`, `npx frostjs registry sync`, `npx frostjs sri`: third-party code by fingerprint.
+
+## Policy grammar
+
+```
+policy "<name>"
+ignore "<glob>", ...
+vendored "<glob>", ...
+may use <capability> [in "<glob>", ...] [until YYYY-MM-DD]   -- hint
+may reach "<host>", ... [in "<glob>", ...] [until YYYY-MM-DD]
+forbid [using] <capability> [in "<glob>", ...]
+forbid reaching "<host>", ...
+```
