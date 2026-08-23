@@ -13,9 +13,11 @@
  * through operations that provably preserve it** - string methods, URL
  * decoding, JSON.parse, template concatenation, member access. Any other
  * function call breaks the chain, so `el.innerHTML = DOMPurify.sanitize(x)`
- * is not flagged while `el.innerHTML = x` is. It is intraprocedural (within
- * one function, with closure inheritance and message-handler seeding);
- * cross-function flow is out of scope and stated as a limit.
+ * is not flagged while `el.innerHTML = x` is. Flow is followed within a
+ * function (with closure inheritance and message-handler seeding) and one
+ * hop across a call: a tainted argument to a local function whose parameter
+ * reaches a sink. A whole call graph is not walked, and that is stated as a
+ * limit rather than hidden.
  */
 import { positionAt, type AnyNode, type Node, type ParsedFile } from "./ast.js";
 import { analyzeScopes } from "./scope.js";
@@ -295,12 +297,17 @@ function ownNodes(root: AnyNode): AnyNode[] {
 }
 
 /** Analyze one function scope: fixpoint on taint, then scan sinks; recurse into nested functions. */
+/** Local functions whose parameters reach a sink: name -> (param index -> sink). */
+type SinkFns = ReadonlyMap<string, ReadonlyMap<number, string>>;
+const NO_SINK_FNS: SinkFns = new Map();
+
 function analyzeScope(
   body: AnyNode,
   inherited: Scope,
   findings: TaintFinding[],
   parsed: ParsedFile,
   seedParam: { name: string; source: string } | null,
+  sinkFns: SinkFns = NO_SINK_FNS,
 ): void {
   const scope: Scope = { tainted: new Set(inherited.tainted), sources: new Map(inherited.sources) };
   if (seedParam) {
@@ -315,24 +322,90 @@ function analyzeScope(
     for (const n of nodes) if (propagate(n, scope)) changed = true;
   }
 
-  for (const n of nodes) {
-    checkSinks(n, scope, (source, sink, at) => {
-      const pos = positionAt(parsed.lines, at.start);
-      findings.push({
-        source,
-        sink,
-        file: parsed.file,
-        line: pos.line,
-        column: pos.column,
-        expression: parsed.source.slice(at.start, at.end).replace(/\s+/g, " ").slice(0, 120),
-      });
+  const report = (source: string, sink: string, at: AnyNode): void => {
+    const pos = positionAt(parsed.lines, at.start);
+    findings.push({
+      source,
+      sink,
+      file: parsed.file,
+      line: pos.line,
+      column: pos.column,
+      expression: parsed.source.slice(at.start, at.end).replace(/\s+/g, " ").slice(0, 120),
     });
+  };
+
+  for (const n of nodes) {
+    checkSinks(n, scope, report);
+    // One-hop interprocedural: a tainted argument passed to a local function's sink parameter.
+    if (n.type === "CallExpression") {
+      const name = isIdentifier(n["callee"] as AnyNode) ? ((n["callee"] as AnyNode)["name"] as string) : null;
+      const summary = name !== null ? sinkFns.get(name) : undefined;
+      if (summary) {
+        const args = n["arguments"] as AnyNode[];
+        for (const [i, sink] of summary) {
+          const s = args[i] ? taintSource(args[i]!, scope) : null;
+          if (s) report(s, `${sink} (via ${name}())`, n);
+        }
+      }
+    }
   }
 
   // Recurse into nested functions, inheriting this scope's taint (closure).
   for (const fn of nestedFunctions(body)) {
-    analyzeScope(fn["body"] as AnyNode, scope, findings, parsed, messageSeed(fn));
+    analyzeScope(fn["body"] as AnyNode, scope, findings, parsed, messageSeed(fn), sinkFns);
   }
+}
+
+/** Every function reachable by name: `function f(){}` and `const f = () => {}`. */
+function namedFunctions(program: Node): Map<string, AnyNode> {
+  const out = new Map<string, AnyNode>();
+  const FN = new Set(["FunctionExpression", "ArrowFunctionExpression"]);
+  const walk = (n: AnyNode): void => {
+    if (n.type === "FunctionDeclaration" && n["id"]) out.set((n["id"] as AnyNode)["name"] as string, n);
+    if (
+      n.type === "VariableDeclarator" &&
+      (n["id"] as AnyNode).type === "Identifier" &&
+      n["init"] &&
+      FN.has((n["init"] as AnyNode).type)
+    ) {
+      out.set((n["id"] as AnyNode)["name"] as string, n["init"] as AnyNode);
+    }
+    for (const key of Object.keys(n)) {
+      if (key === "type" || key === "start" || key === "end") continue;
+      const v = n[key];
+      if (Array.isArray(v)) {
+        for (const it of v) if (isNode(it)) walk(it);
+      } else if (isNode(v)) walk(v);
+    }
+  };
+  walk(program as AnyNode);
+  return out;
+}
+
+/**
+ * For each named function, which parameters flow to a sink. Computed by
+ * seeding one parameter at a time as the only source and seeing whether any
+ * sink fires - so a parameter that is sanitized before the sink does not
+ * count. Direct only: a parameter that reaches a sink through another
+ * function is not summarized (a stated limit).
+ */
+function summarize(functions: ReadonlyMap<string, AnyNode>, parsed: ParsedFile): SinkFns {
+  const out = new Map<string, Map<number, string>>();
+  for (const [name, fn] of functions) {
+    const params = fn["params"] as AnyNode[];
+    const sinkParams = new Map<number, string>();
+    for (let i = 0; i < params.length; i++) {
+      const p = params[i]!;
+      if (p.type !== "Identifier") continue;
+      const probe: TaintFinding[] = [];
+      const scope: Scope = { tainted: new Set(), sources: new Map() };
+      analyzeScope(fn["body"] as AnyNode, scope, probe, parsed, { name: p["name"] as string, source: "@param" });
+      const hit = probe.find((f) => f.source === "@param");
+      if (hit) sinkParams.set(i, hit.sink);
+    }
+    if (sinkParams.size > 0) out.set(name, sinkParams);
+  }
+  return out;
 }
 
 /** Immediate nested functions of a body (not deeper - each recursion handles its own). */
@@ -412,9 +485,10 @@ export function taint(parsed: ParsedFile): TaintFinding[] {
   for (const [n, v] of info.constants) (n as AnyNode)[FOLDED] = v;
   markMessageHandlers(parsed.program);
 
+  const sinkFns = summarize(namedFunctions(parsed.program), parsed);
   const findings: TaintFinding[] = [];
   const empty: Scope = { tainted: new Set(), sources: new Map() };
-  analyzeScope(parsed.program as AnyNode, empty, findings, parsed, null);
+  analyzeScope(parsed.program as AnyNode, empty, findings, parsed, null, sinkFns);
   // Deduplicate by position and sink.
   const seen = new Set<string>();
   return findings.filter((f) => {

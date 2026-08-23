@@ -16,6 +16,8 @@ change the policy grammar or the JSON schema; the changelog will say so.
 - HTML attributes are analyzed, not just `<script>` blocks: inline `on*`
   event handlers, `javascript:` URLs, `<iframe srcdoc>`, and `src`/`href`
   to another host (a remote `<script src>` most of all).
+- Taint follows one hop across functions: a tainted argument to a local
+  helper whose parameter reaches a sink is flagged, reported `(via fn())`.
 
 ## [0.2.0] - 2026-08-23
 

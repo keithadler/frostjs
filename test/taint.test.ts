@@ -54,6 +54,31 @@ describe("taint: untrusted source into a dangerous sink", () => {
   });
 });
 
+describe("taint: one-hop interprocedural (a local helper is a sink)", () => {
+  it("a tainted argument to a helper whose parameter reaches a sink", () => {
+    expect(flows("function setHtml(x){ el.innerHTML = x; } setHtml(location.hash);")).toEqual([
+      "location.hash->innerHTML (via setHtml())",
+    ]);
+    expect(flows("const run = (c) => eval(c); run(location.search);")).toEqual(["location.search->eval (via run())"]);
+    expect(flows("function put(node, html){ node.innerHTML = html; } put(n, document.cookie);")).toEqual([
+      "document.cookie->innerHTML (via put())",
+    ]);
+  });
+
+  it("through a nested closure inside the helper", () => {
+    expect(flows("function later(h){ setTimeout(() => { el.innerHTML = h; }, 0); } later(location.hash);")).toEqual([
+      "location.hash->innerHTML (via later())",
+    ]);
+  });
+
+  it("stays quiet when the helper sanitizes, ignores, or is called with a constant", () => {
+    expect(flows("function setHtml(x){ el.innerHTML = DOMPurify.sanitize(x); } setHtml(location.hash);")).toEqual([]);
+    expect(flows("function log(x){ console.log(x); } log(location.hash);")).toEqual([]);
+    expect(flows('function setHtml(x){ el.innerHTML = x; } setHtml("<b>ok</b>");')).toEqual([]);
+    expect(flows("function setHtml(x){ el.innerHTML = x; } setHtml(user.bio);")).toEqual([]);
+  });
+});
+
 describe("taint: must stay quiet", () => {
   it("an unknown call breaks the chain (sanitizers)", () => {
     expect(flows("el.innerHTML = DOMPurify.sanitize(location.hash)")).toEqual([]);

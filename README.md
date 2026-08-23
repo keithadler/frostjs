@@ -236,11 +236,15 @@ chain, so `innerHTML = DOMPurify.sanitize(x)` is not flagged while
   `insertAdjacentHTML`, `document.write`, `importScripts`, `import()`,
   `setAttribute("on*"/"srcdoc", ...)`, and `location` / `window.open`
   redirects.
-- **Limit, stated plainly**: it is intraprocedural, with closure
-  inheritance and message-handler seeding; a flow that crosses a function
-  boundary through an argument or return value is not tracked, and DOM
-  input values (`el.value`) are not modeled as sources. It finds real
-  flows; it does not claim to find all of them.
+- **One hop across functions**: a tainted argument passed to a local
+  function whose parameter reaches a sink is flagged (`setHtml(x) { el.innerHTML = x }`
+  called with `location.hash`), reported `... (via setHtml())`. A parameter
+  only counts if it reaches the sink through provably-preserving operations,
+  so a helper that sanitizes its argument is not a sink.
+- **Limit, stated plainly**: flow is followed one function hop, not a whole
+  call graph (a parameter that reaches a sink through a second function is
+  not summarized), and DOM input values (`el.value`) are not modeled as
+  sources. It finds real flows; it does not claim to find all of them.
 
 Run over 21 MB of popular packages it reports zero (mature libraries
 sanitize); on real application code it lights up the flows a reviewer
