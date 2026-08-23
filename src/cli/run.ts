@@ -49,6 +49,7 @@ import { includesFor, sync, usesOf } from "../sync.js";
 import { policyNameFor, starterPolicy } from "../init.js";
 import { audit, auditJson, formatAudit, groupByFile, type FileSource } from "../audit.js";
 import { taint, type TaintFinding } from "../extract/taint.js";
+import { suppressions, isSuppressed } from "../extract/suppress.js";
 
 export interface Io {
   stdout: (s: string) => void;
@@ -203,6 +204,43 @@ function runCheck(args: ParsedArgs, io: Io): number {
     scopePath: (u) => relToPolicy(policyDir, path.resolve(cwd, u.file)),
     ...(args.minConfidence ? { minConfidence: args.minConfidence } : {}),
   });
+
+  // Taint: untrusted input reaching a dangerous sink, opt-in with --taint.
+  // Modeled as denials of a synthetic taint.<sink> capability so baseline,
+  // changed-lines and every output format apply to them uniformly.
+  if (args.taint) {
+    const vendored = (f: string): boolean =>
+      registry !== null && policy.vendored.some((g) => matchesGlob(g, relToPolicy(policyDir, f)));
+    for (const file of files) {
+      if (vendored(file)) continue;
+      const name = shown(cwd, file);
+      const units = isHtml(file) ? parseHtml(file, fs.readFileSync(file, "utf8")) : [parseFile(file)];
+      for (const unit of units) {
+        if (unit.errors.length > 0) continue;
+        const ignores = suppressions(unit);
+        for (const t of taint(unit)) {
+          const capability = `taint.${t.sink}`;
+          const use: CapabilityUse = {
+            capability,
+            target: t.source,
+            file: name,
+            line: t.line,
+            column: t.column,
+            expression: t.expression,
+            confidence: "certain",
+            origin: isHtml(file) ? "inline-html" : "first-party",
+            suppressed: isSuppressed(ignores.get(t.line), capability),
+          };
+          decisions.push({
+            use,
+            verdict: use.suppressed ? "suppressed" : "denied",
+            reason: "tainted",
+            rule: null,
+          });
+        }
+      }
+    }
+  }
 
   // Baseline: denials already on record are reported as baselined, not denied.
   let baselineNote = "";

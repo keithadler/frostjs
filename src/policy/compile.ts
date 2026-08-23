@@ -19,7 +19,8 @@ import { ymd, type ParsedPolicy, type Rule } from "./parse.js";
  * `decide()` for vendored files the registry does not know, never by
  * `compile()`.
  */
-export type Reason = "granted" | "forbidden" | "expired" | "not granted" | "unknown destination" | "unregistered";
+export type Reason =
+  "granted" | "forbidden" | "expired" | "not granted" | "unknown destination" | "unregistered" | "tainted";
 
 export interface Evaluation {
   verdict: "allowed" | "denied";

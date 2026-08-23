@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseSource } from "../src/extract/ast.js";
 import { taint } from "../src/extract/taint.js";
+import { cliIn } from "./helpers.js";
 
 const flows = (src: string) => taint(parseSource("t.js", src)).map((f) => `${f.source}->${f.sink}`);
 
@@ -87,5 +88,68 @@ describe("taint: location sources are narrowed to attacker-influenced parts", ()
     expect(flows2("el.innerHTML = location.hostname")).toEqual([]);
     expect(flows2("el.innerHTML = location.origin")).toEqual([]);
     expect(flows2("el.innerHTML = location.protocol")).toEqual([]);
+  });
+});
+
+describe("frostjs check --taint", () => {
+  const project = (files: Record<string, string>) => {
+    const fs = require("node:fs") as typeof import("node:fs");
+    const os = require("node:os") as typeof import("node:os");
+    const path = require("node:path") as typeof import("node:path");
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "frostjs-taint-"));
+    fs.writeFileSync(path.join(dir, "frostjs.policy"), 'policy "t"\nmay use html injection\nmay use code generation\n');
+    for (const [name, body] of Object.entries(files)) fs.writeFileSync(path.join(dir, name), body);
+    return dir;
+  };
+
+  it("off by default; --taint fails the build on a flow", () => {
+    const dir = project({ "app.js": "el.innerHTML = location.hash;\n" });
+    expect(cliIn(dir, ".").code).toBe(0); // html injection is granted; no taint gate
+    const r = cliIn(dir, "--taint", ".");
+    expect(r.code).toBe(1);
+    expect(r.stdout).toContain("app.js:1:1: location.hash reaches innerHTML: el.innerHTML = location.hash");
+  });
+
+  it("a sanitizer breaks the flow", () => {
+    const dir = project({ "app.js": "el.innerHTML = DOMPurify.sanitize(location.hash);\n" });
+    const r = cliIn(dir, "--taint", ".");
+    expect(r.code).toBe(0);
+    expect(r.stdout).not.toContain("reaches");
+  });
+
+  it("--exit-zero reports but does not fail", () => {
+    const dir = project({ "app.js": "eval(location.search);\n" });
+    const r = cliIn(dir, "--taint", "--exit-zero", ".");
+    expect(r.code).toBe(0);
+    expect(r.stdout).toContain("location.search reaches eval");
+  });
+
+  it("inline suppression", () => {
+    const dir = project({ "app.js": "el.innerHTML = location.hash; // frostjs: ignore[taint]\n" });
+    const r = cliIn(dir, "--taint", ".");
+    expect(r.code).toBe(0);
+    expect(r.stdout).toContain("1 suppressed");
+  });
+
+  it("appears in json and sarif as taint.<sink>", () => {
+    const dir = project({ "app.js": "eval(location.hash);\n" });
+    const j = JSON.parse(cliIn(dir, "--taint", "--format", "json", ".").stdout);
+    const flow = j.decisions.find((d: { capability: string }) => d.capability === "taint.eval");
+    expect(flow).toMatchObject({ verdict: "denied", reason: "tainted", target: "location.hash" });
+    const log = JSON.parse(cliIn(dir, "--taint", "--format", "sarif", ".").stdout);
+    expect(log.runs[0].tool.driver.rules.map((x: { id: string }) => x.id)).toContain("taint.eval");
+  });
+
+  it("baseline freezes an existing flow", () => {
+    const fs = require("node:fs") as typeof import("node:fs");
+    const path = require("node:path") as typeof import("node:path");
+    const dir = project({ "app.js": "eval(location.hash);\n" });
+    const bl = path.join(dir, "b.json");
+    cliIn(dir, "--taint", "--baseline", bl, "--update-baseline", ".");
+    expect(cliIn(dir, "--taint", "--baseline", bl, ".").code).toBe(0);
+    fs.writeFileSync(path.join(dir, "new.js"), "eval(location.search);\n");
+    const r = cliIn(dir, "--taint", "--baseline", bl, ".");
+    expect(r.code).toBe(1);
+    expect(r.stdout).toContain("new.js:1:1: location.search reaches eval");
   });
 });

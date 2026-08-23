@@ -38,6 +38,7 @@ export function denialText(d: Decision): string {
   const { rule, reason, use } = d;
   if (reason === "unregistered")
     return `vendored file is not in the registry; review it with: frostjs vendor add ${use.file}`;
+  if (reason === "tainted") return `reaches a dangerous sink`;
   if (rule === null) return "denied by default (no rule grants it)";
   const where = `"${rule.text}" (line ${rule.line})`;
   const hint = rule.hint ? `: ${rule.hint}` : "";
@@ -55,6 +56,9 @@ export function denialText(d: Decision): string {
 export function denialMessage(d: Decision): string {
   const { use } = d;
   if (d.reason === "unregistered") return denialText(d);
+  // A taint finding reads as "<source> reaches <sink>": capability is taint.<sink>, target is the source.
+  if (d.reason === "tainted")
+    return `${use.target ?? "untrusted input"} reaches ${use.capability.replace(/^taint\./, "")}: ${use.expression}`;
   return `${describeUse(use.capability, use.target)} ${denialText(d)}: ${use.expression}`;
 }
 

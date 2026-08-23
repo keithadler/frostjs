@@ -15,7 +15,10 @@ change the policy grammar or the JSON schema; the changelog will say so.
 - Bounded taint analysis: untrusted input (URL, cookie, postMessage)
   reaching a dangerous sink (eval, innerHTML, importScripts, redirect),
   in `frostjs audit`. Taint survives only provably-preserving operations,
-  so sanitizers break the chain.
+  so sanitizers break the chain. `frostjs check --taint` makes it a gate:
+  each flow is a `taint.<sink>` finding across text/json/sarif/github,
+  failing the build, and honoring --baseline, --changed-since and inline
+  suppression.
 - `network.resource`: `el.src = "https://..."` naming another host.
 - `network.importscripts`: `importScripts(url)` in a worker.
 - `device` family: File System Access pickers, WebUSB/Bluetooth/Serial/HID/MIDI,

@@ -243,6 +243,15 @@ Run over 21 MB of popular packages it reports zero (mature libraries
 sanitize); on real application code it lights up the flows a reviewer
 would flag by hand.
 
+Taint is a human report in `frostjs audit` and, with `--taint`, an
+enforced gate in `frostjs check`: each flow becomes a `taint.<sink>`
+finding that fails the build and appears in the json, sarif and github
+outputs, so it lands as a code-scanning alert on the pull request.
+`--changed-since`, `--baseline` and `// frostjs: ignore[taint]` all apply
+to taint findings, so it adopts on a legacy codebase the same way the
+capability gate does. It is off by default because it is best-effort;
+the capability gate stays deterministic.
+
 ## Policy files
 
 A policy is a `frostjs.policy` file in frost's policy dialect: one rule per
@@ -326,6 +335,7 @@ frostjs --min-confidence <c>  lowest confidence that fails: certain, probable (d
 frostjs --baseline <file>     denials recorded in this file do not fail the build
 frostjs --update-baseline     write every current denial into the baseline and exit 0
 frostjs --changed-since <ref> fail only on uses in lines changed since the git ref
+frostjs --taint          also fail on untrusted input reaching a dangerous sink
 frostjs --format <f>      text (default), json, sarif, or github
 frostjs --version         print the version and exit
 frostjs --help            show usage
