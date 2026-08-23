@@ -266,6 +266,13 @@ function checkSinks(n: AnyNode, scope: Scope, add: (source: string, sink: string
     // A tainted first argument to a timer is a string, so it is the string-code
     // form (setTimeout("...", n)); a function callback is never tainted.
     if (isIdentifier(callee, "setTimeout") || isIdentifier(callee, "setInterval")) return flag(args[0], callee.name);
+    // jQuery/Zepto/cash factory: $(tainted) / jQuery(tainted). Given a string
+    // beginning with `<`, jQuery parses it as HTML and builds nodes from it, so
+    // a tainted value here is the classic $(location.hash) DOM-XSS. A `$`
+    // aliased to querySelector takes the value as a selector instead, not HTML;
+    // either way attacker input is reaching a DOM lookup/parse, and the sink
+    // only fires when the argument is genuinely tainted.
+    if (isIdentifier(callee, "$") || isIdentifier(callee, "jQuery")) return flag(args[0], `${callee.name}()`);
 
     if (callee.type === "MemberExpression") {
       const method = memberName(callee);
@@ -275,6 +282,13 @@ function checkSinks(n: AnyNode, scope: Scope, add: (source: string, sink: string
         return flag(args[0], method);
       if (method === "importScripts") return args.forEach((a) => flag(a, "importScripts"));
       if (method === "insertAdjacentHTML") return flag(args[1], "insertAdjacentHTML");
+      // jQuery/Zepto/cash HTML sinks. `.html(x)` has no native-DOM namesake, so
+      // a tainted argument is unambiguously set as markup; `$.parseHTML(x)`
+      // parses a string into nodes. The append-family (`.append`, `.prepend`,
+      // `.before`, `.after`, `.replaceWith`) is deliberately omitted: those
+      // names exist on native Element too, where a string argument becomes text
+      // and is safe, and taint cannot tell the receiver apart.
+      if (method === "html" || method === "parseHTML") return flag(args[0], `jQuery.${method}`);
       if (method === "write" || method === "writeln") return flag(args[0], "document.write");
       if (method === "setAttribute") {
         const attr = args[0];

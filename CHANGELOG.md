@@ -7,6 +7,15 @@ change the policy grammar or the JSON schema; the changelog will say so.
 
 ## [Unreleased]
 
+### Added
+
+- Taint recognizes jQuery/Zepto/cash DOM sinks: `$(tainted)` / `jQuery(tainted)`
+  (the `$(location.hash)` selector/HTML-injection class), `.html(tainted)`, and
+  `$.parseHTML(tainted)`. The append-family (`.append`, `.prepend`, `.before`,
+  `.after`, `.replaceWith`) is deliberately excluded — those names also belong
+  to native `Element`, where a string argument is inserted as text and is safe,
+  and taint cannot tell the receiver apart. Corpus unchanged (328).
+
 ## [0.7.0] - 2026-08-23
 
 Additive: taint now follows destructuring, two validated false-positive

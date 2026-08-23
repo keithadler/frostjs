@@ -60,6 +60,38 @@ describe("taint: untrusted source into a dangerous sink", () => {
   });
 });
 
+describe("taint: jQuery/Zepto DOM sinks", () => {
+  it("$()/jQuery() factory with a tainted argument", () => {
+    // The classic $(location.hash) DOM-XSS: jQuery parses a string starting
+    // with `<` as HTML and builds nodes from it.
+    expect(flows("$(location.hash)")).toEqual(["location.hash->$()"]);
+    expect(flows('var h = location.hash; $(h).appendTo("body");')).toEqual(["location.hash->$()"]);
+    expect(flows("jQuery(document.referrer)")).toEqual(["document.referrer->jQuery()"]);
+    expect(flows("$(decodeURIComponent(location.search))")).toEqual(["location.search->$()"]);
+  });
+
+  it(".html() and $.parseHTML() with a tainted argument", () => {
+    expect(flows('$(".x").html(location.hash)')).toEqual(["location.hash->jQuery.html"]);
+    expect(flows("var q = new URLSearchParams(location.search).get('q'); el.html(q);")).toEqual([
+      "location.search->jQuery.html",
+    ]);
+    expect(flows("$.parseHTML(location.hash)")).toEqual(["location.hash->jQuery.parseHTML"]);
+    expect(flows("jQuery.parseHTML(window.name)")).toEqual(["window.name->jQuery.parseHTML"]);
+  });
+
+  it("does not flag safe or native-DOM lookalikes", () => {
+    expect(flows("$('#menu')")).toEqual([]); // constant selector
+    expect(flows("var id = compute(); $('#' + id)")).toEqual([]); // untainted
+    expect(flows('$(".x").text(location.hash)')).toEqual([]); // .text() sets text, not HTML
+    expect(flows("var s = $('.x').html()")).toEqual([]); // getter, no argument
+    // Native Element.append/before/after/prepend/replaceWith insert a string as
+    // text, not HTML, so a tainted argument there is safe and must not flag.
+    expect(flows("document.body.append(location.hash)")).toEqual([]);
+    expect(flows("el.before(location.search)")).toEqual([]);
+    expect(flows("el.replaceWith(document.referrer)")).toEqual([]);
+  });
+});
+
 describe("taint: one-hop interprocedural (a local helper is a sink)", () => {
   it("a tainted argument to a helper whose parameter reaches a sink", () => {
     expect(flows("function setHtml(x){ el.innerHTML = x; } setHtml(location.hash);")).toEqual([
