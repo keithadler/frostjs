@@ -230,11 +230,16 @@ function checkSinks(n: AnyNode, scope: Scope, add: (source: string, sink: string
     if (isIdentifier(callee, "eval")) return flag(args[0], "eval");
     if (isIdentifier(callee, "Function")) return flag(args[args.length - 1], "Function");
     if (isIdentifier(callee, "importScripts")) return args.forEach((a) => flag(a, "importScripts"));
+    // A tainted first argument to a timer is a string, so it is the string-code
+    // form (setTimeout("...", n)); a function callback is never tainted.
+    if (isIdentifier(callee, "setTimeout") || isIdentifier(callee, "setInterval")) return flag(args[0], callee.name);
 
     if (callee.type === "MemberExpression") {
       const method = memberName(callee);
       const obj = callee["object"] as AnyNode;
       if (method === "eval") return flag(args[0], "eval");
+      if ((method === "setTimeout" || method === "setInterval") && freeGlobal(unwrap(obj), GLOBALS))
+        return flag(args[0], method);
       if (method === "importScripts") return args.forEach((a) => flag(a, "importScripts"));
       if (method === "insertAdjacentHTML") return flag(args[1], "insertAdjacentHTML");
       if (method === "write" || method === "writeln") return flag(args[0], "document.write");

@@ -27,6 +27,13 @@ describe("taint: untrusted source into a dangerous sink", () => {
     expect(flows("el.outerHTML = `x${document.referrer}y`")).toEqual(["document.referrer->outerHTML"]);
   });
 
+  it("a tainted string into a timer is code execution", () => {
+    expect(flows("setTimeout(location.hash.slice(1), 100)")).toEqual(["location.hash->setTimeout"]);
+    expect(flows("window.setInterval(document.cookie, 1000)")).toEqual(["document.cookie->setInterval"]);
+    expect(flows("setTimeout(function () { run(location.hash); }, 0)")).toEqual([]); // a callback is not tainted
+    expect(flows("setTimeout(handler, delay)")).toEqual([]);
+  });
+
   it("open redirect and setAttribute handler", () => {
     expect(flows("location.href = location.hash.slice(1)")).toEqual(["location.hash->location (redirect)"]);
     expect(flows("location.assign(location.search)")).toEqual(["location.search->location (redirect)"]);
