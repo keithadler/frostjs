@@ -7,6 +7,12 @@ change the policy grammar or the JSON schema; the changelog will say so.
 
 ## [Unreleased]
 
+### Added
+
+- SARIF results carry a stable `partialFingerprints["frostjs/v1"]` keyed on
+  (file, capability, expression), so GitHub code scanning tracks a finding
+  across commits instead of re-alerting when it moves lines.
+
 ## [0.3.0] - 2026-08-23
 
 Minor bump: new grammar is additive (`frostjs capabilities`; taint now

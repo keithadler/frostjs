@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import path from "node:path";
-import { cli } from "./helpers.js";
+import { cli, cliIn } from "./helpers.js";
 import { VERSION } from "../src/version.js";
 
 const proj = path.join(__dirname, "fixtures", "proj");
@@ -125,5 +125,25 @@ describe("--format", () => {
     const r = cli("--format", "xml", path.join(proj, "src"));
     expect(r.code).toBe(2);
     expect(r.stderr).toContain("--format must be one of text, json, sarif, github, html");
+  });
+});
+
+describe("--format sarif fingerprints", () => {
+  it("carries a stable partialFingerprint that ignores line number", () => {
+    const fs = require("node:fs") as typeof import("node:fs");
+    const os = require("node:os") as typeof import("node:os");
+    const path = require("node:path") as typeof import("node:path");
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "frostjs-fp-"));
+    fs.writeFileSync(path.join(dir, "frostjs.policy"), 'policy "t"\n');
+    fs.writeFileSync(path.join(dir, "a.js"), 'localStorage.setItem("x", 1);\n');
+    const fp1 = JSON.parse(cliIn(dir, "--format", "sarif", ".").stdout).runs[0].results[0].partialFingerprints[
+      "frostjs/v1"
+    ];
+    expect(fp1).toMatch(/^[0-9a-f]{16}$/);
+    // Move the use down two lines: same fingerprint, different startLine.
+    fs.writeFileSync(path.join(dir, "a.js"), '\n\nlocalStorage.setItem("x", 1);\n');
+    const r2 = JSON.parse(cliIn(dir, "--format", "sarif", ".").stdout).runs[0].results[0];
+    expect(r2.locations[0].physicalLocation.region.startLine).toBe(3);
+    expect(r2.partialFingerprints["frostjs/v1"]).toBe(fp1);
   });
 });

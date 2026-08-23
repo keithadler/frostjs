@@ -5,7 +5,9 @@
  * suppression. Uses the policy did not flag are not results.
  */
 import type { Decision, Verdict } from "../policy/index.js";
+import { createHash } from "node:crypto";
 import { denialMessage, describeUse } from "./text.js";
+import { baselineKey } from "../baseline.js";
 import { VERSION } from "../version.js";
 
 const LEVEL: Record<Exclude<Verdict, "allowed">, "error" | "warning" | "note"> = {
@@ -45,6 +47,14 @@ export function sarif(decisions: readonly Decision[]): string {
         },
       ],
       properties: { confidence: d.use.confidence, target: d.use.target, verdict: d.verdict },
+      // A stable key over (file, capability, expression), not the line, so
+      // code scanning tracks a finding across commits when it moves lines.
+      partialFingerprints: {
+        "frostjs/v1": createHash("sha256")
+          .update(baselineKey(d.use.file, d.use.capability, d.use.expression))
+          .digest("hex")
+          .slice(0, 16),
+      },
     };
     if (carried) r["baselineState"] = "unchanged";
     if (d.verdict === "suppressed") r["suppressions"] = [{ kind: "inSource" }];
