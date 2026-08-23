@@ -83,6 +83,8 @@ export function run(argv: readonly string[], io: Io): number {
       return runVendorAdd(args, io);
     case "registry-sync":
       return runRegistrySync(args, io);
+    case "sri":
+      return runSri(args, io);
     default:
       return runCheck(args, io);
   }
@@ -132,6 +134,10 @@ function runCheck(args: ParsedArgs, io: Io): number {
   const cwd = io.cwd ?? process.cwd();
   if (args.updateBaseline && args.baseline === null) {
     io.stderr("permit: --update-baseline needs --baseline <file>\n");
+    return 2;
+  }
+  if (args.format === "html") {
+    io.stderr("permit: --format html is only for permit sri\n");
     return 2;
   }
   if (args.paths.length === 0) {
@@ -381,6 +387,55 @@ function runRegistrySync(args: ParsedArgs, io: Io): number {
     `${path.relative(cwd, regFile) || regFile}: ${result.registry.entries.length} ${result.registry.entries.length === 1 ? "entry" : "entries"}\n`,
   );
   return result.needsReview ? 1 : 0;
+}
+
+/** `permit sri`: integrity values for registered vendored files, in the registry's own hash form. */
+function runSri(args: ParsedArgs, io: Io): number {
+  const cwd = io.cwd ?? process.cwd();
+  const inputs = (args.paths.length ? args.paths : ["."]).map((p) => path.resolve(cwd, p));
+  const loaded = loadPolicy(args, io, inputs, true);
+  if (typeof loaded === "number") return loaded;
+  const { policy, policyDir } = loaded;
+  let registry: Registry;
+  try {
+    registry = readRegistry(registryPath(policyDir));
+  } catch (e) {
+    io.stderr(`permit: ${(e as Error).message}\n`);
+    return 2;
+  }
+  let files: string[];
+  try {
+    files = discover(inputs, { exclude: args.exclude, include: includesFor(policy.vendored) });
+  } catch (e) {
+    io.stderr(`permit: ${(e as Error).message}\n`);
+    return 2;
+  }
+  const out: { file: string; integrity: string }[] = [];
+  let missing = 0;
+  for (const file of files) {
+    const rel = path.relative(policyDir, file).split(path.sep).join("/");
+    if (!policy.vendored.some((g) => matchesGlob(g, rel))) continue;
+    const integrity = integrityOfFile(file);
+    const shown = path.relative(cwd, file).split(path.sep).join("/");
+    if (lookup(registry, integrity) === null) {
+      io.stderr(`${shown}: not in the registry; review it with: permit vendor add ${shown}\n`);
+      missing++;
+      continue;
+    }
+    out.push({ file: shown, integrity });
+  }
+  switch (args.format) {
+    case "json":
+      io.stdout(JSON.stringify(Object.fromEntries(out.map((o) => [o.file, o.integrity])), null, 2) + "\n");
+      break;
+    case "html":
+      for (const o of out)
+        io.stdout(`<script src="${o.file}" integrity="${o.integrity}" crossorigin="anonymous"></script>\n`);
+      break;
+    default:
+      for (const o of out) io.stdout(`${o.file} ${o.integrity}\n`);
+  }
+  return missing > 0 ? 1 : 0;
 }
 
 /** `permit csp` and `permit summary`: read the policy, print the derived artifact. */

@@ -372,7 +372,8 @@ Ported directly from `exact`, because it is already proven.
     that the gate hard-fails without a lockfile is withdrawn: a project that
     vendors one minified file into `static/` has no lockfile and no reason
     to fail.
-28. SRI attribute emission.
+28. SRI attribute emission. **DONE 2026-08-23.** `permit sri` in text, json
+    and html forms. **Phase F complete.**
 
 **Phase G - reach**
 

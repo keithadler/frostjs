@@ -115,9 +115,15 @@ describe("--format github", () => {
 });
 
 describe("--format", () => {
+  it("rejects html outside permit sri", () => {
+    const r = cli("--format", "html", path.join(proj, "src"));
+    expect(r.code).toBe(2);
+    expect(r.stderr).toContain("--format html is only for permit sri");
+  });
+
   it("rejects unknown formats", () => {
     const r = cli("--format", "xml", path.join(proj, "src"));
     expect(r.code).toBe(2);
-    expect(r.stderr).toContain("--format must be one of text, json, sarif, github");
+    expect(r.stderr).toContain("--format must be one of text, json, sarif, github, html");
   });
 });

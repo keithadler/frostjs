@@ -98,6 +98,7 @@ permit csp               print the Content-Security-Policy header the policy imp
 permit summary           print a plain-English reading of the policy
 permit vendor add <files>  fingerprint third-party files and record their capabilities
 permit registry sync     re-admit bumped dependencies whose capabilities did not change
+permit sri [paths]       print Subresource Integrity values for registered vendored files
 permit --exclude <name>  skip directories with this name (repeatable)
 permit --exit-zero       report findings but always exit 0
 permit --policy <file>   use this policy instead of searching for permit.policy
@@ -176,6 +177,11 @@ destination" case from the threat model. Entries whose file is gone are
 pruned, and the lockfile's hash is recorded so the next run can say
 whether anything moved. A vendored glob may reach into `node_modules`;
 the walk follows it there.
+
+`permit sri` prints the same SHA-384 values as `integrity` attributes
+(`--format html` for ready-made script tags, `--format json` for a build
+step), so the browser refuses at load time exactly what the registry never
+reviewed. A vendored file that is not in the registry is refused here too.
 
 ## One policy, three artifacts
 

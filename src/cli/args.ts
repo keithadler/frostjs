@@ -1,4 +1,4 @@
-export type Command = "check" | "csp" | "summary" | "vendor-add" | "registry-sync";
+export type Command = "check" | "csp" | "summary" | "vendor-add" | "registry-sync" | "sri";
 
 export interface ParsedArgs {
   command: Command;
@@ -16,7 +16,7 @@ export interface ParsedArgs {
   paths: string[];
 }
 
-export const FORMATS = ["text", "json", "sarif", "github"] as const;
+export const FORMATS = ["text", "json", "sarif", "github", "html"] as const;
 export type Format = (typeof FORMATS)[number];
 
 export class UsageError extends Error {}
@@ -43,7 +43,7 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
     const arg = argv[i]!;
     if (first) {
       first = false;
-      if (arg === "csp" || arg === "summary") {
+      if (arg === "csp" || arg === "summary" || arg === "sri") {
         out.command = arg;
         continue;
       }
@@ -141,6 +141,7 @@ export const HELP = `usage: permit [options] <paths...>
        permit summary [--policy <file>]
        permit vendor add <files...>
        permit registry sync
+       permit sri [--format text|json|html] [paths...]
 
 Deny-by-default capability linter for JavaScript.
 
@@ -157,6 +158,10 @@ commands:
                        whose capability set did not change, refuse and show
                        the difference for those that gained one, prune
                        entries whose file is gone, record the lockfile hash
+  permit sri           print Subresource Integrity values for registered
+                       vendored files (text: path and hash; json: a map;
+                       html: script tags), so the browser enforces the same
+                       hashes the registry reviewed
 
 options:
   -h, --help           show this help and exit
