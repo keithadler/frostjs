@@ -207,6 +207,9 @@ to any origin, and the capability counts. `--format json` for tooling.
 Run it on a pull request's new dependency, or on the one you already have
 and never read.
 
+See [docs/CAPABILITIES.md](docs/CAPABILITIES.md) for the full taxonomy with
+the policy phrase for each code, or run `frostjs capabilities`.
+
 ## Taint: does untrusted input reach a dangerous sink?
 
 `frostjs audit` includes a bounded taint analysis. It answers the question

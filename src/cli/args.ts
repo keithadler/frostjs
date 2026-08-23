@@ -5,7 +5,7 @@
 import { CONFIDENCE_ORDER, type Confidence } from "../policy/index.js";
 
 /** The subcommand, `check` being the bare `frostjs <paths>` form. */
-type Command = "check" | "init" | "audit" | "csp" | "summary" | "vendor-add" | "registry-sync" | "sri";
+type Command = "check" | "init" | "audit" | "capabilities" | "csp" | "summary" | "vendor-add" | "registry-sync" | "sri";
 
 export interface ParsedArgs {
   command: Command;
@@ -24,7 +24,7 @@ export interface ParsedArgs {
   paths: string[];
 }
 
-const FORMATS = ["text", "json", "sarif", "github", "html"] as const;
+const FORMATS = ["text", "json", "sarif", "github", "html", "md"] as const;
 type Format = (typeof FORMATS)[number];
 
 /** A flag or argument the CLI cannot accept; the message is printed with the help text. */
@@ -58,7 +58,14 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
     const arg = argv[i]!;
     if (first) {
       first = false;
-      if (arg === "csp" || arg === "summary" || arg === "sri" || arg === "init" || arg === "audit") {
+      if (
+        arg === "csp" ||
+        arg === "summary" ||
+        arg === "sri" ||
+        arg === "init" ||
+        arg === "audit" ||
+        arg === "capabilities"
+      ) {
         out.command = arg;
         continue;
       }
@@ -159,6 +166,7 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
 export const HELP = `usage: frostjs [options] <paths...>
        frostjs init [paths...]
        frostjs audit [--format text|json] <paths...>
+       frostjs capabilities [--format text|json|md]
        frostjs csp [--policy <file>]
        frostjs summary [--policy <file>]
        frostjs vendor add <files...>
@@ -169,6 +177,8 @@ Deny-by-default capability linter for JavaScript.
 
 commands:
   (default)            analyze the given paths against the policy
+  frostjs capabilities the full capability taxonomy frostjs recognizes and
+                       the policy phrase for each; --format text|json|md
   frostjs audit        what the code does, with no policy: hosts reached,
                        code generation from non-constant input, script
                        injection, service workers, and files where those

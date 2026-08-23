@@ -7,6 +7,13 @@ change the policy grammar or the JSON schema; the changelog will say so.
 
 ## [Unreleased]
 
+### Added
+
+- `frostjs capabilities`: the full taxonomy with the policy phrase for each
+  code, as text, json or md. `docs/CAPABILITIES.md` is generated from it and
+  a test fails if it drifts.
+- Taint sink: a tainted string into `setTimeout` / `setInterval`.
+
 ## [0.2.0] - 2026-08-23
 
 Everything below shipped after 0.1.0. Minor bump: new capability family and

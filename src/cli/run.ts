@@ -49,6 +49,7 @@ import { includesFor, sync, usesOf } from "../sync.js";
 import { policyNameFor, starterPolicy } from "../init.js";
 import { audit, auditJson, formatAudit, groupByFile, type FileSource } from "../audit.js";
 import { taint, type TaintFinding } from "../extract/taint.js";
+import { capabilitiesJson, capabilitiesMarkdown, capabilitiesText } from "../capabilities.js";
 import { suppressions, isSuppressed } from "../extract/suppress.js";
 
 export interface Io {
@@ -82,6 +83,8 @@ export function run(argv: readonly string[], io: Io): number {
       return runInit(args, io);
     case "audit":
       return runAudit(args, io);
+    case "capabilities":
+      return runCapabilities(args, io);
     case "csp":
     case "summary":
       return runPolicyCommand(args, io);
@@ -169,6 +172,7 @@ function runCheck(args: ParsedArgs, io: Io): number {
   const cwd = cwdOf(io);
   if (args.updateBaseline && args.baseline === null) return fail(io, "--update-baseline needs --baseline <file>");
   if (args.format === "html") return fail(io, "--format html is only for frostjs sri");
+  if (args.format === "md") return fail(io, "--format md is only for frostjs capabilities");
   if (args.paths.length === 0) {
     io.stderr("frostjs: no paths given\n");
     io.stderr(HELP);
@@ -338,6 +342,16 @@ function extractAll(
   }
   for (const e of syntaxErrors) io.stderr(`${e.file}:${e.line}:${e.column}: syntax error: ${e.message}\n`);
   return syntaxErrors.length > 0 ? 2 : uses;
+}
+
+// frostjs capabilities
+
+function runCapabilities(args: ParsedArgs, io: Io): number {
+  if (args.format === "json") io.stdout(capabilitiesJson());
+  else if (args.format === "md") io.stdout(capabilitiesMarkdown());
+  else if (args.format === "text") io.stdout(capabilitiesText());
+  else return fail(io, "frostjs capabilities prints text, json or md");
+  return 0;
 }
 
 // frostjs audit <paths...>
