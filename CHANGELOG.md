@@ -7,6 +7,13 @@ change the policy grammar or the JSON schema; the changelog will say so.
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-08-23
+
+Additive: taint now models jQuery, the one major DOM-injection API it was
+missing. Validated by a 164-package sweep (no wild flow surfaced; maintained
+packages are clean) and the pinned corpus (unchanged at 328). No breaking
+changes to policies or the JSON/SARIF schema.
+
 ### Added
 
 - Taint recognizes jQuery/Zepto/cash DOM sinks: `$(tainted)` / `jQuery(tainted)`
