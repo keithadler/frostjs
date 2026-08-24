@@ -1,8 +1,12 @@
 # Showcase: three.js ships a remote eval behind a URL parameter
 
-This is the finding that explains what frostjs is for. Everything below is
-reproducible with `npm run showcase` (the corpus fetch verifies three.js
-0.160.0 against its npm integrity hash first).
+This is a demonstration of `frostjs audit` run on a real, widely-shipped
+dependency — the "vet it before you adopt it" use case, not a claim that frost
+hunts novel vulnerabilities in popular packages (it does not; see the README's
+"What it is, and what it is not"). It is here because it shows, concretely,
+what the capability model catches when you point it at code you did not write.
+Everything below is reproducible with `npm run showcase` (the corpus fetch
+verifies three.js 0.160.0 against its npm integrity hash first).
 
 ## The finding
 

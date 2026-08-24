@@ -7,6 +7,14 @@ change the policy grammar or the JSON schema; the changelog will say so.
 
 ## [Unreleased]
 
+### Changed
+
+- Docs: positioning made explicit. frostjs is a build-time gate for code you
+  own and dependencies you vet, not a scanner that promises novel findings in
+  popular packages — a clean result on maintained code is the tool working.
+  README gains a "What it is, and what it is not" section; the three.js and
+  lottie write-ups are framed as `audit` demonstrations, not the tool's purpose.
+
 ## [0.8.0] - 2026-08-23
 
 Additive: taint now models jQuery, the one major DOM-injection API it was

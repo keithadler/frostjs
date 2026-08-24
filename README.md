@@ -131,17 +131,35 @@ denied.
 The instructions above are also in [`AGENTS.md`](AGENTS.md) in this
 repository, which applies them to frostjs's own code.
 
-## Where it has already found something
+## What it is, and what it is not
 
-three.js 0.160.0 ships `examples/jsm/libs/ecsy.module.js`, which, if a page
-that imports it is opened with `?enable-remote-devtools` in the URL, loads a
-script from a third-party CDN, connects to a third-party relay, and `eval`s
-whatever the relay sends. frostjs reports it as
+frostjs is a build-time gate for code you own and dependencies you vet. Its
+job is to enforce a policy on *your* project's build, and to answer, when you
+point `audit` at a dependency, "what does this reach for, and does anything
+untrusted flow into a dangerous sink." It is **not** a scanner that promises
+novel vulnerabilities in popular packages. Those are the most-audited code on
+the web; run frost across the top of npm and it stays quiet, because the
+capabilities it finds there are the libraries' advertised jobs and the policy
+is your application's, not theirs. A clean result on maintained code is the
+tool working, not failing. Where it earns its keep is the deny-by-default gate
+on first-party code and the moment before you adopt a dependency you have not
+read.
+
+## What auditing a dependency can surface
+
+The two write-ups below are demonstrations of `audit` on real, widely-shipped
+code — not a claim that frost hunts 0-days. three.js 0.160.0 ships
+`examples/jsm/libs/ecsy.module.js`, which, if a page that imports it is opened
+with `?enable-remote-devtools` in the URL, loads a script from a third-party
+CDN, connects to a third-party relay, and `eval`s whatever the relay sends.
+frostjs reports it as
 `codegen.eval denied by default (no rule grants it): eval(data.script)` under any policy
 an application would plausibly write. The same run names a runtime
 `import()` of physics engine code from `cdn.skypack.dev`. The full story, the
 policy, the CSP it emits and the honest count of what else the policy
-flags are in [SHOWCASE.md](SHOWCASE.md).
+flags are in [SHOWCASE.md](SHOWCASE.md). A second, fully-public example —
+`lottie-web` evaluating expression strings embedded in an animation JSON, on
+by default — is in [`showcase/lottie/README.md`](showcase/lottie/README.md).
 
 ## Status
 
