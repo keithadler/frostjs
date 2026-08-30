@@ -68,7 +68,7 @@
     "sweep": "vite-node scripts/sweep.ts"
   },
   "dependencies": {
-    "oxc-parser": "~0.146.0"
+    "oxc-parser": "~0.147.0"
   },
   "peerDependencies": {
     "eslint": ">=9"
